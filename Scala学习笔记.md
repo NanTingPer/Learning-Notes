@@ -1,4 +1,6 @@
 
+
+>
 在scala中 使用object 创建文件 其默认为一个单例对象
 可直接调用其内部的方法 相当于Java中的静态类 无法创建实例
 
@@ -2803,5 +2805,6 @@ isSet判断接收信息
 
 
 <!--stackedit_data:
-eyJoaXN0b3J5IjpbLTE1MDE5MzAyNDBdfQ==
+eyJoaXN0b3J5IjpbLTEwMjMzMzI1MTQsLTE1MDE5MzAyNDBdfQ
+==
 -->

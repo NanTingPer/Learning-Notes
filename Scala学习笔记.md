@@ -1,6 +1,6 @@
 
+Akka教程https://jasonqu.github.io/akka-doc-cn/2.3.6/scala/book/chapter1/introduction.html
 
->
 在scala中 使用object 创建文件 其默认为一个单例对象
 可直接调用其内部的方法 相当于Java中的静态类 无法创建实例
 
@@ -2804,6 +2804,504 @@ isSet判断接收信息
 | react | 阻塞线程，直到超时或接收到消息 |
 
 
+
+
+
+# Akka
+
+- ##### Akka是一个用于构建高并发、分布式和可拓展的基于事件驱动的应用的工具包。
+
+- ##### Akka是使用Scala开发的库，同时可以使用Scala和Java语言来开发基于Akka的应用程序
+
+## 特性
+
+- ##### 提供基于异步非阻塞、高性能的事件驱动编程模型
+
+- ##### 内置容错机制，允许Actor在出错时进行恢复或重置操作
+
+- ##### 超级轻量级的事件处理 不依赖操作系统
+
+- ##### 使用Akka可以在单机上构建高并发程序，也可以在网络中构建分布式程序
+
+## 创建
+
+- #### API介绍
+
+  - ###### ActorSystem 它负责创建和监督Actor
+  
+    1. 在Akka中，ActorSystem是一个重量级的结构，它需要分配多个线程。
+  
+    2. 在实际使用中，ActorSystem通常是一个单例对象，可以使用它创建很多Actor.
+  
+    3. 之间使用context.system就可以获取到管理该Actor的ActorSytem的引用
+  
+  - ###### 实现Actor类
+  
+    1. 定义类或者单例对象继承Actor 需要导入akka.actor包下的Actor
+    
+    2. 实现receive方法，receive方法中直接处理消息，不用添加loop和react方法(while死循	等),Akka会自动调用receive来接收消息
+    2. 可以实现preStart()方法，在Actor对象构建后执行，在生命周期内只执行一次
+  
+  - ###### 加载Actor
+  
+    1. 要创建Akka的Actor，必须先获取创建一个ActorSystem。需要给ActorSystem指定一个名称，并可以去加载一些配置项
+  
+    2. 调用ActorSystem.actorOf(Props(Actor对象),"名字")来加载Actor
+
+- #### Actor Path - 路径
+
+每一个Actor都有一个Path，这个路径可以被外部引用。路径的格式:
+
+获取 context.actorSelection("akka://System名/user/Actor名");
+
+| 本地 | akka://actorSystem名称/user/Actor名称       | akka://SimpleAkkaDomo/user/senderActor   |
+| ---- | ------------------------------------------- | ---------------------------------------- |
+| 远程 | akka.tcp://mysys@ip地址:端口/user/Actor名称 | akka.tcp://192.168.1.1:7777/user/service |
+
+## 入门
+
+#### 需求
+
+基于Akka创建两个Actor，Actor之间可以互相发送消息
+
+#### Maven默认Settings.xml文件
+
+```xml
+<?xml version="1.0" encoding="UTF-8"?>
+<settings xmlns="http://maven.apache.org/SETTINGS/1.0.0"
+          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+          xsi:schemaLocation="http://maven.apache.org/SETTINGS/1.0.0 http://maven.apache.org/xsd/settings-1.0.0.xsd">
+
+</settings>
+```
+
+#### 项目引入Akka - Maven
+
+```xml
+<repositories>
+<repository>
+  <id>akka-repository</id>
+  <name>Akka library repository</name>
+  <url>https://repo.akka.io/maven</url>
+</repository>
+</repositories>
+```
+
+#### Akka Actors - 引入
+
+```xml
+<properties>
+  <scala.binary.version>2.13</scala.binary.version>
+</properties>
+<dependencyManagement>
+  <dependencies>
+    <dependency>
+      <groupId>com.typesafe.akka</groupId>
+      <artifactId>akka-bom_${scala.binary.version}</artifactId>
+      <version>2.9.6</version>
+      <type>pom</type>
+      <scope>import</scope>
+    </dependency>
+  </dependencies>
+</dependencyManagement>
+<dependencies>
+  <dependency>
+    <groupId>com.typesafe.akka</groupId>
+    <artifactId>akka-actor-typed_${scala.binary.version}</artifactId>
+  </dependency>
+  <dependency>
+    <groupId>com.typesafe.akka</groupId>
+    <artifactId>akka-actor-testkit-typed_${scala.binary.version}</artifactId>
+    <scope>test</scope>
+  </dependency>
+</dependencies>
+```
+
+
+
+#### 使用其提供的sbt模板直接创建
+
+- Scala [akka-quickstart-scala.zip](https://doc.akka.io/docs/akka/current/attachments/akka-quickstart-scala.zip)
+- Java [akka-quickstart-java.zip](https://doc.akka.io/docs/akka/current/attachments/akka-quickstart-java.zip)
+
+#### 创建并加载Actor
+
+- Actor -> import akka.actor.Actor
+
+- 需要创建两个Actor:
+  1. SenderActor(自定义名称 继承Actor) : 用来发送消息
+  2. RecriverActor(自定义名称 继承Actor) : 用来接收消息,回复消息
+- 创建两个Actor 使用object关键字
+- 创建单例对象 封装main方法
+- 启动程序
+
+```scala
+import akka.actor._
+object RecriveActor extends Actor
+{
+    override def receive: Receive = {
+        case x => println(x);
+    }
+}
+```
+
+```scala
+import akka.actor._;
+object SendActor extends Actor
+{
+    override def receive: Receive = {
+        case x => println(x);
+    }
+}
+```
+
+```scala
+import akka.actor.{ActorSystem, Props}
+import com.typesafe.config.ConfigFactory
+object Ente {
+    def main(args: Array[String]): Unit =
+    {
+        //创建ActorSystem 用来管理Actor
+        //参数 =>   名称,配置文件(目前没有)
+        var actorsys = ActorSystem("actor",ConfigFactory.load())
+        //加载自定义Actor
+        //将自定义Actor装入Props ,名字
+        var send = actorsys.actorOf(Props(SendActor),"Send");
+        var Recrive = actorsys.actorOf(Props(RecriveActor),"Recriv");
+    }
+}
+```
+
+#### 发送和接收消息
+
+1. 创建两个样例类 分别用来提交任务 和 任务提交成功反馈
+2. System发送消息给Send/Recrive
+3. 接收到消息的一方给另一方发送回传信息
+
+| sender(接收体内表示发送者)                       | 直接使用                                            |
+| ------------------------------------------------ | --------------------------------------------------- |
+| ActorSystem.actorOf(Props(Actor名),"后期使用名") | 创建一个Actor引用                                   |
+| context.actorSelection("ActorPath")              | System发送任务时使用该方法获取需要发送给Actor的Path |
+
+- ### 主函数
+
+  ```scala
+  def main(args: Array[String]): Unit =
+  {
+      //创建ActorSystem 用来管理Actor
+      //参数 =>   名称,配置文件(目前没有)
+      var actorsys = ActorSystem("actorSystem",ConfigFactory.load())
+      //加载自定义Actor
+      //将自定义Actor装入Props ,名字
+      var Send= actorsys.actorOf(Props(SendActor),"Send");
+      var Recrive = actorsys.actorOf(Props(RecriveActor),"Recriv");
+      //发送消息给send
+      Send ! "start";
+  }
+  ```
+
+- ### 样例类 (类似于 枚举)
+
+  ```scala
+  object RunSendorOn
+  {
+      case class 发送(内容: String) {}
+      case class 回传(内容: String) {}
+  }
+  ```
+
+- ### Send
+
+  ```scala
+  object SendActor extends Actor
+  {
+      override def receive: Receive = {
+          case "start" =>
+          {
+              println("Send : 接收到了消息 : start");
+              //给Recriv发送消息
+              //先获取Recriv的Path
+              var receive: ActorSelection = context.actorSelection("akka://actorSystem/user/Recriv");
+              receive ! RunSendorOn.发送("你好！我收到了一条System消息！");
+          }
+          case RunSendorOn.回传(msg : String)=>{
+              println(s"Send : 我收到你的回传了！ 内容 : ${msg}");
+          }
+      }
+  }
+  ```
+
+- ### Recrive
+
+  ```scala
+  object RecriveActor extends Actor
+  {
+      override def receive: Receive = {
+          case RunSendorOn.发送(msg : String) => {
+              println(s"Receive : 我收到了消息! 内容 : ${msg}");
+              //因为接收到了消息，可以直接使用sender定位到消息来源
+              sender ! RunSendorOn.回传("我收到了！现在还给你！");
+          }
+      }
+  }
+  ```
+
+## 定时任务
+
+需求:定时处理一些任务
+
+在Akka中，提供了一个scheduler对象来实现定时调度功能。使用ActorSystem.scheduler.schedule()方法启动。
+
+- ### 导入隐式转换包
+
+  - ##### import actorSystem.dispatcher
+
+  - ##### import scala.concurrent.duration._
+
+- ### 使用
+
+- ###### time => 延迟
+
+- ###### time2 => 间隔
+
+  - ##### ActorSystem.scheduler.schedule(time seconds,time2 seconds,Actor,消息);
+
+  - ##### ActorSystem.scheduler.schedule(time seconds,time2 seconds)(Actor ! 消息);
+
+  - ##### ActorSystem.scheduler.schedule(time seconds,time2 seconds){
+
+    ##### 	Actor ! 内容;
+
+  - ##### }
+
+
+
+## 进程间通信
+
+- ##### 先在resources中创建配置文件 -> application.conf
+
+```scala
+#高版本中netty被artery替代
+#akka.actor.provider = "akka.remote.RemoteActorRefProvider"
+#akka.remote.netty.tcp.hostname = "127.0.0.1"
+#akka.remote.artery.tcp.hostname = "127.0.0.1"
+#akka.remote.netty.tcp.port = "7001"
+#akka.remote.artery.tcp = "7001"
+# Akka Actor系统配置
+akka {
+  actor {
+    provider = "akka.remote.RemoteActorRefProvider"
+  }
+
+  # 远程通信配置
+  remote {
+    # 启用Artery作为远程传输
+    artery {
+      enabled = no
+
+      # TCP传输配置
+      transport = tcp
+
+      # 绑定到指定的IP地址和端口
+      canonical {
+        hostname = "127.0.0.1"
+        port = 7001
+      }
+
+      # 其他可能的配置，如压缩、加密等（根据需要添加）
+      # ...
+    }
+
+    # 注意：如果你之前使用了Netty，并且确定不再需要它，可以确保没有启用Netty的配置
+    # 例如，不要有以下配置（或者确保它们是注释掉的）：
+    # netty.tcp {
+    #   hostname = "127.0.0.1"
+    #   port = 7001
+    # }
+  }
+
+  # 其他Akka配置（如日志、序列化器等）
+  # ...
+}
+```
+
+- 添加远程依赖包 build.sbt
+
+- ```
+  "com.typesafe.akka" %% "akka-remote" % akkaVersion
+  ```
+
+
+
+### 全部代码
+
+- ## 模块1
+
+Rec
+
+```json
+#高版本中netty被artery替代
+#akka.actor.provider = "akka.remote.RemoteActorRefProvider"
+#akka.remote.netty.tcp.hostname = "127.0.0.1"
+#akka.remote.artery.tcp.hostname = "127.0.0.1"
+#akka.remote.netty.tcp.port = "7001"
+#akka.remote.artery.tcp = "7001"
+# Akka Actor系统配置
+akka {
+  actor {
+    provider = "akka.remote.RemoteActorRefProvider"
+  }
+
+  # 远程通信配置
+  remote {
+    # 启用Artery作为远程传输
+    artery {
+      enabled = yes
+
+      # TCP传输配置
+      transport = tcp
+
+      # 绑定到指定的IP地址和端口
+      canonical {
+        hostname = "127.0.0.1"
+        port = 7666
+      }
+
+      # 其他可能的配置，如压缩、加密等（根据需要添加）
+      # ...
+    }
+
+    # 注意：如果你之前使用了Netty，并且确定不再需要它，可以确保没有启用Netty的配置
+    # 例如，不要有以下配置（或者确保它们是注释掉的）：
+     netty.tcp {
+       hostname = "127.0.0.1"
+       port = 7666
+     }
+  }
+
+  # 其他Akka配置（如日志、序列化器等）
+  # ...
+}
+```
+
+```scala
+object RecActor extends Actor
+{
+    override def receive: Receive =
+    {
+        case "cconect" =>
+        {
+            println("RecActor : 收到数据cconect");
+            sender ! "cconect";
+        }
+    }
+}
+```
+
+Main
+
+```scala
+import akka.actor.{ActorSystem, Props}
+import com.typesafe.config.ConfigFactory
+object AcortMain
+{
+    case class 发送(var txt : String){}
+    case class 回传(var txt : String){}
+    def main(args: Array[String]): Unit =
+    {
+        var aectorSystem = ActorSystem("actorSystem", ConfigFactory.load());
+        var recActor = aectorSystem.actorOf(Props(RecActor), "recActor");
+    }
+}
+```
+
+
+
+- ## 模块2
+
+Woke
+
+```json
+#高版本中netty被artery替代
+#akka.actor.provider = "akka.remote.RemoteActorRefProvider"
+#akka.remote.netty.tcp.hostname = "127.0.0.1"
+#akka.remote.artery.tcp.hostname = "127.0.0.1"
+#akka.remote.netty.tcp.port = "7666"
+#akka.remote.artery.tcp = "7000"
+# Akka Actor系统配置
+akka {
+  actor {
+    provider = "akka.remote.RemoteActorRefProvider"
+  }
+
+  # 远程通信配置
+  remote {
+    # 启用Artery作为远程传输
+    artery {
+      enabled = yes
+
+      # TCP传输配置
+      transport = tcp
+
+      # 绑定到指定的IP地址和端口
+      canonical {
+        hostname = "127.0.0.1"
+        port = 7000
+      }
+
+      # 其他可能的配置，如压缩、加密等（根据需要添加）
+      # ...
+    }
+
+    # 注意：如果你之前使用了Netty，并且确定不再需要它，可以确保没有启用Netty的配置
+    # 例如，不要有以下配置（或者确保它们是注释掉的）：
+     netty.tcp {
+       hostname = "127.0.0.1"
+       port = 7000
+     }
+  }
+
+  # 其他Akka配置（如日志、序列化器等）
+  # ...
+}
+```
+
+```scala
+object WokeActor extends Actor
+{
+    override def receive: Receive =
+    {
+        case "setp" =>
+        {
+            println("Woke : System发了setp");
+            val recActor = context.actorSelection("akka://actorSystem@127.0.0.1:7666/user/recActor");
+            recActor ! "cconect"
+        }
+        case "cconect" =>
+        {
+            println("Woke : 收到回传信息! cconect")
+        }
+    }
+}
+```
+
+Main
+
+```scala
+import akka.actor.{ActorSystem, Props}
+import com.typesafe.config.ConfigFactory
+object AcortMain
+{
+    def main(args: Array[String]): Unit =
+    {
+        //akka://actorSystem@198.18.0.1:25520
+        var aectorSystem = ActorSystem("actorSystem", ConfigFactory.load());
+        var wokeActor = aectorSystem.actorOf(Props(WokeActor), "wokeActor");
+        var e = 0;
+        wokeActor ! "setp"
+    }
+}
+```
 <!--stackedit_data:
-eyJoaXN0b3J5IjpbLTEwMjMzMzI1MTRdfQ==
+eyJoaXN0b3J5IjpbLTE1MDIzMzU4MDFdfQ==
 -->

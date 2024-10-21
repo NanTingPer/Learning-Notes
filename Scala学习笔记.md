@@ -2710,9 +2710,6 @@ map.filterKeys(_ == "B"); //取键为B的键值对对象
 
 | contains(值) | 判断是否存在这个键 |
 | ------------ | ------------------ |
-|              |                    |
-|              |                    |
-|              |                    |
 
 ```scala
 //先获取数据
@@ -2775,7 +2772,7 @@ f1
 
 给actor1线程发送一串消息
 
-```
+```scala
 actor1 ! "你好"
 ```
 
@@ -2785,7 +2782,7 @@ actor1 ! "你好"
 
 需要传入一个偏函数
 
-```
+```scala
 {
 	case 变量名:类型 => 代码块
 }
@@ -3302,6 +3299,666 @@ object AcortMain
     }
 }
 ```
+
+
+
+# 自模拟spark通信框架
+
+- #### 1个Master
+
+- #### 若干个Worker
+
+- #### Master管理Worker
+
+## 实现思路
+
+1. 构建Master、Worker
+   - 构建Master和Worker的ActorSystem与Actor
+2. Worker注册
+   - Worker进程向Master注册 发送自己的实例信息
+3. Worker定时发送心跳
+   - Worker定期向Master发送心跳信息
+4. Master定时心跳检测
+   - Master定期检查Worker心跳，将超时的Worker移除，并对Worker按照内存进行倒序排序
+5. 多个Worker测试阶段
+   - 启动多个Worker查看是否能注册成功，停止某个Worker查看能否正确移除
+
+## 启用java序列化
+
+```scala
+akka.actor.allow-java-serialization = on
+```
+
+## Worker
+
+| preStart() | 在start之前执行 |
+| ---------- | --------------- |
+
+1. ##### 在preStart中封装自身的实例信息到样例类中(id,cpu,msm) 然后发送给Master   1
+
+4. ##### 接收Master注册成功的消息 4
+
+5. ##### 通过定时器给Master发送心跳消息 包含自身实例信息  5
+
+## Master
+
+2. ##### Master接收Worker注册信息 存入Map集合 键是id,值是具体的Worker对象 添加心跳time字段  2
+
+3. ##### 注册成功发送回执  3
+
+6. ##### 更新指定Worker的心跳time字段  6
+
+7. ##### 在preStart中设置定时器 用来检测心跳time超时  7
+
+8. ##### 打印存活的Worker  8
+
+## 样例类 - 枚举信息
+
+- #### 需要存放在新的工程中，序列化后才能转换
+
+## 模块信息
+
+| Master           | 存放Master实例 |
+| ---------------- | -------------- |
+| Worker           | 存放Worker实例 |
+| emu              | 存放样例类实例 |
+| 名称都可以自定义 |                |
+
+- #### 导入模块
+
+  Maven
+
+  ```xml
+  <dependency>
+  	<groupId>包路径</groupId>
+      <artifactId>包名称</a>
+      <version>版本信息</version>
+  </dependency>
+  ```
+
+  stb 根模块build.stb设置
+
+  | 模块名称    | 表示   |
+  | ----------- | ------ |
+  | Master_Dome | Master |
+  | Worker_Dome | Morker |
+  | eum_obj     |        |
+  | AcortDome   | 根模块 |
+
+  ```scala
+  name := "AcortDome"
+  
+  version := "1.0"
+  
+  scalaVersion := "2.13.14"
+  
+  resolvers += "Akka library repository".at("https://repo.akka.io/maven")
+  
+  lazy val akkaVersion = sys.props.getOrElse("akka.version", "2.9.6")
+  
+  // Run in a separate JVM, to make sure sbt waits until all threads have
+  // finished before returning.
+  // If you want to keep the application running while executing other
+  // sbt tasks, consider https://github.com/spray/sbt-revolver/
+  fork := true
+  
+  //lazy val root = (project in file("."))
+  //    .aggregate(Master_Dome, Worker_Dome,eum_object) // 聚合子项目，以便可以一起构建
+  //    .settings(
+  //        name := "RootProject"
+  //    )
+  
+  lazy val Master_Dome = (project in file("Master_Dome"))
+      .dependsOn(eum_object)
+      .settings(
+          name := "Master_Dome",
+          // 其他设置
+      )
+  
+  lazy val eum_object = (project in file("eum_object"))
+      .settings(
+          name := "eum_object"
+      )
+  
+  lazy val Worker_Dome = (project in file("Worker_Dome"))
+      .dependsOn(eum_object) // 设置子模块B依赖于子模块A
+      .settings(
+          name := "Worker_Dome",
+      )
+  ```
+
+## 1.开始
+
+- ### 测试各Actor是否成功启动
+
+- #### Master
+
+```scala
+object Master extends Actor
+{
+    override def receive: Receive =
+    {
+        case a => {
+            println(a);
+        }
+    }
+}
+```
+
+```scala
+object MasterMain
+{
+    //akka://MasterSystem@127.0.0.1:7666
+    def main(args: Array[String]): Unit =
+    {
+        //创建ActorSystem用来管理所有自定义Actor
+        var MasterSystem = ActorSystem.create("MasterSystem", ConfigFactory.load());
+        //通过MasterSystem管理Master
+        var master = MasterSystem.actorOf(Props(Master),"Master");
+        master ! "e";
+    }
+}
+```
+
+- #### Worker
+
+```scala
+object Worker extends Actor
+{
+    override def receive: Receive =
+    {
+        case a =>{
+            println(a);
+        }
+    }
+}
+```
+
+```scala
+object Worker_Main
+{
+    //akka://ActorSystem@127.0.0.1:7668
+    def main(args: Array[String]): Unit =
+    {
+        //创建ActorSystem用来管理所有自定义Actor
+        val ActorSystemSystem = ActorSystem.create("ActorSystem", ConfigFactory.load());
+        var worker = ActorSystemSystem.actorOf(Props(Worker),"Worker");
+        worker ! "Nihao";
+    }
+}
+```
+
+## 2.注册Worker
+
+### 需求
+
+在Worker启动时,发送注册消息给Master
+
+1. Worker向Master发送注册消息(id,cpu,内存大小)
+   - 随机生成cpu核心数量(1、2、3、4、5、6、7、8)
+   - 随机生成内存大小(M) 512的倍数
+2. Master保存Worker信息，给Worker回复注册成功
+3. 测试
+
+### 步骤
+
+1. 在eum_object项目中，创建两个样例类
+2. 在Worker中定义成员变量 : 
+   - masterActorRef -> 表示MasterActor的引用
+   - workerid -> 表示Worker的id
+   - cpu -> 表示Worker的cpu核心数量
+   - mem -> 表示Worker的内存大小
+   - cup_list : 表示当前Worker核心数量的最大最小值
+   - mem_list : 表示当前Worker内存的最大最小值
+3. 在Worker中preStart()方法里，封装注册信息发送给Master
+4. 在MasterActor中接收注册信息并保存在Map
+5. Master给Worker发送成功信息
+6. Worker接收Master回复
+
+## 3.eum_object的公共
+
+- #### MessgPackage - 注册信息 心跳信息
+
+```scala
+/***
+ * 用来给Worker的注册信息包
+ * @param workid Worker的ID
+ * @param cpu   Worker的CPU核心数量
+ * @param mem   Worker的内存大小
+ */
+case class WorkerMessgPackage(workid : String,cpu : Int, mem : Int)
+
+/***
+ * 用来给Master给Worker发送注册成功的消息
+ */
+object MessgSuccessPackage
+
+/***
+ * Worker的心跳消息包
+ * @param workid Worker的ID
+ * @param cpu   Worker的CPU核心数
+ * @param mem   Worker的内存大小
+ */
+case class WorkerHeart(workid : String,cpu : Int,mem : Int)
+```
+
+- #### WorkerInfo - Worker
+
+```scala
+/***
+ * Worker的信息
+ * @param workerid ID
+ * @param cpu   CPU数量
+ * @param mem   内存大小
+ * @param HearTime  心跳时间
+ */
+case class WorkerInfo(var workerid : String,var cpu:Int,var mem:Int,var HearTime:Long)
+```
+
+## 4.Worker开始
+
+1. #### 定义成员变量
+
+```scala
+/**
+ * @param MasterActorRef -> 对于主Master
+ * @param WorkerID -> Worker的ID
+ * @param cpu -> CPU的核心数
+ * @param mem -> 内存的大小
+ * @param cpuList -> CPU核心数的定义
+ * @param memList -> 内存大小的定义
+ */
+private :
+var MasterActorRef: ActorSelection = _;
+var WorkerID : String = _;
+var cpu : Int = _;
+var mem : Int = _;
+val cpulist : List[Int] = List(1,2,3,4,5,6,7,8,9,10);
+val memlist : List[Int] = List(512,1024,1536,2048);
+```
+
+2.重写preStart()方法，在里面进行初始化并发送Worker基本信息
+
+```scala
+override def preStart() = {
+    MasterActorRef = context.system.actorSelection("akka.tcp://MasterSystem@127.0.0.1:7666/user/Master");
+    WorkerID = UUID.randomUUID().toString;
+    cpu = cpulist(Random.nextInt(cpulist.length));
+    mem = memlist(Random.nextInt(memlist.length));
+    //创建注册信息
+    var WorkerInfo = MessgPackage.WorkerMessgPackage(WorkerID,cpu,mem);
+    //发送注册信息
+    MasterActorRef ! WorkerInfo;
+}
+```
+
+## 5.Master接收
+
+```scala
+    var WorkerMap : mutable.HashMap[ActorRef, WorkerInfo] = new HashMap[ActorRef,WorkerInfo]();
+    override def receive: Receive =
+    {
+        //接收注册信息
+        case MessgPackage.WorkerMessgPackage(id,cpu,mem) =>{
+            println(s"接收到Worker注册信息${id} + ${cpu} + ${mem}")
+            WorkerMap += sender -> WorkerInfo(id,cpu,mem,new Date().getTime)
+            sender ! MessgPackage.MessgSuccessPackage;
+            println(WorkerMap);
+        }
+    }
+```
+
+## 6.Worker心跳
+
+- ##### 在配置文件中增加自定义字段 => worker.heartbeat.interval = 5
+
+1. ##### 编写工具类读取自定义数据
+
+2. ##### 创建心跳消息
+
+3. ##### Worker接收到注册成功后定时发送
+
+4. ##### Master收到，更新
+
+5. ##### 启动
+
+### 工具类读取
+
+- ### 内置方法
+
+```scala
+private val config = ConfigFactory.load();
+var `worker.heartbeat.interval` : Int = config.getInt("worker.heartbeat.interval");
+```
+
+- ### 自己写的方法:
+
+```scala
+/**
+ *
+ * @param file 文件路径
+ * @return 返回-1无 否则返回值
+ */
+def FileConfigHeart(file : File):Int ={
+    //读取文件
+    var source = Source.fromFile(file);
+    //获取字段 行读取
+    var stringInter = source.getLines();
+    while (stringInter.hasNext)
+    {
+        var str = stringInter.next();
+        //判断配置行
+        if(str.startsWith("worker.heartbeat.interval")){
+            //最后一个字符为配置值
+            val strings = str.split("=");
+            //stringsub也可以截取字符
+            return strings(1).trim.toInt;
+        }
+    }
+    -1
+}
+```
+
+### 创建 发送 心跳
+
+- ##### ~~定义一个成员变量 用来判断是否注册成功~~
+
+- ~~在Worker的receive方法的接收注册回执的匹配内设置为true~~
+
+  ```scala
+  private var hand = false;
+  ```
+
+- ##### 创建并心跳包
+
+  ```scala
+  case MessgPackage.MessgSuccessPackage =>{
+      println("Worker已经注册成功");
+  
+      //导入定时器的隐式包
+      import scala.concurrent.duration._
+      import context.dispatcher
+      //后缀顶级语句的包
+      import scala.language.postfixOps
+      //创建定时任务，马上发送，间隔设置时间
+      context.system.scheduler.schedule(0 seconds,ConfigUtils.`worker.heartbeat.interval` seconds)(
+          //发送包
+          MasterActorRef ! MessgPackage.WorkerHeart(WorkerID,cpu, mem)
+      );
+  }
+  ```
+
+​	以上写法已过时
+
+1. ```scala
+   import scala.concurrent.duration._
+   import scala.language.postfixOps
+   import scala.concurrent.ExecutionContext.Implicits.global
+   context.system.scheduler.scheduleAtFixedRate(
+       //初始多久发
+       initialDelay = 0.seconds,
+       //间隔多久发
+       interval = ConfigUtils.`worker.heartbeat.interval`.seconds,
+       //发给谁
+       receiver = sender,
+       //消息内容
+       message = MessgPackage.WorkerHeart(WorkerID, cpu, mem)
+       //线程池  谁发过去的
+   )(global, Actor.noSender)
+   ```
+
+   
+
+## Master处理心跳包
+
+- 在MasterActor下添加如下代码
+
+```scala
+case MessgPackage.WorkerHeart(id,cpu,mem) =>{
+    WorkerMap(sender) = WorkerInfo(id,cpu,mem,new Date().getTime)
+}
+```
+
+## Master处理超时Worker
+
+自定义两条超时配置
+
+```scala
+master.check.heartbeat.interval = 6
+master.check.heartbeat.timeout = 15
+```
+
+定义一个单例对象 获取配置
+
+```scala
+object ConfigUilt
+{
+    //master.check.heartbeat.interval = 6
+    //master.check.heartbeat.timeout = 15
+    private var config = ConfigFactory.load();
+    def interval = {
+          (config.getInt("master.check.heartbeat.interval"),config.getInt("master.check.heartbeat.timeout"));
+    }
+}
+```
+
+- #### 重写preStart方法，在一开始就开始检测心跳等值
+
+```scala
+import scala.concurrent.duration.DurationInt
+import akka.dispatch.ExecutionContexts.global
+override def preStart()={
+    //context.system.actorSelection("akka://MasterSystem/user/Master")
+    //参数 开始 多久一次 发给谁 发什么(线程池，谁发的)
+    context.system.scheduler.scheduleAtFixedRate(0.seconds,ConfigUilt.interval._1.seconds,MasterMain.master,"心跳")(global, Actor.noSender);
+}
+```
+
+- #### 在receive重写方法中接收"心跳"
+
+```scala
+case "心跳" =>{
+    if(WorkerMap.size != 0){
+        for((k,v) <- WorkerMap){
+             //var e = new LocalDateTime();
+            //判断超时
+            if((new Date().getTime) - WorkerMap(k).HearTime > (ConfigUilt.interval._2 * 1000)){
+                println((new Date().getTime) - WorkerMap(k).HearTime + "," + (ConfigUilt.interval._2 * 1000))
+                println(s"死亡Worker : ${WorkerMap(k).workerid}");
+                //超时删除
+                WorkerMap -= k;
+            }
+        }
+        //返回Iterable特质
+        var inte = WorkerMap.values;
+        //排序
+        inte = inte.toList.sortWith((l1 : WorkerInfo,l2:WorkerInfo) =>{
+            l1.mem > l2.mem
+        })
+        //输出
+        inte.foreach((f : WorkerInfo) =>
+        {
+            println(f + "当前长度 : "  + WorkerMap.size)
+        });
+    }
+}
+```
+
+
+
+
+
+
+
+![image-20241021162447824](C:\Users\Administrator\AppData\Roaming\Typora\typora-user-images\image-20241021162447824.png)
+
+## 全部代码
+
+- ### MasterMain
+
+```scala
+import akka.actor.{ActorRef, ActorSystem, Props}
+import com.typesafe.config.ConfigFactory
+
+object MasterMain
+{
+    var master : ActorRef =_;
+    //akka://MasterSystem@127.0.0.1:7666
+    def main(args: Array[String]): Unit =
+    {
+        //创建ActorSystem用来管理所有自定义Actor
+        var MasterSystem = ActorSystem.create("MasterSystem", ConfigFactory.load());
+        //通过MasterSystem管理Master
+        master = MasterSystem.actorOf(Props(Master),"Master");
+    }
+}
+```
+
+- ### Master
+
+```scala
+import akka.actor.{Actor, ActorRef, ActorSystem}
+import akka.dispatch.ExecutionContexts.global
+
+import java.text.SimpleDateFormat
+import java.util.Date
+import scala.collection.mutable
+import scala.collection.mutable._
+import scala.concurrent.duration.DurationInt
+import java.time._
+
+object Master extends Actor
+{
+    var WorkerMap : mutable.HashMap[String, WorkerInfo] = new HashMap[String,WorkerInfo]();
+
+    override def preStart()={
+        //context.system.actorSelection("akka://MasterSystem/user/Master")
+        context.system.scheduler.scheduleAtFixedRate(0.seconds,ConfigUilt.interval._1.seconds,MasterMain.master,"心跳")(global, Actor.noSender);
+    }
+
+    override def receive: Receive =
+    {
+        //接收注册信息
+        case MessgPackage.WorkerMessgPackage(id,cpu,mem) =>{
+            println(s"接收到Worker注册信息${id} + ${cpu} + ${mem}")
+            WorkerMap += id -> WorkerInfo(id,cpu,mem,new Date().getTime)
+            sender ! MessgPackage.MessgSuccessPackage;
+            println(WorkerMap);
+        }
+        case MessgPackage.WorkerHeart(id,cpu,mem) =>{
+            WorkerMap(id) = WorkerInfo(id,cpu,mem,new Date().getTime)
+            println(s"收到心跳消息:${sender}");
+        }
+        case "心跳" =>{
+            if(WorkerMap.size != 0){
+                for((k,v) <- WorkerMap){
+//                    var e = new LocalDateTime();
+                    if((new Date().getTime) - WorkerMap(k).HearTime > (ConfigUilt.interval._2 * 1000)){
+                        println((new Date().getTime) - WorkerMap(k).HearTime + "," + (ConfigUilt.interval._2 * 1000))
+                        println(s"死亡Worker : ${WorkerMap(k).workerid}");
+                        WorkerMap -= k;
+                    }
+                }
+                //返回Iterable特质
+                var inte = WorkerMap.values;
+                //排序
+                inte = inte.toList.sortWith((l1 : WorkerInfo,l2:WorkerInfo) =>{
+                    l1.mem > l2.mem
+                })
+                //输出
+                inte.foreach((f : WorkerInfo) =>
+                {
+                    println(f + "当前长度 : "  + WorkerMap.size)
+                });
+            }
+        }
+    }
+}
+```
+
+
+
+- ### WorkerMain
+
+```scala
+import akka.actor.{ActorRef, ActorSystem, Props}
+import com.typesafe.config.ConfigFactory
+
+import java.io.File
+
+object Worker_Main
+{
+    var worker : ActorRef = _;
+    //akka://ActorSystem@127.0.0.1:7668
+    def main(args: Array[String]): Unit =
+    {
+        //创建ActorSystem用来管理所有自定义Actor
+        val ActorSystemSystem = ActorSystem.create("ActorSystem", ConfigFactory.load());
+        var worker = ActorSystemSystem.actorOf(Props(Worker),"Worker");
+    }
+}
+```
+
+- ### Worker
+
+```scala
+import akka.actor.{Actor, ActorSelection}
+
+import java.lang.invoke.MethodHandles.loop
+import java.util.UUID
+
+import scala.util.Random
+
+object Worker extends Actor
+{
+    //步骤
+    //1.定义成员变量
+    /**
+     * @param MasterActorRef -> 对于主Master
+     * @param WorkerID       -> Worker的ID
+     * @param cpu            -> CPU的核心数
+     * @param mem            -> 内存的大小
+     * @param cpuList        -> CPU核心数的定义
+     * @param memList        -> 内存大小的定义
+     */
+    private var MasterActorRef: ActorSelection = _;//context.actorSelection("akka.tcp://MasterSystem@127.0.0.1:7666/user/Master");
+    private var WorkerID : String = _;
+    private var cpu : Int = _;
+    private var mem : Int = _;
+    private val cpulist : List[Int] = List(1,2,3,4,6,8);
+    private var memlist : List[Int] = List(512,1024,1536,2048);
+    override def preStart() = {
+        MasterActorRef = context.system.actorSelection("akka://MasterSystem@127.0.0.1:7666/user/Master");
+        WorkerID = UUID.randomUUID().toString;
+        cpu = cpulist(Random.nextInt(cpulist.length));
+        mem = memlist(Random.nextInt(memlist.length));
+        //创建注册信息
+        var WorkerInfo = MessgPackage.WorkerMessgPackage(WorkerID,cpu,mem);
+        //发送注册信息
+        MasterActorRef ! WorkerInfo;
+    }
+
+//    private var hand = false;
+    override def receive: Receive =
+    {
+        case MessgPackage.MessgSuccessPackage =>{
+            println("Worker已经注册成功");
+
+            import scala.concurrent.duration._
+            import scala.language.postfixOps
+            import scala.concurrent.ExecutionContext.Implicits.global
+
+            context.system.scheduler.scheduleAtFixedRate(
+                initialDelay = 0.seconds,
+                interval = ConfigUtils.`worker.heartbeat.interval`.seconds,
+                receiver = sender,
+                message = MessgPackage.WorkerHeart(WorkerID, cpu, mem)
+            )(global, Actor.noSender)
+        }
+    }
+}
+```
+
 <!--stackedit_data:
-eyJoaXN0b3J5IjpbLTE1MDIzMzU4MDFdfQ==
+eyJoaXN0b3J5IjpbMTU4Nzk1MzU0MCwtMTUwMjMzNTgwMV19
 -->

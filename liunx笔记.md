@@ -1,4 +1,3 @@
-
 # 目录
 
 - #### 只有一个树，所有文件的顶级目录都是 /
@@ -233,7 +232,3 @@ case $1 in #条件判断 $1 是用户根在脚本后的一个参数
 esac
 ```
 
-
-<!--stackedit_data:
-eyJoaXN0b3J5IjpbMjIxODMzMzQxXX0=
--->

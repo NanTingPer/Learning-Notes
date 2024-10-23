@@ -280,6 +280,43 @@ public class Test1
 
 
 
+# 7.x 消费者代码实现
+
+```java
+import org.apache.kafka.clients.consumer.*;
+import org.apache.kafka.common.serialization.StringDeserializer;
+
+import java.time.Duration;
+import java.util.*;
+
+public class 消费者
+{
+    public static void main(String[] args)
+    {
+        Map<String,Object> config = new HashMap<String,Object>();
+        config.put(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, "localhost:9092");
+        config.put(ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG, StringDeserializer.class);
+        config.put(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, StringDeserializer.class);
+        //设置消费者组
+        config.put(ConsumerConfig.GROUP_ID_CONFIG, "group1");
+
+        KafkaConsumer<String,String> consumer = new KafkaConsumer<>(config);
+        //指定要消费的主题
+        consumer.subscribe(Arrays.asList("topic1"));
+        //100毫秒
+        while(true)
+        {
+            ConsumerRecords<String, String> poll = consumer.poll(Duration.ofMillis(100));
+            for (ConsumerRecord<String, String> record : poll){
+                System.out.println(record.value());
+            }
+        }
+    }
+}
+```
+
+
+
 # 7.1Topics代码创建实现
 
 ```java
@@ -448,11 +485,49 @@ public class Proeter implements Partitioner
 
 - ##### log 数据文件 20位长度的文件夹 文件名就是偏移量
 
-- ##### index 偏移量的索引文件
+- ##### index 偏移量的索引文件 => 定位数据在文件中的位置 
+
+  - ##### 称为稀疏索引文件
 
 - ##### timeindex 时间索引量
 
-##### 
+## 8.3刷写方式
+
+1. ##### 文件日志消息(LogSegment) 流转 -> HeapByteBuffer -> LogFile(日志文件)
+
+2. ##### 文件消息日志  达到4k-> MappedByteBuffer(相对偏移量) <---->IndexFile
+
+
+
+- ### UnifiedLog
+
+  - ##### ConcurrentSkipListMap(jdk1.6)跳跃表
+
+    - ##### LogSegment(带Long标记 -> 起始偏移量)
+
+      - ##### offset = 0 (0123都在这个段)
+
+    - ##### LogSegment(带Long标记 -> 起始偏移量)
+
+      - ##### offset = 4(4567都在这个段)
+
+    - ##### LogSegment(带Long标记 -> 起始偏移量)
+
+      - ##### offset = 8(8,9,10,11都在这个段)
+
+  - ### 传入7 找比7小的最大值
+
+  - 找到索引文件 ⬇
+
+  - LogSegment(文件段)
+
+    - index File  ➡  (二分法)offset=7.pos=95➡offset=6,offset=7(关联每一个数据) 
+    - Log File
+    - TimeIndex File
+
+  
+
+
 
 # 9.生产效率 自定义发送
 
@@ -777,6 +852,20 @@ catch(Ex e){
 
     - ##### OSR 表示Follower与Leader副本同步时，延迟过多的副本。
 
+# 3.0.1数据同步
+
+- 数据 (4条)➡Leader(4条)
+- Follower-1➡Leader(2条)
+- Follower-2➡Leader(3条)
+
+> #### 若Leader挂了
+
+> #### ISR => [L,F1,F2]
+
+- ####  F1成了Leader 可消费者本来要消费4条 现在只消费到了2条 
+
+  - ##### 水位线以下的 消费者才能看到 =>消费者能消费的最高位置 ⬇️
+
 # 3.1Follower故障处理
 
 - ##### LEO(Log End Offset) => 每个副本的最后一个offset LEO其实就是最新的offset + 1
@@ -787,19 +876,19 @@ catch(Ex e){
 >
 > ##### Leader
 >
-> ​			  	 			      HW			  LE0
+> ​			  	 		    HW			  LE0
 
 broker0 => 0	1	2	3	4	5	6	7
 
 > ##### Follower
 >
-> ​								HW	LEO
+> ​							HW  LEO
 
 broker1 => 0	1	2	3	4	5
 
 > ##### Follower
 >
-> ​								LEO（HW）
+> ​							LEO（HW）
 
 broker2 => 0	1	2	3	4
 
@@ -843,3 +932,191 @@ broker2 => 0	1	2	3	4
 - ##### leader.imbalance.check.interval.seconds
 
   - ##### 间隔时间 默认300秒
+
+# 3.3Leader切换过程
+
+- ISR[1,2,3]
+- 1挂掉 ⬇
+  - [2,3]
+- 1活⬇
+  - [2,3,1]
+
+# 3.4日志删除
+
+## 3.4.1kafka删除
+
+- #### 直接物理删除kafka数据
+
+  - ##### 启动后文件会自动创建回去(根据元数据) 内部数据空了
+
+- #### 在运行时物理删除kafka数据
+
+  - ##### 删除后index和timeindex无法删除 因为kafka是使用索引映射的
+
+## 3.4.2
+
+- ### 默认基于时间 也可以设置基于 数据大小
+
+- ##### 删除方式默认delete  => log.cleanuo.policy = delete
+
+- ##### 压缩 compact => 只适用于保存数据最新状态
+
+# 3.5消费者的数据拉取
+
+- ### Kafka默认将数据拉取的偏移量设置为LEO 即水位线
+
+- ##### 消费者每次挂掉后会自己保存当前读取的数据偏移量 所以每次运行要读取以前的数据 需要重定义消费者组名(offset = 偏移量)
+
+  - 偏移量默认5秒保存一次
+
+- AUTO_OFFSET_RESET_CONFIG,"earliest" => 从头开始消费
+
+- 自定义偏移量
+
+  ```java
+  //自定义数据偏移量
+  //用来决定退出循环
+  boolean flag = true;
+  while (flag)
+  {
+    //拉取
+    consumer.poll(Duration.ofMillis(100));
+    //获取当前消费者已分配的分区列表
+    Set<TopicPartition> 分区表 = consumer.assignment();
+    //不为空 并且 包含元素 isEmpty用于判断是否包含元素，不包含返回true 所以需要取反
+    if(分区表 != null && !分区表.isEmpty())
+    {
+        for (TopicPartition topicPartition : 分区表)
+        {
+            //获取分区所属主题名称
+            if(topicPartition.topic().equals("topic1"))
+            {
+                //将消费者的数据偏移量设置为指定值
+                consumer.seek(topicPartition,1);
+                flag = false;
+            }
+        }
+    }
+  }
+  ```
+
+## 3.5.1手动提交偏移量
+
+> enable_auto_commit_config,false
+
+```java
+消费者.commityAsync => 异步提交
+消费者.commitySync => 同步提交 (会造成阻塞)
+```
+
+## 3.5.2事务的隔离级别
+
+> ISOLATION_LEVEL_CONFIG, read_commited 只消费提交成功的
+
+## 3.5.3消费者
+
+- ##### 一个消费者组中的成员，不能同时消费同一个分区
+
+- ##### 一个消费者组中的成员，可以同时消耗多个分区
+
+- ##### 设置消费者组 => GROUP_ID_CONFIG,"组名称"
+
+  - ##### 消费者可以多，用作冗余
+
+
+
+
+
+- ##### 消费者组和主题的关系在内置的主题中_consumer_offsets
+
+## 3.5.3消费者策略（PATITION）
+
+- ### 轮询 不均衡 RoundRobinAssignor
+
+  - 每个消费者组中的消费者都会含有一个自动生成的UUID作为memberid
+  - 将每个消费者按照memberid进行排序，所有member消费的主题分区根据主题名称进行排序
+
+- ### 范围 RangeAssognor
+
+  - ##### 按照每个topic的partition数量计算出每个消费者应该分配的分区数量，然后分配，分配原则就是一个主题的分区尽可能的平均分，如果不能平均分，那就按顺序向前补齐。
+
+    - ##### 1,2,3,4,5=>2个消费者 =>123,45
+
+- ### 粘性分区 StickyAssignor
+
+  - ##### 第一次分配，保存分配给自己的分区信息，如果有消费者加入或者退出，在进行分区再分配的时候，尽可能保证消费者原有的分区不变，重新对加入或者退出的消费者的分区进行分配
+
+- ### 改良粘性分区CooperativeStickyAssignor
+
+  - 引入 EAGER 协议
+
+# 3.6消费者请求流程
+
+> #### 每有一个成员加入 所有成员都要同步
+
+- ##### Consumer - 1
+
+- ##### 消费者 -> FIND_COORDINATOR(查找消费组管理器) Broker
+
+- ##### Broker -> group.id.hashCode % 50  消费者
+
+- ##### 消费者 -> JOIN_GROUP  / GCA(GroupCoordinatorAdapter) 加入组 成为Leader(必定)
+
+- ##### 消费者 -> GCA SYNC_GROUP同步
+
+
+
+- ##### Consumer - 2
+
+- ##### 消费者 -> 查找组管理器
+
+- ##### Broker -> 返回ID (消费者)
+
+- ##### 消费者 -> 加入组 成为Leader(可能)
+
+- ##### 消费者 -> 同步策略
+
+# 3.7集群脑裂
+
+> #### 老Controller因为网络波动被踢出，然后出了新的Controller，没一会老Controller活了，他不知道自己已经不是controller了，这时候就有两个controller在给成员发同步信息
+
+- #### epoch纪元 ->  => controller_epoch 存储Broker-id
+
+# 3.8零拷贝
+
+> #### Page Cache 页缓存
+>
+> #### Buffer Cache 块缓存 	可以写到不同的设备中
+>
+> ##### 页缓存更改 会直接同步到块缓存
+
+- #### BC => 写缓存 避免频繁写磁盘 提高写文件效率
+
+- #### PC => 读缓存 避免频繁读磁盘 提高读文件效率
+
+- Broker
+  - In Buffer输入缓冲流
+  - Out Buffer输出缓冲流
+
+
+
+1. ## 数据消费的基本流程
+
+- ##### 文件 -> (操作系统)页缓存 -> IN Buffer -> Out Buffer -> (操作系统)块缓存 -> 本地/网络
+
+  - 操作系统属于内核态(CPU状态)
+  - Broker属于用户态(CPU状态)
+
+
+
+## Kafaka
+
+> FileChannel.transforTo
+
+- 页缓存 -> 特权指令 -> 块缓存
+
+# 3.9集群部署
+
+- broker.id
+- advertised.listeners=PLAINTEXT://主机名:9092
+- zookeeper.connect=主机名1:2181,主机名xxx:2181.../kafka

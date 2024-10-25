@@ -2,6 +2,27 @@
 
 clear清屏
 
+CTRL + D复制当前行内容到下一行
+
+ALT拉行统一编辑
+
+> #### Lambda表达式原则
+
+- ##### 方法明确有返回值 可以省略return
+
+- ##### 可以换行表示代码逻辑 ;可以省略
+
+- ##### 如果逻辑只有一行，大括号可以省略
+
+- ##### 参数只有一个 小括号可以省略
+
+- ##### 参数在逻辑中只使用了一次(需要有对象来实现功能)
+
+- IN -> OUT 
+
+  - IN : 传入的值
+  - OUT : 返回的值
+
 # 1.0概述
 
 > ##### 分布式计算的核心 : 切分数据 减少数据规模
@@ -323,6 +344,8 @@ data.forEach(System.out::println);
 > - ##### RDD的组合
 >
 >   - ##### 两根管子对接
+>   
+> - 对于Max操作 ，先取到每个区的Max 再去每个区的最大取MAX
 
 # 3.2RDD的文件分区
 
@@ -433,6 +456,499 @@ data.forEach(System.out::println);
 # 3.5RDD功能
 
 > ### String.trim只能去掉半角 不能去掉全角
+>
+> RDD方法两大类
+>
+> - RDD有很多的方法可以将数据向下流转，称之为转换
+>   - Transformation 转换算子(转换方法)
+>   - 算子 : 认知心理学 operate (操作,方法)
+>     - 问题(初始) ->  算子 ->  问题(中间)  -> 算子  -> 问题(状态)
+> - RRD有很多的方法可以控制数据流转，称之为行动
+>   - Action 行动算子(行动方法)
+>
+> 学习重点 : 
+>
+> 1. 名字
+> 2. 输入 IN
+> 3. 返回 OUT
+
+- #### parallelize => 把集合用作数据源
+
+> ## RDD方法处理数据的分类
+>
+> - 单值 ->  1, "abc" , new User() , new ArrayList() ,(Key,Value)
+> - 键值 -> KV => (Key,Value) 不当整体  Entry(键值对)
+
+- ## KV对
+
+> #### 元组 => 将无关数据封装在一起，形成一个整体，称之为元素的组合
+>
+> #### 如果元组中的数据只有2个，称之为对偶元组，也称为键值对
+
+## 3.5.1 map方法
+
+> #### 翻译 v. 使变换 => 给一个类型 得到另一个类型
+>
+> #### 			=> 给一个数据 得到另一个数据
+>
+> 在数据处理过程中 一般不会改变原始数据
+>
+> 作用 : 传入A转换为B，不限制A和B的关系
+
+### 3.5.1.1map方法 - 原理
+
+> #### 一个RDD只做一件事 => 第一个RDD对接数据源
+>
+> ##### 新RDD内数据的分区数量和旧的RDD的数量保持一致
+
+> ##### 数据流转过程中，数据所在分区会如何变化
+>
+> - ##### 默认情况下，数据流转所在的分区编号不变
+>
+> ##### 数据流转的顺序
+>
+> - 与kafka一样，单分区内有序，多分区无序
+> - 一个数据把一个RDD跑完后，不会等待其他数据也把这个RDD跑完，而是直接流往下一个RDD
+
+
+
+- parallelize("1,2,3,4",2) .map(num->num*2);
+
+
+
+## 3.5.2 filter过滤
+
+> ##### RDD可以根据指定的过滤规则对数据源中的数据进行筛选过滤
+>
+> ##### 如果满足规则，保留数据，不满足规则，直接丢弃
+>
+> 在执行过程中可能会产生数据倾斜
+
+
+
+## 3.5.3flatmap 扁平化映射
+
+> #### 数据扁平化映射
+>
+> #### 将整体数据拆分为个体来使用
+
+```java
+//对接内存数据(并行)
+sc.parallelize(Arrays.asList(Arrays.asList(1, 2, 3, 4), Arrays.asList(5, 6, 7, 8)))
+    //进行扁平化
+        .flatMap((FlatMapFunction<List<Integer>, Integer>) integers ->
+        {
+            //进行映射
+            List<Integer> list = new ArrayList<>();
+            integers.forEach(unm -> list.add(unm + 2));
+            return list.iterator();
+        })
+        .collect()
+        .forEach(System.out::println);
+```
+
+> #### 拆分文本字符 空格隔开
+
+```java
+//创建JavaSpark运行环境
+JavaSparkContext sc = new JavaSparkContext(conf);
+//对磁盘文件进行对接
+sc.textFile("src/main/java/Spark_RDD/Spark.txt")
+    //扁平化映射
+        .flatMap((FlatMapFunction<String, String>) s ->
+        {
+            //扁平化
+            ArrayList<String> arr = new ArrayList<>();
+            for (String string : s.split(" "))
+            {
+                arr.add(string);
+            }
+            return arr.iterator();
+        })
+        .collect()
+        .forEach(System.out::println);
+sc.close();
+```
+
+
+
+## 3.5.4groupBy分组
+
+> #### 返回组对应的名称
+>
+> 组名称一样的就将数据存入组
+>
+> 默认情况下，数据处理后，所在分区不会发生改变，但是groupBy除外
+>
+> Spark在数据处理中，要求同一个组的数据必须在同一个分区中
+>
+> 所以分组操作会将数据分区打乱重新组合，这个操作在Spark中称为Shuffle
+
+> #### 有第二个参数 可以改变分区数 	
+>
+> ### 返回值是一个KV类型
+
+
+
+```java
+sc.textFile("src/main/java/Spark_RDD/Spark.txt")
+        .flatMap((FlatMapFunction<String, String>) s ->
+        {
+            ArrayList<String> list = new ArrayList<>();
+            for (String string : s.split(" "))
+            {
+                list.add(string);
+            }
+            return list.iterator();
+        })
+        .groupBy((Function<String, String>) s -> s.substring(0, 1))
+        .collect()
+        .forEach(System.out::println);
+sc.close();
+```
+
+> 输出
+
+```tex
+(w,[w2g])
+(爱,[爱无关给])
+(a,[a2wf, awfawg鸟我哈, aw, aw2g, aw2g, a2])
+(挖,[挖坟爱无关])
+(f,[f2aw])
+(该,[该模块我])
+(阿,[阿文])
+(g,[g2a])
+```
+
+```java
+sc.textFile("src/main/java/Spark_RDD/Spark.txt")
+        .flatMap((FlatMapFunction<String, String>) s ->
+        {
+            ArrayList<String> list = new ArrayList<>();
+            for (String string : s.split(" "))
+            {
+                list.add(string);
+            }
+            return list.iterator();
+        })
+        .groupBy((Function<String, String>) s -> s.substring(0, 1))
+        .map((Function<Tuple2<String, Iterable<String>>, Tuple2<String, Integer>>) stringIterableTuple2 ->
+            {
+                int a =0;
+                Iterator<String> iterator = stringIterableTuple2._2.iterator();
+                while (iterator.hasNext())
+                {
+                    iterator.next();
+                    a++;	
+                }
+                return new Tuple2<>(stringIterableTuple2._1, a);
+            })
+    	.collect()
+        .forEach(System.out::println);
+sc.close();
+```
+
+> 输出
+
+```
+(w,1)
+(爱,1)
+(a,6)
+(挖,1)
+(f,1)
+(该,1)
+(阿,1)
+(g,1)
+```
+
+## Shuffle
+
+> RDD对象不能保存数据
+>
+> 当前groupBy操作会将数据保存到磁盘文件中，保证数据全部分组后执行后续操作
+>
+> Shuffle操作一定会落盘
+>
+> Shuffle操作有可能会导致资源浪费
+>
+> - 原本3个分区，但是分组后有一个空区
+>
+> Spark中含有Shuffle操作的方法都有改变分区的能力
+>
+> RDD的分区和Tast之间有关系 (一个RDD就是一个Tast)
+>
+> Shuffle会将流程一分为二 一部分写盘 一部分读盘
+>
+> - 写磁盘没完成，不允许读磁盘
+
+## 3.5.5 Distinct 去重
+
+> 分布式去重 => 采用了分组  + shuffle 的处理方式
+
+## 3.5.6 sortBy排序
+
+> sortBy 方法 : 按照指定的排序规则对数据进行排序
+>
+> sortBy方法可以传递三个参数
+>
+> - 第一个参数表示排序规则 :
+>   - Spark会为每一个数据增加一个标记，然后按照标记对数据进行排序
+> - 第二个参数表示排序的方式 : 升序 true 降序 false
+> - 第三个表示分区数量(shuffle)
+>
+> 
+
+
+
+# 3.6KV类型的处理
+
+## 3.6.1初识 KV类型
+
+```java
+//创建元组
+Tuple2<String,Integer> t1 = new Tuple2<>("a",1);
+Tuple2<String,Integer> t2 = new Tuple2<>("b",2);
+Tuple2<String,Integer> t3 = new Tuple2<>("c",3);
+//创建元组集合
+List<Tuple2<String,Integer>> listTuple = new ArrayList<>();
+listTuple.add(t1);
+listTuple.add(t2);
+listTuple.add(t3);
+//构建RDD
+JavaSparkContext jsc = new JavaSparkContext(conf);
+jsc.parallelizePairs(listTuple)
+        //只对值做操作
+        .mapValues(tul1 ->tul1 * 2)
+        .collect()
+        .forEach(tuple ->{
+            System.out.print(tuple._1());
+            System.out.println(tuple._2());
+        });
+//释放资源
+jsc.close();
+```
+
+> #### 输出
+
+```json
+a2
+b4
+c6
+```
+
+
+
+## 3.6.2单值类型转换KV
+
+> #### maptoPair
+
+```java
+//构建Spark运行环境
+JavaSparkContext jsc = new JavaSparkContext(conf);
+//获取RDD
+jsc.parallelize(Arrays.asList(1,2,3,4,5,7))
+    //转换为KV类型
+        .mapToPair(num ->{
+            //可自定义返回
+            return new Tuple2<>(num,num * 2);
+        })
+    //对值乘以2
+        .mapValues(num -> num * 2)
+    //捕获数据
+        .collect()
+    //遍历输出
+        .forEach(System.out::println);
+//释放资源
+jsc.close();
+```
+
+> ### groupBy
+
+```java
+//构建Spark运行环境
+JavaSparkContext jsc = new JavaSparkContext(conf);
+List<Integer> intList = Arrays.asList(1,2,3,4,5,7);
+//获取RDD
+jsc.parallelize(intList)
+    //奇数偶分组
+   .groupBy(num -> num % 2)
+    //区内求和
+   .mapValues(num ->{
+       Iterator<Integer> iterator = num.iterator();
+       int numsub = 0;
+       while (iterator.hasNext())
+       {
+           numsub += iterator.next();
+       }
+       return numsub;
+   })
+  .collect().forEach(System.out::println);
+//释放资源
+jsc.close();
+```
+
+```json
+(0,6)
+(1,16)
+```
+
+## 3.6.3WordCount
+
+```java
+JavaSparkContext sc = new JavaSparkContext(conf);
+//获取文件源
+sc.textFile("src/main/java/Spark_RDD/KVClass/Word.txt")
+  //切分
+        .flatMap(strs -> Arrays.asList(strs.split(" ")).iterator())
+    //分组
+        .groupBy(words -> words)
+    //计数
+        .mapValues(strnum ->{
+            int count = 0;
+            Iterator<String> iterator = strnum.iterator();
+            while (iterator.hasNext())
+            {
+                iterator.next();
+                count ++;
+            }
+            return count;
+        })
+    //取出
+        .collect()
+        .forEach(System.out::println);
+sc.close();
+```
+
+## 3.6.4groupByKey
+
+> #### 强制按照Key分组
+>
+> 
+>
+> #### 按照K对V进行分组 只是把V放一块，而不是把数据放一块
+
+```java
+//创建元组并行数据源
+sc.parallelizePairs(Arrays.asList(
+        new Tuple2<String, Integer>("a", 1),
+        new Tuple2<String, Integer>("b", 2),
+        new Tuple2<String, Integer>("b", 3),
+        new Tuple2<String, Integer>("a", 4)
+)).groupByKey().collect().forEach(System.out::println);
+```
+
+> 输出
+
+```json
+(a,[1, 4])
+(b,[2, 3])
+```
+
+## 3.6.5GroupByKey WordCount
+
+```java
+//创建配置文件
+SparkConf conf = new SparkConf();
+conf.setMaster("local[*]");
+conf.setAppName("WordCount_groupByKey");
+//创建JavaSpark环境
+JavaSparkContext sc = new JavaSparkContext(conf);
+//创建元组并行数据源
+sc.parallelizePairs(Arrays.asList(
+        new Tuple2<String, Integer>("a", 1),
+        new Tuple2<String, Integer>("b", 2),
+        new Tuple2<String, Integer>("b", 3),
+        new Tuple2<String, Integer>("a", 4)
+))
+    //按照Key进行分组
+    .groupByKey()
+    //求组元素数量
+    .mapValues(value ->
+    {
+        int a = 0;
+        Iterator<Integer> iterator = value.iterator();
+        while (iterator.hasNext())
+        {
+            iterator.next();
+            a ++;
+        }
+        return a;
+    }).collect()
+    .forEach(System.out::println);
+sc.close();
+```
+
+> #### 输出
+
+```json
+(a,2)
+(b,2)
+```
+
+
+
+## 3.6.6 reduceByKey(聚合 减少)
+
+> 计算的基本思想 => 永远都是两两相加
+
+```java
+//创建元组并行数据源
+sc.parallelizePairs(Arrays.asList(
+        new Tuple2<String, Integer>("a", 1),
+        new Tuple2<String, Integer>("b", 2),
+        new Tuple2<String, Integer>("b", 3),
+        new Tuple2<String, Integer>("a", 4)
+)).reduceByKey(new Function2<Integer, Integer, Integer>()
+{
+    @Override
+    public Integer call(Integer integer, Integer integer2) throws Exception
+    {
+        return integer + integer2;
+    }
+}).collect()
+  .forEach(System.out::println);
+sc.close();
+```
+
+> 简化
+
+```java
+//创建元组并行数据源
+sc.parallelizePairs(Arrays.asList(
+        new Tuple2<String, Integer>("a", 1),
+        new Tuple2<String, Integer>("b", 2),
+        new Tuple2<String, Integer>("b", 3),
+        new Tuple2<String, Integer>("a", 4)
+)).reduceByKey((num1,num2) -> num1 + num2).collect()
+  .forEach(System.out::println);
+sc.close();
+```
+
+> 
+>
+> num1是上一个聚合后的V num2是下一个等待被聚合的V
+
+
+
+## 3.6.7 sortByKey
+
+> 直接按照Key排序
+
+
+
+# 3.7优化shuffle
+
+> 1. 增加磁盘读写缓冲区
+> 2. 在不影响最终结果的情况下，磁盘的读写数据越少，性能越高
+
+
+
+> reduceByKey => 方法可以在shuffle之前，分区内进行预先聚合，减少落盘的数据量
+>
+> 如果遇见需要分组聚合的功能，优先采用reduceByKey
+>
+> - 预聚合 combine
+>   - 先在同区内将K一样的进行聚合
 
 
 
@@ -442,21 +958,6 @@ data.forEach(System.out::println);
 
 
 
-<!--~~<u>*1.0 Spark环境搭建*</u>~~-->
-
-## <!--~~<u>*1.1准备工作 Local-本地模式*</u>~~-->
-
-- ##### <!--~~<u>*保证有JDK(java1.8)*</u>~~-->
-
-- ##### <!--~~<u>*Windows(开发环境下)需要Scala Liunx不需要*</u>~~-->
-
-- ##### <!--~~<u>*Spark安装包*</u>~~-->
-
-### <!--~~<u>*1.2环境搭建*</u>~~-->
-
-- <!--~~<u>*解压 Spark*</u>~~-->
-- <!--~~<u>*更改名称 Spark*</u>~~-->
-- <!--~~<u>*运行 bash bin/spark-shell.sh*</u>~~-->
 
 
 
@@ -468,55 +969,90 @@ data.forEach(System.out::println);
 
 
 
-# <!--<u>~~*环境搭建*~~</u>-->
-
-## <!--<u>~~*本地环境搭建*~~</u>-->
-
-- #### <!--<u>~~*准备工作*~~</u>-->
-
-  - <!--<u>~~*安装JDK*~~</u>-->
-  - <!--<u>~~*Scala安装包 -- Windows*~~</u>-->
-  - <!--<u>~~*Spark安装包*~~</u>-->
-
-<!--<u>~~**~~</u>-->	
-
-- #### <!--<u>~~*操作*~~</u>-->
-
-  - <!--<u>~~*将安装包上传到node1*~~</u>-->
-  - <!--<u>~~*解压spark安装包*~~</u>-->
-
-  ##### <!--<u>~~*更改文件权限*~~</u>-->
-
-  <!--<u>~~*chown -R root 路径*~~</u>-->
-
-  <!--<u>~~*chgrp -R root 路径*~~</u>-->
-
-  - <!--<u>~~*更改长链接为软链*~~</u>-->
-
-  <!--<u>~~*ln -s 长名 软连*~~</u>-->
-
-- #### <!--<u>~~*解压操作*~~</u>-->
-
-  - <!--<u>~~*tar -zxvf 压缩包 -C 目录*~~</u>-->
-
-- #### <!--<u>~~*文件名称更改*~~</u>-->
-
-  - <!--<u>~~*mv 文件名 更改后*~~</u>-->
 
 
 
-- ### <!--<u>~~*文件提交与运行*~~</u>-->
-
-  - <!--<u>~~*--master 谁来提供资源*~~</u>-->
-  - <!--<u>~~*bin/spark-submit --class 类名 --master 运行环境(local本机) jar包路径*~~</u>--> 
 
 
 
-- ### <!--<u>~~*Yarn环境配置*~~</u>-->
 
-  - <!--<u>~~*/opt/module/spark-yarn/conf*~~</u>-->
-  - <!--<u>~~*在spark-env.sh最后面添加 YARN_CONF_DIR=/opt/module/hadoop/etc/hadoop*~~</u>-->
+- 
 
-# <!--<u>~~*Spark代码开发*~~</u>-->
+- <!--~~<u>*1.0 Spark环境搭建*</u>~~-->
 
-- ## <!--<u>~~*工程创建 - Manve*~~</u>-->
+- ## <!--~~<u>*1.1准备工作 Local-本地模式*</u>~~-->
+
+- - ##### <!--~~<u>*保证有JDK(java1.8)*</u>~~-->
+
+  - ##### <!--~~<u>*Windows(开发环境下)需要Scala Liunx不需要*</u>~~-->
+
+  - ##### <!--~~<u>*Spark安装包*</u>~~-->
+
+- ### <!--~~<u>*1.2环境搭建*</u>~~-->
+
+- - <!--~~<u>*解压 Spark*</u>~~-->
+  - <!--~~<u>*更改名称 Spark*</u>~~-->
+  - <!--~~<u>*运行 bash bin/spark-shell.sh*</u>~~-->
+
+- 
+
+- 
+
+- 
+
+- 
+
+- 
+
+- # <!--<u>~~*环境搭建*~~</u>-->
+
+- ## <!--<u>~~*本地环境搭建*~~</u>-->
+
+- - #### <!--<u>~~*准备工作*~~</u>-->
+
+    - <!--<u>~~*安装JDK*~~</u>-->
+    - <!--<u>~~*Scala安装包 -- Windows*~~</u>-->
+    - <!--<u>~~*Spark安装包*~~</u>-->
+
+- <!--<u>~~**~~</u>-->	
+
+- - #### <!--<u>~~*操作*~~</u>-->
+
+    - <!--<u>~~*将安装包上传到node1*~~</u>-->
+    - <!--<u>~~*解压spark安装包*~~</u>-->
+
+    ##### <!--<u>~~*更改文件权限*~~</u>-->
+
+    <!--<u>~~*chown -R root 路径*~~</u>-->
+
+    <!--<u>~~*chgrp -R root 路径*~~</u>-->
+
+    - <!--<u>~~*更改长链接为软链*~~</u>-->
+
+    <!--<u>~~*ln -s 长名 软连*~~</u>-->
+
+  - #### <!--<u>~~*解压操作*~~</u>-->
+
+    - <!--<u>~~*tar -zxvf 压缩包 -C 目录*~~</u>-->
+
+  - #### <!--<u>~~*文件名称更改*~~</u>-->
+
+    - <!--<u>~~*mv 文件名 更改后*~~</u>-->
+
+- 
+
+- - ### <!--<u>~~*文件提交与运行*~~</u>-->
+
+    - <!--<u>~~*--master 谁来提供资源*~~</u>-->
+    - <!--<u>~~*bin/spark-submit --class 类名 --master 运行环境(local本机) jar包路径*~~</u>--> 
+
+- 
+
+- - ### <!--<u>~~*Yarn环境配置*~~</u>-->
+
+    - <!--<u>~~*/opt/module/spark-yarn/conf*~~</u>-->
+    - <!--<u>~~*在spark-env.sh最后面添加 YARN_CONF_DIR=/opt/module/hadoop/etc/hadoop*~~</u>-->
+
+- # <!--<u>~~*Spark代码开发*~~</u>-->
+
+- - ## <!--<u>~~*工程创建 - Manve*~~</u>-->

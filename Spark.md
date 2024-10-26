@@ -1590,47 +1590,207 @@ class User implements Serializable {
 
 
 
+## 9.6 自定义SQL文(udf)
+
+> #### 用户自定义函数
+>
+> SparkSession.udf().register(函数名,逻辑,数据类型)
+
+```java
+//构建SparkSQL运行环境
+SparkSession sqLudf = SparkSession
+    .builder()
+    .master("local")
+    .appName("SQLudf")
+    .getOrCreate();
+//关联本地文件
+Dataset<Row> json = sqLudf.read().json("src/main/java/SparkSQL/Json.json");
+//创建视图
+json.createOrReplaceTempView("json");
+
+//创建自定义SQL文 -> 调用SparkSQL运行环境进行注册
+sqLudf.udf().register("addName", new UDF1<String, String>() {
+    @Override
+    public String call(String str) throws Exception
+    {
+        return "Name : " + str;
+    }
+}, StringType$.MODULE$); //DataTypes.StringType // StringType(静态导入包) Java
+
+//使用自定义的SQL文 (udf)
+String sqlstr ="select addName(name) from json";
+Dataset<Row> sql = sqLudf.sql(sqlstr);
+sql.show();
+sqLudf.close();
+```
 
 
 
+> ### 原理
+
+- #### UDF函数是每一行数据都会调用一次
+
+> ##### 数据表 -> 第一行 -> 进入函数体 -> 执行逻辑 -> 输出到空表(现在有内容了)
 
 
 
+## 9.7 自定义SQL文(UDAF)
+
+> #### UDAF函数是所有的数据产生一个结果数据
+>
+> ##### UDAF函数底层实现中需要存在一个缓冲区，用于临时存放数据
+>
+> ## 在定义UDAF继承类的时候指定泛型就不会出现全Object的情况了 <输入类型,缓冲区类型,输出类型>
+
+```java
+SparkSession.udf().register("函数名",functions.udaf())
+```
+
+> #### 重写说明
+
+- zero()  
+  - 初始化(对缓冲区进行初始化)
+  -  返回缓冲区的初始值
+- reduce(缓冲区内容,输入内容)
+  - 聚合(操作)
+  - 返回缓冲区内容  第二个参数是传入的内容
+- finish
+  - 最终结果（返回）
+  - 传入的是合并后的缓冲区
+- marge
+  - 合并缓冲区(分布式)
+  - 两个参数都是缓冲区的内容
+  - 返回缓冲区
 
 
 
+> 实现
+>
 
+> ### 主函数
 
+```java
+public class SQL_UDAF_2024_10_26_18
+{
+    public static void main(String[] args)
+    {
+        SparkSession sparkSession = SparkSession
+            .builder()
+            .master("local[*]")
+            .appName("SQLUDAF")
+            .getOrCreate();
+        //链接本地数据
+        Dataset<Row> json = sparkSession.read().json("src/main/java/SparkSQL/Json.json");
+        //视图化
+        json.createOrReplaceTempView("json");
+        //注册UDAF
+        sparkSession.udf().register("AvgAge",functions.udaf(new SQLUDAF_AvgAge(),Encoders.LONG()));
+        //计算平均值
+        sparkSession.sql("select AvgAge(age) from json").show();
+        sparkSession.close();
+    }
+}
+```
 
+> ### UDAF实现
 
+```java
+package SparkSQL;
+import org.apache.spark.sql.Encoder;
+import org.apache.spark.sql.Encoders;
+import org.apache.spark.sql.expressions.Aggregator;
+class SQLUDAF_AvgAge extends Aggregator
+{
+    @Override
+//初始化缓冲区
+    public Object zero()
+    {
+        return new SQLUDAF_UserDefClass(0L, 0L);
+    }
+    @Override
+//聚合
+    public Object reduce(Object b, Object a)
+    {
+        //由于传入的是Object，在明确知道类型的情况下进行转换
+        //b是缓冲区的数据，a是传入的参数
+        SQLUDAF_UserDefClass c = (SQLUDAF_UserDefClass) b;
+        c.setCont(c.getCont() + 1);
+        c.setSum(c.getSum() + (long) a);
+        System.out.println("reduceA : " + a + "c.Cont And Sum: " + c.getCont() + " " + c.getSum());
+        return c;
+    }
+    @Override
+//缓冲区内聚合
+    public Object merge(Object b1, Object b2)
+    {
+        //由于传入的是Object，在明确知道类型的情况下进行转换
+        SQLUDAF_UserDefClass b1_ = (SQLUDAF_UserDefClass) b1;
+        SQLUDAF_UserDefClass b2_ = (SQLUDAF_UserDefClass) b2;
+        b1_.setSum(b1_.getSum() + b2_.getSum());
+        b1_.setCont(b1_.getCont() + b2_.getCont());
+        return b1;
+    }
+    @Override
+//最终
+    public Object finish(Object reduction)
+    {
+        //由于传入的是Object类型，所有进行类型转换(明确知道类型的情况下)
+        SQLUDAF_UserDefClass red = (SQLUDAF_UserDefClass) reduction;
+        System.out.println("finish最终计算 : " + red.getSum() + " "  + red.getCont());
+        //返回年龄总和除以数据条数
+        return red.getSum() / red.getCont();
+    }
+    @Override
+    //返回的类型
+    public Encoder<SQLUDAF_UserDefClass> bufferEncoder()
+    {
+        return Encoders.bean(SQLUDAF_UserDefClass.class);
+    }
+    @Override
+    //输出的类型
+    public Encoder<Long> outputEncoder()
+    {
+        return Encoders.LONG();
+    }
+}
+```
 
+> ### 缓冲区内类型实现
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+```java
+package SparkSQL;
+import java.io.Serializable;
+//由于需要进行数据传输(无论还是网络间还是设备间)所以必须实现序列化接口
+public class SQLUDAF_UserDefClass implements Serializable
+{
+    private long cont = 0;
+    private long sum = 0;
+    public SQLUDAF_UserDefClass()
+    {
+    }
+    public SQLUDAF_UserDefClass(long cont, long sum)
+    {
+        this.cont = cont;
+        this.sum = sum;
+    }
+    public long getCont()
+    {
+        return cont;
+    }
+    public void setCont(long cont)
+    {
+        this.cont = cont;
+    }
+    public long getSum()
+    {
+        return sum;
+    }
+    public void setSum(long sum)
+    {
+        this.sum = sum;
+    }
+}
+```
 
 
 

@@ -349,7 +349,7 @@ data.forEach(System.out::println);
 
 # 3.2RDD的文件分区
 
-> Partition(分区)
+> Partition(分区) 底层使用散列(hash)确保数据均衡
 >
 > saveAsTextFile保存为文本文件
 >
@@ -374,6 +374,45 @@ data.forEach(System.out::println);
   - 如果part-num得到了余数，余数如果大于单个分区大小的10%那么建新区
 
 - 在textFile的第二参数指定的是最小分区数
+
+
+
+> ## 自定义分区器
+
+- 继承抽象类 Partitioner
+
+  - 重写numPartitions方法
+
+    - 返回的值是分区数量
+
+  - 重写getPartition方法
+
+    - 返回值是数据要到哪个区
+    - 从0开始计算
+
+  - 重写equals
+
+    - 判断内容
+
+    ```java
+    if(xxx instanceof xxxx)
+    {
+    	xxx.xxx == xxxx.xxx;
+    }else
+    {
+    	return false;
+    }
+    ```
+
+    
+
+  - 重写hashCode
+
+
+
+
+
+
 
 
 
@@ -890,6 +929,12 @@ sc.close();
 ## 3.6.6 reduceByKey(聚合 减少)
 
 > 计算的基本思想 => 永远都是两两相加
+>
+> - 第一个参数表示数据分区的规则 参数可以不用传递 使用时 会使用默认值(HashPartitioner) 散列
+>   - HashPartitioner中有一个getPartition方法
+>     - getPartition需要传递一个参数Key，然后方法有一个返回值 表示分区编号 分区编号从0开始
+>       - hash取余 Key的hash % 分区数
+> - 第二个参数表示数据聚合的逻辑
 
 ```java
 //创建元组并行数据源
@@ -973,6 +1018,8 @@ sc.close();
 > collect方法就行行动算子
 >
 > ​	RDD的行动算子就会触发作业Job的执行
+>
+> 触发行动算子RDD的转换算子会从管道头开始
 
 > 如何区分行动算子和转换算子
 >
@@ -1140,11 +1187,15 @@ RDD算子的逻辑代码是在Executor端执行的，其他的代码都是Driver
 
   - ##### 前一个阶段不执行完成，后一个阶段就不允许执行
 
+  - 阶段数量和shuffle依赖的数量有关 : 1+shuffle依赖的数量
+
 - #### Task -> 任务
 
   - ##### 每个Executor执行的计算单元
 
-  - #### 任务的数量就是每个阶段分区数量之和
+  - #### 任务的数量就是每个阶段最后一个RDD分区数量之和
+
+  - ##### 任务的数量应该设定为资源的数量（CPU核数）, 一般推荐分区数量为资源的2-3倍
 
   
 
@@ -1170,43 +1221,150 @@ RDD算子的逻辑代码是在Executor端执行的，其他的代码都是Driver
 
 
 
+# 7.0 RDD持久化
+
+> ##### RDD不保存数据，如果同一个RDD重复使用一个场合，那么数据就会从头执行，导致数据重复，计算重复
+
+## 7.1 cache（缓冲区）
+
+> #### 使用持久化之前
+>
+> ##### cache就是将数暂存在内存中 数据可能丢失 且会受到内存大小限制 不可靠
+>
+> 只有流程走完了 才会缓存，记录执行过程中的结果进行下次使用
+>
+> 而不是调用了cache就进行缓冲
 
+> cache 底层调用Persist 级别为内存级
 
+- ##### cache会改变血缘关系
 
+  - ##### 因为如果缓存中的数据丢失，可以找到上级重新执行
 
+- ##### 如果重复调用相同规则的shuffle算子，那么第二次shuffle算子不会执行shuffle操作,前一次shuffle会写缓存
 
+```java
+SparkConf conf = new SparkConf();
+conf.setMaster("local[*]");
+conf.setAppName("Lasting");
+JavaSparkContext sc = new JavaSparkContext(conf);
+JavaRDD<String> mapRDD = sc
+    .textFile("src/main/java/Spark_RDD/Spark.txt")
+     .map(str ->
+     {
+         System.out.println("执行");
+         return str;
+     });
+mapRDD.groupBy(str -> str)
+    .collect();
+System.out.println("#######################");
+mapRDD.flatMap(str -> {
+    ArrayList<String> liste = new ArrayList<>();
+    liste.add(str);
+    return liste.iterator();
+}).collect();
+sc.close();
+```
 
+> 输出
+>
 
+```xml
+执行
+执行
+执行
+执行
+执行
+执行
+执行
+执行
+#######################
+执行
+执行
+执行
+执行
+执行
+执行
+执行
+执行
+```
 
+> #### 使用持久化之后 相同的内容没有重复执行
+>
+> 因为RDD是惰性执行，每次收到行动算子从头执行一遍
 
+```json
+执行
+执行
+执行
+执行
+执行
+执行
+执行
+执行
+#######################
+```
 
 
 
+## 7.2 Persist
 
 
 
+## 7.3 中间件(检查点HDFS)
 
+> #### checkpoint
+>
+> - ##### 检查点操作的目的是希望RDD结果的长时间保存，所以需要保证数据的安全 因此他会运行两次
+>
+>   - 为了提高效率 Spark推荐在检查点之前 执行cache方法，缓冲数据
 
 
 
+- #### 设置存储路径 
 
+  - Spark环境.setCheckpointDir("路径")
 
 
 
+## 7.4 unpersist缓存释放
 
 
 
+# 8.0 广播变量
 
+- #### RDD无法实现数据拉取
 
+- 如果Executor端使用了Driver端数 那么需要从Driver端将数据拉取到Executor端 数据拉取的单位是Task(任务)
 
+- 广播变量 发送只读数据（较大）
 
+> 如果数据不是以Task为传输单位，而是以Executor为单位 那么效率会提高
+>
+> RDD不能以Executor为单位进行数据传输
 
+> 广播变量只会分发到各节点(Executor)一次，而不是每个Task都分发
 
+> 实现
 
+```scala
+// 把一个数组定义为一个广播变量
+val broadcastVar = sc.broadcast(Array(1, 2, 3, 4, 5))
+// 之后用到该数组时应优先使用广播变量，而不是原值
+sc.parallelize(broadcastVar.value).map(_ * 10).collect()
+```
 
+```java
+JavaSpakrContext jsc = new JavaSparkContext(conf);
+//将要共享的数据包装起来
+Broadcast<List<String>> bc = jsc.broadcast(数据);
+//使用数据
+jsc.parallelize(bc.value());
+```
 
 
 
+# 8.1 RDD的局限性
 
 
 
@@ -1214,33 +1372,221 @@ RDD算子的逻辑代码是在Executor端执行的，其他的代码都是Driver
 
 
 
+# 9.0 SparkSQL
 
+> ## 结构化数据处理模块Dataset
+>
+> SparkSession => 连接
+>
+> Spark封装模块的目的就是在结构化数据的场合，处理起来方便
+>
+> JDBC不按照0开始
 
+## 9.1添加依赖
 
+```xml
+<dependency>
+    <groupId>org.apache.spark</groupId>
+    <artifactId>spark-sql_2.11</artifactId>
+    <version>2.1.1</version>
+</dependency>
+```
 
+> # xml
 
+```xml
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
 
+    <groupId>org.Spark_d</groupId>
+    <artifactId>Spark</artifactId>
+    <version>1.0-SNAPSHOT</version>
 
+    <properties>
+        <maven.compiler.source>8</maven.compiler.source>
+        <maven.compiler.target>8</maven.compiler.target>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+    </properties>
+    <dependencies>
+        <dependency>
+            <groupId>org.apache.spark</groupId>
+            <artifactId>spark-core_2.12</artifactId>
+            <version>3.5.3</version>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.spark</groupId>
+            <artifactId>spark-sql_2.12</artifactId>
+            <version>3.5.3</version>
+        </dependency>
+        <dependency>
+            <groupId>com.fasterxml.jackson.core</groupId>
+            <artifactId>jackson-databind</artifactId>
+            <version>2.15.0</version>
+        </dependency>
+        <dependency>
+            <groupId>com.fasterxml.jackson.core</groupId>
+            <artifactId>jackson-core</artifactId>
+            <version>2.15.0</version>
+        </dependency>
+        <dependency>
+            <groupId>com.fasterxml.jackson.core</groupId>
+            <artifactId>jackson-annotations</artifactId>
+            <version>2.15.0</version>
+        </dependency>
+        <dependency>
+            <groupId>com.fasterxml.jackson.module</groupId>
+            <artifactId>jackson-module-scala_2.12</artifactId>
+            <version>2.15.2</version>
+        </dependency>
+    </dependencies>
 
 
+</project>
+```
 
-DAG => 有向无环图
 
-dagScheduler => 有向无环图调度器
 
+## 9.2 构建SparkSQL运行环境
 
+```java
+//使用构建器模式构建
+SparkSession sc = SparkSession
+    .builder()
+    .master("local[*]")
+    .appName("SQL2024_10_26")
+    .getOrCreate();
+sc.close();
+```
+
+## 9.2.1 环境转换
+
+```java
+SparkContext -> SQL : SparkSession
+new SparkSession(new SparkContext(conf));
+
+SparkSession -> SparkContext
+sparkSession.sparkContext;
+```
+
+
+
+## 9.2.2 数据类型转换
+
+> Row类型底层使用数组实现
+>
+> - 我们并不知道每个索引对于的值类型甚至某个值在某个索引
+> - 因此我们需要对数据模型中的数据进行转换，将Row转换成其他对象进行处理
+>
+> 
+
+
+
+## 9.3 JSON
+
+> Spark SQL 中对数据模型进行了封装 RDD -> Dataset
+>
+> ​	对接文件数据源时，会将文件中的一行数据封装为Row对象
+
+```java
+SparkSession sc = SparkSession
+    .builder()
+    .master("local[*]")
+    .appName("SQL2024_10_26")
+    .getOrCreate();
+//对接数据源并返回数据模型
+Dataset<Row> json = sc.read().json("src/main/java/SparkSQL/Items.hjson");
+sc.close();
+```
 
+> 使用SQL操作数据并显示
+>
 
+```java
+SparkSession sc = SparkSession
+    .builder()
+    .master("local")
+    .appName("SparkSQL")
+    .getOrCreate();
+Dataset<Row> json = sc.read().json("src/main/java/SparkSQL/Json.json");
 
+//转换为视图
+json.createOrReplaceTempView("items");
+//创建SQL语句
+String sql = "select * from items";
+//执行SQL语句
+Dataset<Row> sql1 = sc.sql(sql);
+//显示
+sql1.show();
+sc.close();
+```
 
 
 
+## 9.4 Row类型转换
 
+```java
+public class SQL2024_10_26_17_bean
+{
+    public static void main(String[] args)
+    {
+        SparkSession ss = SparkSession
+            .builder()
+            .master("local[*]")
+            .appName("SQLbean")
+            .getOrCreate();
+        
+        //读取文件以行的方式
+        Dataset<Row> json = ss.read().json("src/main/java/SparkSQL/Json.json");
+        
+        //进行类型转换 转换为User类型
+        Dataset<User> userDataset = json.as(Encoders.bean(User.class));
+        //输出
+        userDataset.show();
+        ss.close();
+    }
+}
 
+//注意 id age必须为long 除非在读取时声明int 
+//必须实现Serializable接口
+class User implements Serializable {
+    private long id;
+    private long age;
+    private String name;
+    // 默认构造函数
+    public User() {}
+    public long getId() {
+        return id;
+    }
+    public void setId(int id) {
+        this.id = id;
+    }
+    public long getAge() {
+        return age;
+    }
+    public void setAge(int age) {
+        this.age = age;
+    }
+    public String getName() {
+        return name;
+    }
+    public void setName(String name) {
+        this.name = name;
+    }
+}
+```
 
 
 
+## 9.5 视图
 
+> #### createOrReplaceTempView
+>
+> - 将数据模型转换为二维的结构（行，列），可以通过SQL文进行访问
+>
+> #### 结果集 不能增加 不能更改 不能删除 只能查询
 
 
 
@@ -1440,61 +1786,9 @@ dagScheduler => 有向无环图调度器
 
 
 
+- ~~DAG => 有向无环图~~
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-- 
+  ~~dagScheduler => 有向无环图调度器~~
 
 - <!--~~<u>*1.0 Spark环境搭建*</u>~~-->
 

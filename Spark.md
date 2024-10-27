@@ -1640,7 +1640,7 @@ sqLudf.close();
 >
 > ##### UDAF函数底层实现中需要存在一个缓冲区，用于临时存放数据
 >
-> ## 在定义UDAF继承类的时候指定泛型就不会出现全Object的情况了 <输入类型,缓冲区类型,输出类型>
+> ### 在定义UDAF继承类的时候指定泛型就不会出现全Object的情况了 <输入类型,缓冲区类型,输出类型>
 
 ```java
 SparkSession.udf().register("函数名",functions.udaf())
@@ -1794,10 +1794,42 @@ public class SQLUDAF_UserDefClass implements Serializable
 
 
 
+## 9.8 CSV数据源
 
+```java
+public static void main(String[] args)
+{
+    //构建SparkSQL环境
+    SparkSession sparkSession = SparkSession
+        .builder()
+        .master("local[*]")
+        .appName("CSVapp")
+        .getOrCreate();
+    
+    //链接csv数据源
+    Dataset<Row> csv = sparkSession
+        .read()
+        //两个配置
+       .option("header", true)//有表头
+       .option("sep", ",")//分割符
+       .csv("C:\\LiMGren\\codeor\\Spark\\src\\main\\java\\SparkSQL\\csvSource.csv");
+    
+    //显示
+    csv.show();
+    
+    //输出
+    csv.write()
+        .option("header",true)
+        //输出模式 => 追加 默认报错（存在）
+        .mode(SaveMode.Append)
+        .csv("csvSource");
+    sparkSession.close();
+}
+```
 
 
 
+![image-20241027102910973](C:\Users\Administrator\AppData\Roaming\Typora\typora-user-images\image-20241027102910973.png)
 
 
 
@@ -1935,11 +1967,152 @@ public class SQLUDAF_UserDefClass implements Serializable
 
 
 
+# 100 HADOOP配置
 
+1. 下载HADOOP文件[http://hadoop.apache.org/releases.html](https://cloud.tencent.com/developer/tools/blog-entry?target=http%3A%2F%2Fhadoop.apache.org%2Freleases.html&source=article&objectId=1850967)
 
+2. 解压
 
+3. 设置环境变量 (变量路径不能有空格 比如Java的默认安装位置是有空格的 需要移除)
 
+   1. =>高级系统设置
+   2. =>环境变量
+   3. =>新建
+   4. =>HADOOP_HOME => 你解压的目录
+   5. =>找到PATH
+   6. =>添加 你解压的目录/bin
+   7. JAVA_HOME也要
+   8. cmd输入hadoop -version 查看输出
 
+- 编辑hadoop/etc/hadoop/core-site.xml 添加内容
+
+  - ```xml
+    <configuration>
+    	<name>fs.defaultFS</name>
+    	<value>hdfs://0.0.0.0:9000</value>
+    </configuration>
+    ```
+
+- hadoop根目录下创建两个文件夹
+
+  - data
+  - namespace_logs
+
+- 编辑/etc/hadoop下的hdfs-size.xml  在configuration标签下添加如下 内容
+
+- 注意目录 不要傻傻直接抄
+
+  - ```xml
+    <property>
+        <name>dfs.replication</name>
+        <value>1</value>
+    </property>
+    <property>
+        <name>dfs.name.dir</name>
+        <value>file:///C:/LiMGren/PATH/hadoop/namespace_logs</value>
+    </property>
+    <property>
+        <name>dfs.data.dir</name>
+        <value>file:///C:/LiMGren/PATH/hadoop/data</value>
+    </property>
+    ```
+
+- 修改mapred-site.xml (需要自己改后缀名)  %USERNAME% => 改成你当前的Windows用户名
+
+  - ```xml
+    <property>
+      <name>mapreduce.job.user.name</name>
+      <value>%USERNAME%</value>
+    </property>
+    <property>
+      <name>mapreduce.framework.name</name>
+      <value>yarn</value>
+    </property>
+    <property>
+     <name>yarn.apps.stagingDir</name>
+     <value>/user/%USERNAME%/staging</value>
+    </property>
+    <property>
+     <name>mapreduce.jobtracker.address</name>
+     <value>local</value>
+    </property>
+    ```
+
+- 修改yarn-site.xml
+
+  - ```xml
+    <property>
+        <name>yarn.server.resourcemanager.address</name>
+        <value>0.0.0.0:8020</value>
+    </property>
+    <property>
+        <name>yarn.server.resourcemanager.application.expiry.interval</name>
+        <value>60000</value>
+    </property>
+    <property>
+        <name>yarn.server.nodemanager.address</name>
+        <value>0.0.0.0:45454</value>
+    </property>
+    <property>
+        <name>yarn.nodemanager.aux-services</name>
+        <value>mapreduce_shuffle</value>
+    </property>
+    <property>
+        <name>yarn.nodemanager.aux-services.mapreduce.shuffle.class</name>
+        <value>org.apache.hadoop.mapred.ShuffleHandler</value>
+    </property>
+    <property>
+        <name>yarn.server.nodemanager.remote-app-log-dir</name>
+        <value>/app-logs</value>
+    </property>
+    <property>
+        <name>yarn.nodemanager.log-dirs</name>
+        <value>/dep/logs/userlogs</value>
+    </property>
+    <property>
+        <name>yarn.server.mapreduce-appmanager.attempt-listener.bindAddress</name>
+        <value>0.0.0.0</value>
+    </property>
+    <property>
+        <name>yarn.server.mapreduce-appmanager.client-service.bindAddress</name>
+        <value>0.0.0.0</value>
+    </property>
+    <property>
+        <name>yarn.log-aggregation-enable</name>
+        <value>true</value>
+    </property>
+    <property>
+        <name>yarn.log-aggregation.retain-seconds</name>
+        <value>-1</value>
+    </property>
+    <property>
+        <name>yarn.application.classpath</name> 		<value>%HADOOP_CONF_DIR%,%HADOOP_COMMON_HOME%/share/hadoop/common/*,%HADOOP_COMMON_HOME%/share/hadoop/common/lib/*,%HADOOP_HDFS_HOME%/share/hadoop/hdfs/*,%HADOOP_HDFS_HOME%/share/hadoop/hdfs/lib/*,%HADOOP_MAPRED_HOME%/share/hadoop/mapreduce/*,%HADOOP_MAPRED_HOME%/share/hadoop/mapreduce/lib/*,%HADOOP_YARN_HOME%/share/hadoop/yarn/*,%HADOOP_YARN_HOME%/share/hadoop/yarn/lib/*</value>
+    </property>
+    ```
+
+- %JADDOP_HOME%\etc\hadoop\hadoop-env.cmd =>在cmd中运行,初始化环境变量
+
+- hadoop namenode -format =>格式化文件系统 只能使用一次！！！
+
+- 复制文件 winutils.exe到bin目录
+
+- 复制文件hadoop.dll到bin目录
+
+  - 文件下载地址(新)https://github.com/cdarlint/winutils
+  - 该文件在服务器同台局域网
+  - FTP://192.168.45.222 => 压缩包安装文件下
+
+- 启动 %HADOOP_HOME%/sbin/start-all.cmd
+
+- http://localhost:50070/
+
+- ```xml
+  
+  ```
+
+  
+
+​	
 
 
 

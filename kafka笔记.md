@@ -30,7 +30,7 @@ zookeeper.connect=集群主机1:2181,集群主机2:2181......
    1. zoop-server-start.sh ../config/zoop.pro &
    2. kafka-server-start.sh ../config/server.properties &
 8. 创建topic 
-   1. kafka-topic.sh --zookeeper master:2181 --create --topic dome --xx 1 --xx 1
+   1. kafka-topic.sh --zookeeper master:218021 --create --topic dome --xx 1 --xx 1
 9. 链接
    1. kafkaxxx --sever master:9092 --topic dome
 
@@ -1119,4 +1119,74 @@ broker2 => 0	1	2	3	4
 
 - broker.id
 - advertised.listeners=PLAINTEXT://主机名:9092
-- zookeeper.connect=主机名1:2181,主机名xxx:2181.../kafka
+- zookeeper.connect=主机名1:2181,主机名xxx:2181.../kafka# 8.指定分区
+
+```java
+//目标topic名称,目标分区,key给空"",生产的值
+public ProducerRecord(String topic, Integer partition, K key, V value) {
+    this(topic, partition, (Long)null, key, value, (Iterable)null);
+}
+```
+
+## 8.1自定义分区
+
+- ### 步骤
+
+  1. 创建一个类 实现 Partitioner 接口
+  2. 重写partition方法 => 返回值就是指定的分区
+  3. 将这个类put到配置
+
+Proeter这个就是实现的类，需要全类名
+
+```java
+config.put(ProducerConfig.PARTITIONER_CLASS_CONFIG, "Proeter");
+```
+
+```java
+import org.apache.kafka.clients.producer.Partitioner;
+import org.apache.kafka.common.Cluster;
+
+import java.util.Map;
+
+public class Proeter implements Partitioner
+{
+    @Override
+    public int partition(String s, Object o, byte[] bytes, Object o1, byte[] bytes1, Cluster cluster)
+    {
+        //第四个行参是指定值
+        int num = 0;
+        if(o1.toString().equals("2")){
+            num = 1;
+        }else{
+            num = 0;
+        }
+        return num;
+    }
+}
+```
+
+- #### 我这边没有指定多个分区，如果程序卡住无法退出 那么就说明正确； 
+
+# 9.生产效率 自定义发送
+
+1. 缓冲区大小
+   - ProducerConfig.BUFFER_MEMORY_CONFIG,单位字节
+2. 批次大小
+   - ProducerConfig.BATCH_SIZE_CONFIG,单位字节
+3. 发送延迟 linger.ms
+   - ProducerConfig.LINGER_MS_CONFIG,单位毫秒
+4. 压缩方式
+   - ProducerConfig.COMPRESSION_TYPE_CONFIG,"snappy就行了"
+
+# 10.数据可靠性 acke => 1
+
+- ### ACK级别 = -1
+
+- ### 分区副本大于等于2
+
+- ### ISR里应答的最小副本大于等于2
+
+
+<!--stackedit_data:
+eyJoaXN0b3J5IjpbMTI3OTYwMDE4MV19
+-->

@@ -1381,6 +1381,22 @@ jsc.parallelize(bc.value());
 > Spark封装模块的目的就是在结构化数据的场合，处理起来方便
 >
 > JDBC不按照0开始
+>
+> 
+>
+> join(连接列)
+>
+> union(连接行)
+
+## 9.0.1 开窗函数理论
+
+> 对一组行进行操作的函数 就叫开窗函数
+>
+> 基于行组计算没行的返回值
+>
+> 例如 计算移动平均值，计算累加值，等统计信息，或者访问给定当前行的相对位置的行的值
+>
+> ### 在现有行的情况下，增加一列
 
 ## 9.1添加依赖
 
@@ -1833,67 +1849,195 @@ public static void main(String[] args)
 
 
 
+## 9.9 JSON
+
+> #### JavaScript Object Notation => 是js的对象文件
+>
+> ​		对象 => {}
+>
+> ​		数组 => []
+>
+> ​		JSON文件 : 整个文件的数据格式符合JSON格式，不是一行数据符合
+
+> 问题引出
+>
+> ​	SparkSQL就是对Spark Core RDD的封装。RDD读取文件采用的是Hadoop
+>
+> ​	Hadoop是按行读取的，而正确的JSON并不会这样进行编辑
+>
+> ​	SparkSQL只需要保证JSON文件中一行数据符合JSON
+
+
+
+## 20 行式存储(PK)
+
+> 主键索引 一行存在一块
+>
+> 行式存储(PK) : 查询快，统计慢
+
+## 30 列式存储 Parquet
+
+> 没有主键的概念 一列存在一块
+>
+> 列式存储：查询快，统计快
+
+
+
+## 10 MySQL JDBC
+
+> ### 添加依赖
+
+```xml
+<dependency>
+    <groupId>mysql</groupId>
+    <artifactId>mysql-connector-java</artifactId>
+    <version>8.0.18</version>
+</dependency>
+```
+
+```java
+//创建SparkSQL环境
+SparkSession sparkSession = SparkSession
+    .builder()
+    .master("local[*]")
+    .appName("SQlMysql")
+    .getOrCreate();
+//创建MySQL需要设置的配置项
+Properties MySQLc = new Properties();
+MySQLc.put("user","root");
+MySQLc.put("password","123456");
+
+//读表
+Dataset<Row> 表 = sparkSession.read().jdbc("jdbc:xxxx/主表名", "表名", MySQLc);
+表.show();
+//写表
+表.write().mode(SaveMode.Append).jdbc("jdbc:xxx/主表名","表名",MySQLc);//追加内容
+sparkSession.close();
+```
+
+## 10.1 Hive
+
+> ### 依赖添加
+>
+> 创建表 create table 表名(字段 字段类型,字段2 字段类型)
+>
+> limit读取前几条
+
+```xml
+<dependency>
+    <groupId>org.apache.spark</groupId>
+    <artifactId>spark-hive_2.12</artifactId>
+    <version>3.3.1</version>
+</dependency>
+<dependency>
+    <groupId>org.apache.hadoop</groupId>
+    <artifactId>hadoop-common</artifactId>
+    <version>3.3.1</version>
+</dependency>
+<dependency>
+    <groupId>org.apache.hive</groupId>
+    <artifactId>hive-exec</artifactId>
+    <version>2.3.7</version>
+</dependency>
+```
+
+> 文件拷贝 /opt/module/hadoop-3.1.3/etc/hadoop => src/main/resourcer
+
+- core-site.xml
+- hdfs-site.xml
+- yarn-site.xml
+
+> 文件拷贝 /opt/module/hive-3.1.2/conf => src/main/resourcer
+>
+
+- hive-site.xml
 
 
 
 
+```java
+//设置访问hive的用户名
+System.setProperty("HADOOP_USER_NAME","root");
+SparkSession sparkSession = SparkSession
+    .builder()
+    //启用Hive支持
+    .enableHiveSupport()
+    .master("local[*]")
+    .appName("SpakrHive")
+    .getOrCreate();
+//使用SQL文显示全部表
+sparkSession.sql("show tables").show();
+sparkSession.close();
+```
 
 
 
+## SQL案例
+
+> 各区域热门商品Top3
+>
+> 
+
+- group by 分组字段的关系
+  - 如果分组字段存在上下级，或从属关系，那么统计结果和下级字段有关，和上级字段无关
+    - 分组时如果增加上级字段的目的就是为了补全数据
+  - 如果分组字段存在关联关系：（商品ID，商品名称）,那么统计结果和具备唯一性的字段有关，
+    - 其他字段就是为了补全数据
+  - 如果分组字段没有任何的关系，那么统计结果和所有字段有关。
 
 
 
+# 10 Spark Streaming 
+
+> #### 在特定场合下，对Spark Core(RDD)的封装
+>
+> 将无界数据流进行切分，由数据采集器采集
+>
+> ​	得到数据后交给有界数据流处理
+
+- ##### Spark Streaming底层还是Spark Core,就是在流式数据处理中进行的封装
+
+- 有限数据流 => 数据的数量是有限的
+- 无界数据流 => 数据是没有边界的(无限的)
+
+> 无界数据流是无法计算的，但是有界数据流是可以计算的
 
 
 
+> # 概论
+
+- ##### 从数据处理的角度
+
+  1. ##### 流式数据处理 :
+
+     - ##### 一个数据一个数据的处理
+  2. ##### 批量数据处理 :
+
+     - ##### 一批数据一批数据的处理
+
+  3. ##### 微批量数据处理:
+
+     - ##### 一小批一小批数据的处理
+
+  
+
+- ##### 从数据处理延迟的角度
+
+  1. ##### 实时数据处理 :
+  
+     - ##### 数据处理的延迟以毫秒为单位
+  2. ##### 离线数据处理 :
+  
+     - ##### 数据处理的延迟以小时 天为单位
+  3. ##### 准实时数据处理 :
+  
+     - ##### 数据处理的延迟以秒，分钟为单位
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+> #### Spark是批量,离线数据处理框架
+>
+> SparkSteaming
 
 
 

@@ -1,5 +1,7 @@
 P20
 
+https://www.bilibili.com/video/BV1Cm421373b?spm_id_from=333.788.videopod.episodes&vd_source=6cfabdd9118b8397a529eb6df87378b6
+
 # MySQL
 
 # 1.0 概念
@@ -267,3 +269,147 @@ CREATE TABLE IF NOT EXISTS 表名(
 )[表可选约束 表符号]
 ```
 
+```sql
+select * from SQLTable where (get_time > '${MaxTimeStr}' and get_time != 'NULL') or 
+(used_time > '${MaxTimeStr}' and used_time != 'NULL') or (pay_time > '${MaxTimeStr}' and pay_time != 'NULL')
+```
+
+
+
+# 9.0 数据插入insert into
+
+> ### 创建表
+
+```sql
+create table student(
+	id int,
+    name String
+)
+```
+
+
+
+> ### 插入数据
+
+```sql
+insert into student (id,name) value (1,'wd'),(2,'qd');
+```
+
+```sql
+insert into student value (1,'wd'),(4,'qe')
+```
+
+
+
+# 9.1 数据删除 delete
+
+> 不带条件 全部删除
+
+```sql
+delete from student where 条件;
+```
+
+
+
+# 9.2 数据更新 update
+
+> 基础语法
+>
+> update 表名 set 要更改的列名 = '更改后的值' where 进行判断的字段
+
+```sql
+update student set name = 'xxx' where id = x;
+```
+
+
+
+# 9.3 分组聚合 group by
+
+> ### 按条件分组 统计每个组的人数
+
+- ### 执行顺序 -> 先分组 再聚合
+
+```sql
+select gender from student group by gender;
+```
+
+
+
+# 9.4 排序分页 order by
+
+> ### ASC升序 DESC降序
+
+- 将年龄大于20岁的按照年龄进行升学排序
+- order by 默认是asc升序
+
+```sql
+select * from studnet where age > 20 order by age;
+```
+
+
+
+## 9.4.1 LIMIT 展示条目
+
+```sql
+select 列|聚合函数|* from 表
+where ...
+group by ...
+order by ... [asc|desc]
+limit n[,m]
+```
+
+> ### 执行顺序
+
+from -> where -> group by -> 聚合 -> select -> order by -> limit
+
+
+
+# 9.5 JOIN 多表查询
+
+> from 多表
+>
+> inner join
+>
+> outer join
+
+> ### from多表
+
+```sql
+select 表1.人名,
+		表2.班级名称 
+from 表1,表2 
+where 表1.id = 表2.id
+```
+
+
+
+> ### 内关联 inner join
+>
+> inner join 关联表名 ...
+>
+> on 字段 = 字段 (条件)
+
+- 内关联只是求两个表的交集，如果有一个表的一条数据
+  - 被关联的字段为空，那么这条数据就不会显示
+- 必须双向匹配
+
+```sql
+select * from student
+inner join class 
+on student.id = class.id;
+```
+
+
+
+> ## 外关联
+
+```sql
+select ... 
+from 表1 [as 别名] ... 
+(left | right) [outer] join 表2 [as 别名2] ... 
+on 连接条件
+```
+
+left左外关联 => from的表的数据全部都要显示
+
+right右外关联 => 以join的表的数据为主

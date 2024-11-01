@@ -2043,9 +2043,36 @@ sparkSession.close();
 
 
 
+- # 11 读取HBase
 
+> ### 拷贝HBase的Jar包到 Spark下
 
+1. hbase/lib/hbase*.jar
+   1. guava-版号.jar
+   2. htrace-core-版号-incubating.jar
+   3. protobuf-java-版号.jar
+2. 到目录 Spark/jars/新建文件夹 下
 
+```scala
+//创建HBase配置信息
+var HBaseConfig = HBaseConfigration.create();
+//设置查询表
+HBaseConfig.set(TableInputFormat.INPUT_TABLE,"student") 
+
+//创建SparkCore运行环境
+var spark = new SparkContext(new SparkConf());
+
+//读表数据
+var RDD = spark.newAPIHadoopRDD
+(HBaseConfig,
+classOf[TableInputFormat],
+classOf[ImmutableBytesWritable],
+classOf[Result]);
+
+//持久化到缓冲区
+RDD.cache()
+
+```
 
 
 

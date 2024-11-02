@@ -431,3 +431,616 @@ bin/hbase shell
 - Major compaction
   - 将一个Store下的所有Hfile合并成一个大文件，并执行物理删除操作。
   - 物理删除旧的数据
+
+
+
+# 2.0 数据的删除时机
+
+- flush 的时候不会删除删除标记
+- 在compact的时候才会删除 删除标记
+- 涉及版本保留会保留版本
+
+
+
+# 2.1 数据切分
+
+> 会产生数据倾斜
+>
+> - 官方不建议使用多个列族
+>   - 因为数据流量不同，会产生很多小文件
+> - 如果使用多个列族 分配好数据即可
+
+
+
+# 2.2 API的使用
+
+- #### 添加依赖
+
+```xml
+<dependencies>
+    <dependency>
+        <groupId>org.apache.hbase</groupId>
+        <artifactId>hbase-client</artifactId>
+        <version>2.4.11</version>
+    </dependency>
+</dependencies>
+```
+
+- 创建连接
+  - HBase的客户端连接由ConnectionFactory类来创建，用户使用完成之后需要手动关闭连接。
+  - 连接是重量级的，推荐一个进程使用一个连接，对HBase的命令通过连接中的两个属性Admin和Table来实现
+- 单线程创建连接
+
+```JAVA
+//创建连接配置文件 该配置字段可以在 hbase的site配置下找到
+Configuration config = new Configuration();
+config.set("hbase.zookeeper.quorum","192.168.45.13");
+//创建hbase操作对象
+Connection cf = ConnectionFactory.createConnection(config);
+//如果打印不为空则创建成功
+System.out.println(cf);
+```
+
+
+
+## 2.2.1 多线程连接 单例模式
+
+```java
+//创建静态字段
+public static Connection connection = null;
+//使用静态代码快创建单例对象
+static {
+    try
+    {
+        connection = ConnectionFactory.createConnection();
+    }catch (Exception e){};
+}
+//创建公共方法用来关闭单例对象
+public static void closeConnection() throws IOException
+{
+    if(connection!=null)
+    {
+        connection.close();
+    }
+}
+public static void main(String[] args) throws IOException
+{
+    Connection Myconnection = connection;
+    System.out.println(Myconnection);
+    //由于是引用变量，所有hash值是相等的 是同一个对象
+	System.out.println(connection.hashCode()==Myconnection.hashCode());
+}
+```
+
+
+
+## 2.2.2 创建命名空间
+
+```java
+/***
+ * 创建命名空间
+ * @param NameSoace 命名空间的名字
+ */
+//构建一个方法来创建命名空间 可以增加代码复用
+public static void creaceNameSpace(String NameSoace) throws IOException
+{
+    //得到一个轻量的Admin连接
+    Admin admin = connection.getAdmin();
+    //得到一个Builder => 用于取得NamepaceDescriptor实例
+    NamespaceDescriptor.Builder newNameSpace = NamespaceDescriptor.create(NameSoace);
+    //添加说明 
+    newNameSpace.addConfiguration("说明", "这是新表");
+    //创建
+    admin.createNamespace(newNameSpace.build());
+    //admin.createNamespace(NamespaceDescriptor.create("NewNameSpace").addConfiguration("说明","这是新表").build());
+    //记得必须关闭
+    admin.close();
+}
+public static Connection connection = null;
+static {
+    try
+    {
+        connection = ConnectionFactory.createConnection();
+    }catch (Exception e){};
+}
+public static void closeConnection() throws IOException
+{
+    if(connection!=null)
+    {
+        connection.close();
+    }
+}
+public static void main(String[] args) throws IOException
+{
+    Connection Myconnection = connection;
+    //System.out.println(Myconnection);
+    //System.out.println(connection.hashCode() == Myconnection.hashCode());
+    //创建名称空间
+    creaceNameSpace("NewNameSpace");
+    System.out.println("执行完毕");
+    Myconnection.close();
+}
+```
+
+
+
+## 2.2.3 异常处理
+
+> 创建命名空间出现的问题 都属于本方法自身的问题 不应该抛出
+
+```java
+Admin admin = connection.getAdmin();
+NamespaceDescriptor.Builder newNameSpace = NamespaceDescriptor.create(NameSoace);
+newNameSpace.addConfiguration("说明", "这是新表");
+//在这里加上 try catch
+try
+{
+    admin.createNamespace(newNameSpace.build());
+}catch (IOException e){
+    System.out.println("命名空间已经存在");
+    e.printStackTrace();
+}
+```
+
+
+
+## 2.2.4 判断表格是否存在
+
+```java
+/**
+ * 判断表格是否存在
+ * @param NameSpace 命名空间的名称
+ * @param tableName 表的名称
+ * @return
+ */
+public static boolean isTableExists(String NameSpace,String tableName) throws IOException{
+    //1,获取admin
+    Admin admin = connection.getAdmin();
+    boolean run = false;
+    //2,判断
+    try
+    {
+        run = admin.tableExists(TableName.valueOf(NameSpace, tableName));
+    }catch (IOException e){e.printStackTrace();}
+    finally
+    {
+        //3,关闭流
+        admin.close();
+    }
+    //返回
+    return run;
+}
+//查看表是否存在
+System.out.println(isTableExists("123", "123"));
+```
+
+
+
+## 2.2.5 创建表格
+
+- 需要 命名空间的名称,表格的名称,列族的名称
+  - 列族可以多个 String...
+
+
+
+- 获取Admin
+
+- 调用 createTable创建表
+
+  - 创建表格描述 建造者
+  - TableDescriptorBuilder.newBuilder(TableName.valueOf(名称空间,表名));
+  - 
+  - 创建列族描述 建造者 传入列族名称
+  - ColumFamilyDescriptorBuilder.newBuilder(Bytes.toBytes(字符串))
+
+  - 
+
+  - 添加版本参数(可空)
+  - ColumFamilyDescriptorBuilder.setMaxVersions(版本条数)
+
+  - 
+
+  - 添加列族描述实例
+
+  - 表格建造者.setColumnFamily(列族建造者.build());
+
+  - 表格建造者.setColumnFamily() -> 一条一条加 多条可以循环添加
+
+  - admin.createTable(表格建造者.build());
+
+```java
+public static void creaceTable(String nameSpace,String tableName,String... column) throws IOException
+{
+    if(column.length ==0)
+    {
+        System.out.println("必须有一个列族");
+        return;
+    }
+    
+    //1,得到admin
+    Admin admin = connection.getAdmin();
+    //2,创建表格建造者
+    TableDescriptorBuilder tableDescriptorBuilder = TableDescriptorBuilder.newBuilder(TableName.valueOf(nameSpace,tableName));
+    //3,往表格建造者添加列族信息
+    for(String columnstr : column)
+    {
+        //3.1 创建列族建造者
+        ColumnFamilyDescriptorBuilder columnFamilyDescriptorBuilder = 	ColumnFamilyDescriptorBuilder.newBuilder(Bytes.toBytes(columnstr));
+        columnFamilyDescriptorBuilder.setMaxVersions(5);//设置保留5个版本
+        //3.2 添加表格的列族信息
+        tableDescriptorBuilder.setColumnFamily(columnFamilyDescriptorBuilder.build());
+    }
+    //创建表格
+    try{
+    admin.createTable(tableDescriptorBuilder.build());
+    }catch (IOException e)
+    {
+        System.out.println("表格已经存在");
+        e.printStackTrace();
+    }finally {
+        admin.close();
+    }
+}
+//创建表格
+creaceTable("NewNameSpace","NewTable","info");
+```
+
+
+
+# 2.2.6 修改表格信息
+
+- 获取表格描述
+  - admin.getDescriptor()
+    - TableName.valueOf(namespace,tableName)
+- 获取表格描述生成器
+  - TableDescriptorBuilder.newBuilder(admin.getDescriptor)
+- 获取 列族描述 信息
+  - admin.getDescriptor().getColumnFamily(Bytes.toBytes(列族名))
+- 创建 列族描述建造者
+  - ColumnFamilyDescriptorBuilder.newBuilder(上面获取到的列族描述)
+- 对上面的列族描述建造者进行 setmaxver(xx);
+- 使用 上面的表格描述生成器对新的列族描述建造者进行修改生效
+  - modifyColumnFamily(列族描述建造者.build());
+
+```java
+/**
+ * 修改表格的版本信息
+ * @param nameSpace 名称空间
+ * @param tableName 表的名称
+ * @param column 列族名称
+ * @param ver 要保留的版本数量
+ * @throws IOException 正常抛出
+ */
+public static void RevTableDescr(String nameSpace,String tableName,String column,int ver) throws IOException
+{ 
+            //判断表格是否存在
+        if(!isTableExists(nameSpace,tableName)){
+            System.out.println("表格不存在");
+            return;
+        }
+    //1，获取Admin
+     Admin admin = connection.getAdmin();
+     //2，获取表格的描述
+         //获取原表的 描述信息
+         TableDescriptor descriptor = admin.getDescriptor(TableName.valueOf(nameSpace,tableName));
+         //3,创建表格建造者 使用原表的信息
+         TableDescriptorBuilder tableDescriptorBuilder = TableDescriptorBuilder.newBuilder(descriptor);
+         //获取旧的表格列族描述
+         ColumnFamilyDescriptor columnFamily = descriptor.getColumnFamily(Bytes.toBytes(column));
+         //创建列族描述建造者 传入原表的列族描述信息
+         ColumnFamilyDescriptorBuilder columnFamilyDescriptorBuilder = ColumnFamilyDescriptorBuilder.newBuilder(columnFamily);
+         //修改版本信息
+         columnFamilyDescriptorBuilder.setMaxVersions(ver);
+         //将修改后的数据载入表格建造者
+         tableDescriptorBuilder.modifyColumnFamily(columnFamilyDescriptorBuilder.build());
+         //修改
+         admin.modifyTable(tableDescriptorBuilder.build());
+     admin.close();
+}
+
+//修改表格的版本信息
+RevTableDescr("NewNameSpace","NewTable","info",7);
+```
+
+
+
+# 2.2.7 删除表格
+
+```java
+/**
+ * 删除指定表格
+ * @param nameSpace 命名空间
+ * @param tableName 表名
+ * @return True表示删除成功
+ * @throws IOException 正常抛出
+ */
+public static boolean DeleteTable(String nameSpace,String tableName) throws IOException
+{
+    if(!isTableExists(nameSpace,tableName)) {
+        System.out.println("表格不存在");
+        return false;
+    }
+    //获取admin
+    Admin admin = connection.getAdmin();
+    try
+    {
+        //获取需要删除的表格
+        TableName TABLE = TableName.valueOf(nameSpace, tableName);
+        //禁用并删除
+        admin.disableTable(TABLE);
+        admin.deleteTable(TABLE);
+    }catch (IOException e){
+        e.printStackTrace();
+        return false;
+    }finally
+    {
+        admin.close();
+    }
+    return true;
+}
+
+//删除表格
+System.out.println(DeleteTable("NewNameSpace", "NewTable"));
+```
+
+
+
+
+
+# 2.2.8 添加数据Put
+
+```java
+/**
+ * 添加内容
+ * @param nameSpase 命名空间
+ * @param tableName 表名
+ * @param RowKey RowKey
+ * @param RowColumn 列族名称
+ * @param RowName_ 列名
+ * @param content 内容
+ */
+public static void putCall(String nameSpase,String tableName,String RowKey,String RowColumn,String RowName_,  String content) throws IOException
+{
+    Table table = null;
+    //获取要操作的表格
+    try
+    {
+        table = connection.getTable(TableName.valueOf(nameSpase, tableName));
+    }catch (IOException e){
+        System.out.println("表格未找到");
+        return;
+    }
+    //创建Put对象
+    Put put = new Put(Bytes.toBytes(RowKey));
+    put.addColumn(Bytes.toBytes(RowColumn),Bytes.toBytes(RowName_),Bytes.toBytes(content));
+    //put
+    table.put(put);
+    table.close();
+}
+
+putCall("NewNameSpace","NewTable","1001","info","姓名","lisi");
+connection.close();
+```
+
+
+
+# 2.2.9 获取数据 Get
+
+```java
+/**
+ * Get数据
+ * @param nameSpase 命名空间
+ * @param tableName 表名
+ * @param RowKey 行键
+ * @param RowColumn 行族
+ * @param RowName 行名
+ * @throws IOException 正常抛出
+ */
+public static void getCall(String nameSpase,String tableName,String RowKey,String RowColumn,String RowNam
+{
+    //得到表格
+    Table table = connection.getTable(TableName.valueOf(nameSpase,tableName));
+    //创建Get对象
+    Get get = new Get(Bytes.toBytes(RowKey));
+    //添加查询范围
+    get.addColumn(Bytes.toBytes(RowColumn),Bytes.toBytes(RowName));
+    //得到数据
+    Result result = table.get(get);
+    //取出数据
+    Cell[] cells = result.rawCells();
+    //循环输出
+    for (Cell cell : cells)
+    {
+        //底层字节 需要特殊处理
+        System.out.println(Bytes.toString(CellUtil.cloneValue(cell)));
+    }
+    table.close();
+}
+//获取
+getCall("NewNameSpace","NewTable","1002","info","姓名");
+connection.close();
+```
+
+
+
+# 2.3.0 扫描数据 scan
+
+```JAVA
+/**
+ * 扫描数据
+ * @param nameSpace  表命名空间
+ * @param tableName 表名称
+ * @param startRow 起始行号
+ * @param stopRow 结束行号
+ * @throws IOException 正常抛出
+ */
+public static void ScanContent(String nameSpace,String tableName, String startRow,String stopRow) throws IOException
+{
+    //1.得到表
+    Table table = connection.getTable(TableName.valueOf(nameSpace,tableName));
+    //2.创建Scan对象
+    Scan scan = new Scan();
+    //起始位
+    scan.withStartRow(Bytes.toBytes(startRow));
+    //结束位
+    scan.withStopRow(Bytes.toBytes(stopRow));
+    //得到数据
+    ResultScanner scanner = table.getScanner(scan);
+    //遍历数据
+    for (Result result : scanner)
+    {
+        Cell[] cells = result.rawCells();
+        for (Cell cell : cells)
+        {
+            System.out.println(new java.lang.String(CellUtil.cloneValue(cell), StandardCharsets.UTF_8));
+        }
+    }
+    table.close();
+}
+//扫描
+ScanContent("ods","order_master","020241031163235115","020241031163240658");
+connection.close();
+```
+
+
+
+# 2.3.1 过滤数据
+
+```java
+/**
+ * 扫描数据 并过滤
+ * @param nameSpace  表命名空间
+ * @param tableName 表名称
+ * @param startRow 起始行号
+ * @param stopRow 结束行号
+ * @param RowFamily 列族
+ * @param RowName 列名
+ * @param Value 值
+ * @throws IOException 正常抛出
+ */
+public static void FilterContent(String nameSpace,String tableName, String startRow,
+                                 String stopRow,String RowFamily,
+                                 String RowName,String Value) throws IOException
+{
+    //1.得到表
+    Table table = connection.getTable(TableName.valueOf(nameSpace,tableName));
+    //2.创建Scan对象
+    Scan scan = new Scan();
+    //起始位
+    scan.withStartRow(Bytes.toBytes(startRow));
+    //结束位
+    scan.withStopRow(Bytes.toBytes(stopRow));
+    //创建过滤器
+    FilterList filterList = new FilterList();
+    //只保留值的过滤(列)
+    //列族,列名,方式(EQUAL = 等于),具体值
+    //整行 => SingleColumnValueFilter 使用方式一样
+    ColumnValueFilter columnValueFilter = new ColumnValueFilter(
+        Bytes.toBytes(RowFamily),  //列族名称
+        Bytes.toBytes(RowName),  //列明
+        CompareOperator.EQUAL,  //等于
+        Bytes.toBytes(Value)); //具体值
+    filterList.addFilter(columnValueFilter);
+    //添加过滤器
+    scan.setFilter(filterList);
+    //得到数据
+    ResultScanner scanner = table.getScanner(scan);
+    //遍历数据
+    for (Result result : scanner)
+    {
+        Cell[] cells = result.rawCells();
+        for (Cell cell : cells)
+        {
+            System.out.println(new java.lang.String(CellUtil.cloneValue(cell), StandardCharsets.UTF_8));
+        }
+    }
+    table.close();
+}
+
+//过滤
+FilterContent("NewNameSpace","NewTable","1000","1003","info","姓名","王五");
+connection.close();
+
+```
+
+
+
+# 2.3.2 删除某一列数据 delete
+
+```java
+/**
+ * 删除一列内容
+ * @param nameSpace 名称空间
+ * @param tableName 表名
+ * @param RowFamily 列族
+ * @param RowKey RowKey
+ * @param RowName 列名
+ * @throws IOException 正常抛出
+ */
+public static void deltetContentRow(String nameSpace,String tableName, String RowFamily,
+                                    String RowKey,String RowName) throws IOException
+{
+    //获取表 table
+    Table table1 = connection.getTable(TableName.valueOf(nameSpace, tableName));
+    //创建删除对象 传入 RowKey
+    Delete delete = new Delete(Bytes.toBytes(RowKey));
+    //添加删除内容 传入 列族  列名
+    delete.addColumn(Bytes.toBytes(RowFamily),Bytes.toBytes(RowName));
+    //删除
+    table1.delete(delete);
+    table1.close();
+}
+//删除
+deltetContentRow("NewNameSpace","NewTable","info","1005","666");
+connection.close();
+```
+
+
+
+# 2.3.3 HBase对接Hive
+
+- #### 在HBase的site配置下添加如下内容
+
+```xml
+<property>
+    <name>hive.zookeeper.quorum</name>
+    <value>bigdata1,bigdata2,bigdata3</value>
+</property>
+<property>
+    <name>hive.zookeeper.client.port</name>
+    <value>2181</value>
+</property>
+```
+
+- 创建关联表 插入数据到Hive表的同时能影响HBase表
+- 在Hive中创建表同时关联HBase
+
+```hive
+CREATE TABLE 表名(
+	empno int,
+    job string,
+    mgr string
+)STORED BY 'org.apache.hadoop.hive.hbase.HBaseStorageHandler'
+with SERDEPROPERTIES("hbase.colums.mapping"=":key,info:empno,info:job,info:mgr")
+tblproperties("hbase.table.name"="表名")；
+```
+
+- 关联表只能使用insert into 进行插入数据
+
+
+
+- ### Hive表关联HBase进行数据操作
+
+- #### Hive创建外部表
+
+```hive
+CREATE EXTERNAL TABLE 表名(
+	字段名 类型名,...
+)
+stored by
+'org.apache.hadoop.hiv.hbase.HBaseStorageHandler'
+with serdeproperties("hbase.columns.mapping" =
+                    ":key,info:字段...")
+tblproperties ("hbase.table.name" = "HBase内的表名称")
+```
+

@@ -1,0 +1,48 @@
+put 'ods:order_master_offline','0+20241103104721666','info:order_id','1'
+put 'ods:order_master_offline','0+20241103104721666','info:order_sn','2022031631349116'
+put 'ods:order_master_offline','0+20241103104721666','info:customer_id','9097'
+put 'ods:order_master_offline','0+20241103104721666','info:shipping_user','孙燕'
+put 'ods:order_master_offline','0+20241103104721666','info:province','上海市'
+put 'ods:order_master_offline','0+20241103104721666','info:city','上海市'
+put 'ods:order_master_offline','0+20241103104721666','info:address','上海市上海市水城南路854598号17层'
+put 'ods:order_master_offline','0+20241103104721666','info:order_source','1'
+put 'ods:order_master_offline','0+20241103104721666','info:payment_method','3'
+put 'ods:order_master_offline','0+20241103104721666','info:order_money','2177.28'
+put 'ods:order_master_offline','0+20241103104721666','info:district_money','1306.37'
+put 'ods:order_master_offline','0+20241103104721666','info:shipping_money','22.12'
+put 'ods:order_master_offline','0+20241103104721666','info:payment_money','893.03'
+put 'ods:order_master_offline','0+20241103104721666','info:shipping_comp_name','韵达'
+put 'ods:order_master_offline','0+20241103104721666','info:shipping_sn','9339334312635'
+put 'ods:order_master_offline','0+20241103104721666','info:create_time','20220317170357'
+put 'ods:order_master_offline','0+20241103104721666','info:shipping_time','NULL'
+put 'ods:order_master_offline','0+20241103104721666','info:pay_time','NULL'
+put 'ods:order_master_offline','0+20241103104721666','info:receive_time','NULL'
+put 'ods:order_master_offline','0+20241103104721666','info:order_status','已下单'
+put 'ods:order_master_offline','0+20241103104721666','info:order_point','89'
+put 'ods:order_master_offline','0+20241103104721666','info:invoice_title','南康信息有限公司'
+put 'ods:order_master_offline','0+20241103104721666','info:modified_time','2022-03-17 17:03:57.000'
+
+
+order_id
+order_sn
+customer_id
+shipping_user
+province
+city
+address
+order_source
+payment_method
+order_money
+district_money
+shipping_money
+payment_money
+shipping_comp_name
+shipping_sn
+create_time
+shipping_time
+pay_time
+receive_time
+order_status
+order_point
+invoice_title
+modified_time

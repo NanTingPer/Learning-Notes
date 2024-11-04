@@ -483,7 +483,7 @@ System.out.println(cf);
 
 
 
-## 2.2.1 多线程连接 单例模式
+# 2.2.1 多线程连接 单例模式
 
 ```java
 //创建静态字段
@@ -514,7 +514,7 @@ public static void main(String[] args) throws IOException
 
 
 
-## 2.2.2 创建命名空间
+# 2.2.2 创建命名空间
 
 ```java
 /***
@@ -564,7 +564,7 @@ public static void main(String[] args) throws IOException
 
 
 
-## 2.2.3 异常处理
+# 2.2.3 异常处理
 
 > 创建命名空间出现的问题 都属于本方法自身的问题 不应该抛出
 
@@ -584,7 +584,7 @@ try
 
 
 
-## 2.2.4 判断表格是否存在
+# 2.2.4 判断表格是否存在
 
 ```java
 /**
@@ -616,7 +616,7 @@ System.out.println(isTableExists("123", "123"));
 
 
 
-## 2.2.5 创建表格
+# 2.2.5 创建表格
 
 - 需要 命名空间的名称,表格的名称,列族的名称
   - 列族可以多个 String...

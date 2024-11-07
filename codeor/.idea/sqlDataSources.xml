@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="DdlMappings">
+    <mapping uuid="88f2ec69-76b5-4228-af9a-fbfb626e6ffc" name="Master Mapping">
+      <data-sources db="5698d37b-bcaf-44e4-80c2-5dd084fdcaf1" ddl="1a73bb02-fd40-4d4a-b8be-c7b39c082b60" />
+    </mapping>
+  </component>
+  <component name="SqlDataSourceStorage">
+    <option name="dataSources">
+      <list>
+        <State>
+          <option name="id" value="1a73bb02-fd40-4d4a-b8be-c7b39c082b60" />
+          <option name="name" value="Master (DDL)" />
+          <option name="dbmsName" value="HIVE" />
+          <option name="urls">
+            <array />
+          </option>
+          <option name="outLayout" value="File per object by schema.groovy" />
+        </State>
+      </list>
+    </option>
+  </component>
+</project>

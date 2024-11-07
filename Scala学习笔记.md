@@ -400,6 +400,22 @@ var tupl : Array[Tuple2[String,Int]]  = new Array[Tuple2[String, Int](2);
 
   
 
+## 列表展开
+
+```scala
+var list : List[Int] = List(1,23,4,5,6);
+
+list:_* => 1,23,4,5,6
+```
+
+
+
+
+
+
+
+
+
 # 集 - Set Or Map
 
 ### Set

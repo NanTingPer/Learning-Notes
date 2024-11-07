@@ -1,0 +1,12 @@
+C:\Users\Administrator\Documents\GitHub\Learning-Notes\codeor\Cshps\Res\ILCursorRun\bin\Debug\net8.0\ILCursorRun.deps.json
+C:\Users\Administrator\Documents\GitHub\Learning-Notes\codeor\Cshps\Res\ILCursorRun\bin\Debug\net8.0\ILCursorRun.dll
+C:\Users\Administrator\Documents\GitHub\Learning-Notes\codeor\Cshps\Res\ILCursorRun\bin\Debug\net8.0\ILCursorRun.pdb
+C:\Users\Administrator\Documents\GitHub\Learning-Notes\codeor\Cshps\Res\ILCursorRun\obj\Debug\net8.0\ILCursorRun.GeneratedMSBuildEditorConfig.editorconfig
+C:\Users\Administrator\Documents\GitHub\Learning-Notes\codeor\Cshps\Res\ILCursorRun\obj\Debug\net8.0\ILCursorRun.AssemblyInfoInputs.cache
+C:\Users\Administrator\Documents\GitHub\Learning-Notes\codeor\Cshps\Res\ILCursorRun\obj\Debug\net8.0\ILCursorRun.AssemblyInfo.cs
+C:\Users\Administrator\Documents\GitHub\Learning-Notes\codeor\Cshps\Res\ILCursorRun\obj\Debug\net8.0\ILCursorRun.csproj.CoreCompileInputs.cache
+C:\Users\Administrator\Documents\GitHub\Learning-Notes\codeor\Cshps\Res\ILCursorRun\obj\Debug\net8.0\ILCursorRun.sourcelink.json
+C:\Users\Administrator\Documents\GitHub\Learning-Notes\codeor\Cshps\Res\ILCursorRun\obj\Debug\net8.0\ILCursorRun.dll
+C:\Users\Administrator\Documents\GitHub\Learning-Notes\codeor\Cshps\Res\ILCursorRun\obj\Debug\net8.0\refint\ILCursorRun.dll
+C:\Users\Administrator\Documents\GitHub\Learning-Notes\codeor\Cshps\Res\ILCursorRun\obj\Debug\net8.0\ILCursorRun.pdb
+C:\Users\Administrator\Documents\GitHub\Learning-Notes\codeor\Cshps\Res\ILCursorRun\obj\Debug\net8.0\ref\ILCursorRun.dll

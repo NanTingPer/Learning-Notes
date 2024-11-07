@@ -4,6 +4,8 @@ https://www.bilibili.com/video/BV1Cm421373b?spm_id_from=333.788.videopod.episode
 
 # MySQL
 
+with 临时表
+
 # 1.0 概念
 
 - 数据定义语句 => 创建和修改盛放数据的容器 DDL
@@ -413,3 +415,29 @@ on 连接条件
 left左外关联 => from的表的数据全部都要显示
 
 right右外关联 => 以join的表的数据为主
+
+
+
+
+
+# 9.6 窗口函数
+
+> ### MySQL 8
+
+- #### 排序类
+
+1. rank,dense_rank,row_number
+
+```sql
+--按班级分组后打上序号 不考虑并列
+select *,row_number() over (partition by cid order by 分数) from SQLTable
+
+--按照班级分组后做跳跃排名 考虑并列
+select *,rank() over (partition by cid order by 分数) from SQLTable
+
+--按照班级分组后作连续排名 考虑并列
+select *,dense_rank() over (partition by cid order by 分数) from SQLTable
+
+
+```
+

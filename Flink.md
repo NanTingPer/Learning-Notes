@@ -661,3 +661,963 @@ taskmanager.numberOfTaskSlots: 1 #设置的是每个TM的个数 不是总数
   - JobMaster -> 分配任务 (Job Master -> NodeManager内的TaskManager) 按照执行流图分配
 
   - 生成物理流图
+
+
+
+# 2.3 动手！
+
+# 2.4 DataStreamAPI
+
+> #### DataStreamAPI是Flink的核心层API。一个Flink程序,其实就是对DataStream的各种转换
+
+- Environment(获取执行环境) -> Source(读取数据源) -> Transformation(转换操作) -> Sink(输出)  -> Execute(触发执行)
+
+
+
+## 2.4.1 Env
+
+1. 本地运行环境
+2. 远程运行环境
+3. 自动识别运行环境 直接用这个就行了
+   1. 底层调用了getExecutionEnvorpnment
+      1. 如果能获取到远程环境 直接使用返回远程环境
+      2. 如果获取不到远程环境 使用了 createLocalEnvironment
+
+```java
+StreamExecutionEnvironment.getExecutionEnvironment(); //自动识别 远程集群还是本地环境
+```
+
+- ### Configuration(配置文件)
+
+```java
+//配置文件
+Configuration conf = new Configuration();
+//Flink封装了一个有关配置的类
+//          RestOptions
+conf.set(RestOptions.BIND_PORT,"8081");
+
+//使用配置文件获取运行环境 未配置的配置项 按照默认值
+StreamExecutionEnvironment Env = StreamExecutionEnvironment.getExecutionEnvironment(conf);
+```
+
+
+
+- ### 运行模式设置 -> 流还是批
+
+- ##### 默认是流处理
+
+1. BATCH => 批
+2. AUTOMATIC => 自动
+3. STREAMING => 流
+
+```java
+//流处理
+Env.setRuntimeMode(RuntimeExecutionMode.STREAMING);
+//自动
+Env.setRuntimeMode(RuntimeExecutionMode.AUTOMATIC);
+//批处理
+Env.setRuntimeMode(RuntimeExecutionMode.BATCH);
+```
+
+
+
+- #### 通过命令行设置 一般这样做 程序不写死
+
+```sh
+bin/flink run -Dexecution.runtime-mode=BATCH ...
+```
+
+
+
+## 2.4.2 Env.execute();
+
+> 如果两套逻辑可以使用 executeAsync() 但是不建议
+
+```java
+//默认一个env.execute()触发一个flink job
+//		一个main方法可以调用多个execute,但是没有意义,指定到第一个就会阻塞
+
+// env.executeAsync() 异步触发 不阻塞
+//		=> 一个main方法里excuteAsync()个数 = 生成的flink job数
+
+// yarn-application集群 提交一次，集群里会有几个flinkjob?
+// 		=> 取决于调用了几个excuteAsync() 对应就有几个job
+//		=> 对应application集群内就有n个job
+//		=> 对应jobmanager当中，会有n个JobMaster
+
+//如果后面还有 execute 那么第一个必须是异步
+Env.executeAsync();
+Env.execute();
+```
+
+
+
+# 2.5 源算子(Source)
+
+## 1.0 准备工作
+
+为了方便练习 使用WaterSensor作为数据模型
+
+- 所有属性的类型都是可以序列化的
+- 有一个无参构造方法
+- 类是公共的 public
+
+| 字段名 | 数据类型 | 说明             |
+| ------ | -------- | ---------------- |
+| id     | String   | 水位传感器类型   |
+| ts     | Long     | 传感器记录时间戳 |
+| vc     | Integer  | 水位记录         |
+
+> ## 创建JavaBeans 简单的Java对象
+
+- Flink会把这样的类作为一种特殊的POJO数据类型来对待 方便数据的解析和序列化
+
+```java
+package SourceDome;
+
+import java.util.Objects;
+
+public class WaterSensor
+{
+    /**
+     * 水位传感器类型
+     */
+    public String id;
+
+    /**
+     * 传感器记录时间戳
+     */
+    public Long ts;
+
+    /**
+     * 水位记录
+     */
+    public int vc;
+
+    /**
+     * 空参 一定要提供
+     */
+    public WaterSensor()
+    {
+    }
+
+    /**
+     * 构建一个水位传感器
+     * @param id 水位传感器类型
+     * @param ts 传感器记录时间戳
+     * @param vc 水位记录
+     */
+    public WaterSensor(String id, Long ts, int vc)
+    {
+        this.id = id;
+        this.ts = ts;
+        this.vc = vc;
+    }
+
+    public String getId()
+    {
+        return id;
+    }
+
+    public void setId(String id)
+    {
+        this.id = id;
+    }
+
+    public Long getTs()
+    {
+        return ts;
+    }
+
+    public void setTs(Long ts)
+    {
+        this.ts = ts;
+    }
+
+    public int getVc()
+    {
+        return vc;
+    }
+
+    public void setVc(int vc)
+    {
+        this.vc = vc;
+    }
+
+    @Override
+    public String toString()
+    {
+        return "WaterSensor{" +
+            "id='" + id + '\'' +
+            ", ts=" + ts +
+            ", vc=" + vc +
+            '}';
+    }
+
+    @Override
+    public boolean equals(Object o)
+    {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        WaterSensor that = (WaterSensor) o;
+        return vc == that.vc && Objects.equals(id, that.id) && Objects.equals(ts, that.ts);
+    }
+
+    @Override
+    public int hashCode()
+    {
+        return Objects.hash(id, ts, vc);
+    }
+}
+```
+
+
+
+## 1.1 集合/数组数据源
+
+```java
+//环境
+StreamExecutionEnvironment Env = StreamExecutionEnvironment.getExecutionEnvironment();
+//获取
+DataStreamSource<Integer> ArraysSource = Env.fromCollection(Arrays.asList(1, 1, 2, 34, 5, 64, 6));
+//打印
+ArraysSource.print();
+Env.execute();
+```
+
+
+
+## 1.2 文件数据源
+
+- #### 导入依赖
+
+```xml
+<dependency>
+  <groupId>org.apache.flink</groupId>
+  <artifactId>flink-connector-files</artifactId>
+  <version>1.17.0</version>
+</dependency>
+```
+
+- 如何知道参数到底要写什么 ? CTRL+H看实现
+  - 点进构造器
+  - 查看构造器参数
+  - 点进构造器参数
+  - 如果是接口 查看实现 实现就是参数要的东西
+
+```java
+public class FileSourceDome
+{
+    public static void main(String[] args) throws Exception
+    {
+        StreamExecutionEnvironment Env = StreamExecutionEnvironment.getExecutionEnvironment();
+//        FileSource.FileSourceBuilder<String> filesource = FileSource.forRecordStreamFormat(
+//            new TextLineInputFormat(),
+//            Path.fromLocalFile(
+//                new File("C:\\LiMGren\\codeor\\Flink\\src\\main\\java\\_001\\word.txt")
+//            )
+//        );
+        //创建文件 数据源
+        FileSource<String> filesource = FileSource
+            .forRecordStreamFormat(
+                new TextLineInputFormat(),
+                new Path("C:\\LiMGren\\codeor\\Flink\\src\\main\\java\\_001\\word.txt")
+            ).build();
+        //创建数据流
+        DataStreamSource<String> FileSourceData = Env.fromSource(filesource, WatermarkStrategy.noWatermarks(), "666");
+        //打印
+        FileSourceData.print();
+        //行动
+        Env.execute();
+    }
+}
+```
+
+
+
+> ### 写法
+
+```java
+// env.fromSource(Source的实现类,Watermark,名字)
+```
+
+
+
+## 1.3 Kafka数据源
+
+- #### 导入依赖
+
+```xml
+<dependency>
+  <groupId>org.apache.flink</groupId>
+  <artifactId>flink-connector-kafka</artifactId>
+  <version>1.17.0</version>
+</dependency>
+```
+
+> kafka消费者的参数
+>
+> ​	auto.reset.offsets
+>
+> ​		earliest : 如果有offset , 从offset继续消费 ；如果没有offset, 从最早消费
+>
+> ​		lates : 如果有offset ，从offset继续消费;如果没有offset,从最新消费
+>
+> Flink的消费者参数 offset消费策略 OffsetInitializer
+>
+> 默认 earliest
+>
+> ​		earliest : 一定从最早消息
+>
+> ​		lates : 一定从最新消费
+
+```java
+public class KafkaSourceDome
+{
+    public static void main(String[] args) throws Exception
+    {
+        StreamExecutionEnvironment Env = StreamExecutionEnvironment.getExecutionEnvironment();
+        KafkaSource<String> Kafka =
+            KafkaSource.<String>builder()
+                       //设置消费主题
+                       .setTopics("Kafka666")
+                       //设置Kafka链接
+                       .setBootstrapServers("192.168.45.13:9092")
+                       //设置反序列化器
+                       .setValueOnlyDeserializer(new SimpleStringSchema())
+                       //设置便宜 从最新开始
+                       .setStartingOffsets(OffsetsInitializer.latest())
+                       //设置消费者组
+                       .setGroupId("KafkaSource")
+                       //得到这个Source
+                       .build();
+        Env.fromSource(Kafka, WatermarkStrategy.noWatermarks(),"Kafka666").print();
+        Env.execute();
+    }
+}
+```
+
+
+
+## 1.4 数据生成器源
+
+- #### 导入依赖 我这边没出来
+
+```xml
+<dependency>
+  <groupId>org.apache.flink</groupId>
+  <artifactId>flink-connector-datagen</artifactId>
+  <version>1.17.0</version>
+</dependency>
+```
+
+
+
+## 1.5 Flink支持的数据类型
+
+> #### 在Flink中 其需要的类型是TypeInformation类型
+>
+> 标准POJO 否则会被当作黑盒，无法访问内部
+>
+> - 所有属性的类型都是可以序列化的
+> - 有一个无参构造方法
+> - 类是公共的 public
+
+- 等效
+
+```java
+//                    .returns(Types.TUPLE(Types.STRING,Types.INT))
+            .returns(new TypeHint<Tuple2<String, Integer>>() {})
+```
+
+
+
+# 2.6 基本转换算子
+
+> #### 标准写法 新建 包存放公共算子
+>
+> 新建 functions包
+
+## 1.0 Map(转换算子)
+
+在functions包下创建MapFun类 实现MapFunction接口
+
+```java
+package functions;
+
+import WaterSensors.WaterSensor;
+import org.apache.flink.api.common.functions.MapFunction;
+
+public class MapFun implements MapFunction<WaterSensor,String>
+{
+
+    @Override
+    public String map(WaterSensor waterSensor) throws Exception
+    {
+        return waterSensor.getId();
+    }
+}
+```
+
+> ### 使用
+
+```java
+package Transfrom;
+
+import WaterSensors.WaterSensor;
+import functions.MapFun;
+import org.apache.flink.streaming.api.datastream.DataStreamSource;
+import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
+
+public class Map_fun
+{
+    public static void main(String[] args) throws Exception
+    {
+        StreamExecutionEnvironment Env = StreamExecutionEnvironment.getExecutionEnvironment();
+
+        DataStreamSource<WaterSensor> Data = Env.fromElements(
+            new WaterSensor("sd1", 2L, 3),
+            new WaterSensor("sd2", 2L, 3),
+            new WaterSensor("sd3", 2L, 3)
+        );
+
+        Data.map(new MapFun()).print();
+
+        Env.execute();
+    }
+}
+```
+
+
+
+## 1.1 Filter
+
+> true保留 false丢弃
+
+```java
+package Transfrom;
+
+import WaterSensors.WaterSensor;
+import org.apache.flink.api.common.functions.FilterFunction;
+import org.apache.flink.streaming.api.datastream.DataStreamSource;
+import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
+
+public class Filter_Fun
+{
+    public static void main(String[] args) throws Exception
+    {
+        StreamExecutionEnvironment Env = StreamExecutionEnvironment.getExecutionEnvironment();
+
+        DataStreamSource<WaterSensor> Data = Env.fromElements(
+            new WaterSensor("sd1", 2L, 3),
+            new WaterSensor("sd1", 343L, 3),
+            new WaterSensor("sd2", 2L, 3),
+            new WaterSensor("sd3", 2L, 3)
+        );
+
+        Data.filter(new FilterFunction<WaterSensor>() {
+            @Override
+            public boolean filter(WaterSensor waterSensor) throws Exception
+            {
+                return "sd1".equals(waterSensor.getId());
+            }
+        }).print();
+
+        Env.execute();
+    }
+}
+```
+
+```java
+16> WaterSensor{id='sd1', ts=2, vc=3}
+17> WaterSensor{id='sd1', ts=343, vc=3}
+```
+
+
+
+## 1.2 flatMap
+
+> 对于sd1的数据一进一出
+>
+> 对于sd2的数据一进多出
+>
+> 对于sd3的数据一进零出 类似过滤
+
+```java
+package Transfrom;
+
+import WaterSensors.WaterSensor;
+import org.apache.flink.api.common.functions.FilterFunction;
+import org.apache.flink.api.common.functions.FlatMapFunction;
+import org.apache.flink.streaming.api.datastream.DataStreamSource;
+import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
+import org.apache.flink.util.Collector;
+
+public class flatMap_Fun
+{
+    public static void main(String[] args) throws Exception
+    {
+        StreamExecutionEnvironment Env = StreamExecutionEnvironment.getExecutionEnvironment();
+
+        DataStreamSource<WaterSensor> Data = Env.fromElements(
+            new WaterSensor("sd1", 2L, 3),
+            new WaterSensor("sd1", 343L, 3),
+            new WaterSensor("sd2", 2L, 3),
+            new WaterSensor("sd3", 2L, 3)
+        );
+        //如果是sd1输出ts
+        //如果是sd2输出ts和vc
+
+        Data.flatMap(new FlatMapFunction<WaterSensor, String>() {
+            @Override
+            public void flatMap(WaterSensor waterSensor, Collector<String> collector) throws Exception
+            {
+                if("sd1".equals(waterSensor.getId())){
+                    collector.collect(waterSensor.getId() + "\tts: " +  waterSensor.ts);
+                }else if ("sd2".equals(waterSensor.getId())) {
+                    collector.collect(waterSensor.getId() + "\tts: " +  waterSensor.ts);
+                    collector.collect(waterSensor.getId() + "\tvc: " +  waterSensor.vc);
+
+                }
+            }
+        }).print();
+
+        Env.execute();
+    }
+}
+```
+
+```java
+12> sd1	ts: 343
+13> sd2	ts: 2
+11> sd1	ts: 2
+13> sd2	vc: 3
+```
+
+
+
+# 2.7 聚合算子
+
+## 1.0 按键分区(KeyBy)
+
+> #### 相同Key的数据发往同一个分区
+>
+> #### 按照Key分组	
+
+> ##### 返回的是一个KeydStream 键控流
+>
+> Keyby不是转换算子，只是对数据进行重分区
+>
+> 转换算子都能设置并行度 而Keyby不是转换算子
+
+> Keyby分区与分组的关系
+>
+> ​	keyby 是对数据分组 保证相同key的数据 在同一个分区
+>
+> ​	分区 : 一个子任务 可以理解为一个分区
+>
+> 相同组的数据在同一个分区
+>
+> 一个分区可以有多个组
+
+```java
+//学生、教室。学生分了小组 1、2、3组
+//教师是物理上的资源 也就是并行度 子任务
+//KeyBy就是 老师跟同学说你是第几组
+//对于1组的同学 2组的同学 3组的同学都在同个教师
+```
+
+```java
+package aggreagte;
+
+import WaterSensors.WaterSensor;
+import org.apache.flink.api.java.functions.KeySelector;
+import org.apache.flink.streaming.api.datastream.DataStreamSource;
+import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
+
+public class KeyByFun
+{
+    public static void main(String[] args) throws Exception
+    {
+        StreamExecutionEnvironment Env = StreamExecutionEnvironment.getExecutionEnvironment();
+//        Env.setParallelism(2);//设置并行度
+        DataStreamSource<WaterSensor> Data = Env.fromElements(
+            new WaterSensor("sd1", 2L, 3),
+            new WaterSensor("sd1", 3L, 7),
+            new WaterSensor("sd2", 2L, 8),
+            new WaterSensor("sd2", 6L, 5),
+            new WaterSensor("sd3", 8L, 14),
+            new WaterSensor("sd3", 9L, 5)
+        );
+        //按照 id 分组
+        //KeySelector<输入的类型,分组字段的类型>
+        Data.keyBy(new KeySelector<WaterSensor, String>() {
+            @Override
+            public String getKey(WaterSensor waterSensor) throws Exception
+            {
+                return waterSensor.getId();
+            }
+        }).print();
+        Env.execute();
+    }
+}
+```
+
+```java
+10> WaterSensor{id='sd1', ts=2, vc=3}
+10> WaterSensor{id='sd1', ts=3, vc=7}
+10> WaterSensor{id='sd2', ts=2, vc=8}
+10> WaterSensor{id='sd2', ts=6, vc=5}
+10> WaterSensor{id='sd3', ts=8, vc=14}
+10> WaterSensor{id='sd3', ts=9, vc=5}
+```
+
+
+
+## 1.1 简单聚合算子
+
+> > 只有经过Keyby这种处理后才会有这些方法
+> >
+> > sum / min / max / minBy / maxBy
+>
+> max\maxby的区别：同min
+>
+> ​	max 只会取比较字段的最大值，非比较字段保留第一次的值
+>
+> ​	maxby 取比较字段的最大值，同时非比较字段 取 最大值这条数据的值
+
+```java
+max("vc")
+10> WaterSensor{id='sd1', ts=2, vc=3}
+10> WaterSensor{id='sd1', ts=2, vc=7}
+10> WaterSensor{id='sd2', ts=2, vc=8}
+10> WaterSensor{id='sd2', ts=2, vc=8}
+10> WaterSensor{id='sd3', ts=8, vc=14}
+10> WaterSensor{id='sd3', ts=8, vc=14}
+```
+
+```java
+DataStreamSource<WaterSensor> Data = Env.fromElements(
+    new WaterSensor("sd1", 2L, 3),
+    new WaterSensor("sd1", 3L, 7),
+    new WaterSensor("sd2", 2L, 8),
+    new WaterSensor("sd2", 6L, 5),
+    new WaterSensor("sd3", 20L, 14),
+    new WaterSensor("sd3", 18L, 5)
+);
+maxBy("vc")
+    
+10> WaterSensor{id='sd1', ts=2, vc=3}
+10> WaterSensor{id='sd1', ts=3, vc=7}
+10> WaterSensor{id='sd2', ts=2, vc=8}
+10> WaterSensor{id='sd2', ts=2, vc=8}
+10> WaterSensor{id='sd3', ts=20, vc=14}
+10> WaterSensor{id='sd3', ts=20, vc=14}
+```
+
+
+
+## 1.2 reduce聚合
+
+> 1. keyby之后调用
+> 2. 输入类型 = 输出类型，类型不能变
+> 3. 每个key的第一条数据来的时候，不会执行reduce方法，存起来 直接返回
+>
+> v1是之前计算的结果，v2是来的数据
+
+```java
+DataStreamSource<WaterSensor> Data = Env.fromElements(
+    new WaterSensor("sd1", 2L, 3),
+    new WaterSensor("sd1", 3L, 7),
+    new WaterSensor("sd2", 2L, 8),
+    new WaterSensor("sd2", 6L, 5),
+    new WaterSensor("sd3", 20L, 14),
+    new WaterSensor("sd3", 18L, 5)
+);
+.reduce(new ReduceFunction<WaterSensor>() {
+  @Override
+  public WaterSensor reduce(WaterSensor t1, WaterSensor t2) throws Exception
+  {
+      return new WaterSensor(t1.id,t1.ts + t2.ts,t1.vc + t2.vc);
+  }
+  }).print();
+
+10> WaterSensor{id='sd1', ts=2, vc=3}
+10> WaterSensor{id='sd1', ts=5, vc=10}
+10> WaterSensor{id='sd2', ts=2, vc=8}
+10> WaterSensor{id='sd2', ts=8, vc=13}
+10> WaterSensor{id='sd3', ts=20, vc=14}
+10> WaterSensor{id='sd3', ts=38, vc=19}
+```
+
+
+
+## 1.3 UDF用户自定义
+
+> 直接new
+>
+> 定义一个类
+>
+> ##### 在实现自定义函数的时候可以选择定义一个构造器 在new的时候传入匹配的参数
+
+# 2.8 富函数
+
+> #### 内含生命周期管理办法
+>
+> 
+
+> RichXXXFunction : 富函数
+>
+> 1. 多了生命周期管理方法
+>
+>    open -> 每个子任务开始时调用
+>
+>    close -> 每个子任务结束时调用
+>
+>    ->如果是Flink程序异常退出 close方法将不会被调用
+>
+>    ->如果正常调用cancel命令 可以close
+>
+> 2. 多了一个 运行时上下文
+>
+>    可以获取一些运行时的环境信息，比如 子任务编号、名称、其他...
+
+```java
+Env.setParallelism(2);
+DataStreamSource<WaterSensor> Data = Env.fromElements(
+    new WaterSensor("sd1", 2L, 3),
+    new WaterSensor("sd1", 343L, 3),
+    new WaterSensor("sd2", 2L, 3),
+    new WaterSensor("sd3", 2L, 3)
+);
+//使用富函数
+Data.filter(new RichFilterFunction<WaterSensor>() {
+    @Override
+    public boolean filter(WaterSensor waterSensor) throws Exception
+    {
+        return true;
+    }
+    @Override
+    public void open(Configuration parameters) throws Exception
+    {
+        super.open(parameters);
+        //getRuntimeContext 获取运行时上下文
+        System.out.println(getRuntimeContext().getTaskNameWithSubtasks() + "调用了open");
+    }
+    @Override
+    public void close() throws Exception
+    {
+        super.close();
+        System.out.println(getRuntimeContext().getTaskNameWithSubtasks() + "调用了close");
+    }
+}).print();
+```
+
+
+
+- 可以看到 每个任务线程都会运行一次
+
+```java
+Filter -> Sink: Print to Std. Out (1/2)#0调用了open
+Filter -> Sink: Print to Std. Out (2/2)#0调用了open
+2> WaterSensor{id='sd1', ts=343, vc=3}
+1> WaterSensor{id='sd1', ts=2, vc=3}
+2> WaterSensor{id='sd3', ts=2, vc=3}
+1> WaterSensor{id='sd2', ts=2, vc=3}
+Filter -> Sink: Print to Std. Out (2/2)#0调用了close
+Filter -> Sink: Print to Std. Out (1/2)#0调用了close
+```
+
+
+
+# 2.9 分区算子
+
+> ##### shuffle随机分区 : ranom.nextInt(下游算子并行度)
+>
+> ##### rebalance全局轮询 : nextChannelToSendTo = (nextChannelToSendTo+1) % 下游算子并行度
+>
+> ##### 	如果是数据源倾斜的场景，source读进来后，调用rebalance,就可以解决 **数据源**的数据倾斜
+
+> ##### rescale() 缩放局部轮询, 局部组队 比rebalance更高效
+>
+> ##### broadcast 广播 ： 发送给下游所有的子任务
+>
+> ##### global 全局 : 全部发往第一个子任务 return 0;
+
+
+
+- ### 自定义分区器
+
+1. 实现Partitioner接口
+2. 重写partition方法 该方法返回要去的分区
+
+```java
+package SourceDome;
+import org.apache.flink.api.common.functions.Partitioner;
+public class 自定义分区器 implements Partitioner
+{
+    //需要注意的是 任务的起始编号是0
+    @Override
+    public int partition(Object o, int i)
+    {
+        if(o.hashCode() % i <= 0) return 0;
+        if(o.hashCode() % i > i) return i;
+        return o.hashCode() % i - 1;
+    }
+}
+```
+
+```java
+package SourceDome;
+import org.apache.flink.streaming.api.datastream.DataStreamSource;
+import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
+public class SocktSourceParititon
+{
+    public static void main(String[] args) throws Exception
+    {
+        StreamExecutionEnvironment Env = StreamExecutionEnvironment.getExecutionEnvironment();
+        Env.setParallelism(5);
+        DataStreamSource<String> Data = Env.socketTextStream("192.168.45.13", 7777);
+        
+        //使用自定义分区器
+        Data.partitionCustom(
+            new 自定义分区器(), k -> k
+        ).print();
+        Env.execute();
+    }
+}
+```
+
+- 由于我使用hash取余，所以相同的内容肯定在同一个分区
+
+```java
+1> 2
+2> 666
+1> 123
+2> 666
+1> 444
+1> 444
+4> 556465
+1> 132
+1> 123
+1> 444
+4> 44
+```
+
+
+
+# 3.0 分流
+
+> Fliter可以简单实现 但是不推荐 效率低
+>
+> #### 当你发现当前的算子都不能满足你的要求时，可以使用process算子
+>
+> #### 	这个算子是底层算子，是最灵活的算子
+
+- 先定义一个map,用于将输入数据进行转换，转换为先前自定义的一个类
+
+```java
+package functions;
+import WaterSensors.WaterSensor;
+import org.apache.flink.api.common.functions.MapFunction;
+public class WaterSensorMapFunction implements MapFunction<String, WaterSensor>
+{
+    @Override
+    public WaterSensor map(String s) throws Exception
+    {
+        String[] split = s.split(",");
+        String id;
+        Long ts;
+        int vc;
+        id = split[0];
+        try{
+            ts = Long.valueOf(split[1]);
+        }catch (Exception e){ ts = 0L;}
+        try{
+            vc = Integer.valueOf(split[2]);
+        }catch (Exception e){ vc = 0;}
+        return new WaterSensor(id,ts,vc);
+    }
+}
+```
+
+> ## 分流
+
+```java
+package OutStream;
+
+import WaterSensors.WaterSensor;
+import functions.WaterSensorMapFunction;
+import org.apache.flink.api.common.typeinfo.Types;
+import org.apache.flink.streaming.api.datastream.*;
+import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
+import org.apache.flink.streaming.api.functions.ProcessFunction;
+import org.apache.flink.util.*;
+
+public class ProcessOutStream
+{
+    public static void main(String[] args) throws Exception
+    {
+        StreamExecutionEnvironment Env = StreamExecutionEnvironment.getExecutionEnvironment();
+
+        DataStreamSource<String> DataStream = Env.socketTextStream("192.168.45.13", 7777);
+
+        //将输入的数据转换为WaterSensor
+        SingleOutputStreamOperator<WaterSensor> map = DataStream.map(new WaterSensorMapFunction());
+
+        //创建两个支流
+        //第一个参数是支流名称
+        //第二个参数是该流内的数据类型
+        OutputTag<WaterSensor> s1 = new OutputTag<>("s1", Types.POJO(WaterSensor.class));
+        OutputTag<WaterSensor> s2 = new OutputTag<>("s2", Types.POJO(WaterSensor.class));
+
+        //分流
+        SingleOutputStreamOperator<WaterSensor> Value = map.process(new ProcessFunction<WaterSensor, WaterSensor>()
+        {
+
+            //第一个参数是传入的数据
+            //第二个参数是上下文
+            //第三个参数是给下游发送消息的(主干道)
+            @Override
+            public void processElement(WaterSensor waterSensor, ProcessFunction<WaterSensor, WaterSensor>.Context context, Collector<WaterSensor> collector) throws Exception
+            {
+                //如果id是s1那么走支流s1
+                if ("s1".equals(waterSensor.getId()))
+                {
+                    context.output(s1, waterSensor);
+                }
+                //如果id是s2那么走支流s2
+                else if ("s2".equals(waterSensor.getId()))
+                {
+                    context.output(s2, waterSensor);
+                }
+                //其他走主干
+                else
+                {
+                    collector.collect(waterSensor);
+                }
+            }
+        });
+
+        //输出主干道内容
+        Value.print("主干道\t");
+        //输出支流
+        SideOutputDataStream<WaterSensor> s1Value = Value.getSideOutput(s1);
+        s1Value.print("支s1\t");
+        SideOutputDataStream<WaterSensor> s2Value = Value.getSideOutput(s2);
+        s2Value.print("支s2\t");
+
+        Env.execute();
+
+    }
+}
+```
+
+```java
+支s1	:14> WaterSensor{id='s1', ts=3, vc=4}
+支s2	:15> WaterSensor{id='s2', ts=5, vc=3}
+主干道	:16> WaterSensor{id='s3', ts=6, vc=4}
+主干道	:17> WaterSensor{id='s5', ts=0, vc=64}
+```
+
+![image-20241107211022916](C:\Users\Administrator\AppData\Roaming\Typora\typora-user-images\image-20241107211022916.png)

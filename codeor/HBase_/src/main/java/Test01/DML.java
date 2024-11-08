@@ -9,6 +9,8 @@ import org.apache.hadoop.hbase.filter.ColumnPaginationFilter;
 import org.apache.hadoop.hbase.filter.ColumnValueFilter;
 import org.apache.hadoop.hbase.filter.FilterList;
 import org.apache.hadoop.hbase.util.Bytes;
+import sun.nio.cs.ext.GBK;
+
 import java.io.IOException;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
@@ -109,11 +111,11 @@ public class DML
         //2.创建Scan对象
         Scan scan = new Scan();
 
-        //起始位
-        scan.withStartRow(Bytes.toBytes(startRow));
-
-        //结束位
-        scan.withStopRow(Bytes.toBytes(stopRow));
+//        //起始位
+//        scan.withStartRow(Bytes.toBytes(startRow));
+//
+//        //结束位
+//        scan.withStopRow(Bytes.toBytes(stopRow));
         //得到数据
         ResultScanner scanner = table.getScanner(scan);
 
@@ -123,7 +125,7 @@ public class DML
             Cell[] cells = result.rawCells();
             for (Cell cell : cells)
             {
-                System.out.println(new java.lang.String(CellUtil.cloneValue(cell), StandardCharsets.UTF_8));
+                System.out.println(new java.lang.String(CellUtil.cloneValue(cell), new GBK()));
             }
         }
         table.close();
@@ -218,13 +220,13 @@ public class DML
 //        getCall("NewNameSpace","NewTable","1002","info","姓名");
 
         //扫描
-//        ScanContent("ods","order_master","020241031163235115","020241031163240658");
+        ScanContent("ods","order_master","d","020241031163240658");
 
         //过滤
 //        FilterContent("NewNameSpace","NewTable","1000","1003","info","姓名","王五");
 
         //删除
-        deltetContentRow("NewNameSpace","NewTable","info","1005","666");
+//        deltetContentRow("NewNameSpace","NewTable","info","1005","666");
         connection.close();
     }
 }

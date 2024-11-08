@@ -967,7 +967,7 @@ public class FileSourceDome
 >
 > 默认 earliest
 >
-> ​		earliest : 一定从最早消息
+> ​		earliest : 一定从最早消费
 >
 > ​		lates : 一定从最新消费
 
@@ -1543,6 +1543,8 @@ public class WaterSensorMapFunction implements MapFunction<String, WaterSensor>
 
 > ## 分流
 
+## 9 process底层算子
+
 ```java
 package OutStream;
 
@@ -1621,3 +1623,659 @@ public class ProcessOutStream
 ```
 
 ![image-20241107211022916](C:\Users\Administrator\AppData\Roaming\Typora\typora-user-images\image-20241107211022916.png)
+
+
+
+# 3.1 合流
+
+## 1.0 联合(Union)
+
+> #### 数据类型必须相同 最简单的合流操作
+
+```java
+public class Union_Demo
+{
+    public static void main(String[] args) throws Exception
+    {
+        StreamExecutionEnvironment Env = StreamExecutionEnvironment.getExecutionEnvironment();
+        DataStreamSource<Integer> Data1 = Env.fromElements(1, 2, 3);
+        DataStreamSource<Integer> Data2 = Env.fromElements(11, 22, 33);
+        DataStreamSource<String> Data3 = Env.fromElements("1", "2", "3");
+        
+        //合流方法1 多次union
+        DataStream<Integer> union1 = Data1.union(Data2).union(Data3.map(f -> Integer.valueOf(f)));
+        
+        //合流方法2 传入可变长参
+        DataStream<Integer> union2 = Data1.union(Data2, Data3.map(f -> Integer.valueOf(f)));
+        union2.print();
+        Env.execute();
+    }
+}
+```
+
+```java
+4> 3
+1> 11
+2> 1
+2> 22
+3> 2
+3> 33
+11> 2
+12> 3
+10> 1
+```
+
+
+
+## 1.1 连接 (Connect)
+
+> 使用Connect合流
+>
+> - 一次只能连接两条流
+>
+> - 流的数据可以不一样
+> - 连接后可以调用map,flatmap,process来处理
+
+```java
+package combine;
+
+import org.apache.flink.streaming.api.datastream.ConnectedStreams;
+import org.apache.flink.streaming.api.datastream.DataStream;
+import org.apache.flink.streaming.api.datastream.DataStreamSource;
+import org.apache.flink.streaming.api.datastream.SingleOutputStreamOperator;
+import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
+import org.apache.flink.streaming.api.functions.co.CoMapFunction;
+
+public class Connect_Demo
+{
+    public static void main(String[] args) throws Exception
+    {
+        StreamExecutionEnvironment Env = StreamExecutionEnvironment.getExecutionEnvironment();
+
+        SingleOutputStreamOperator<Integer> DataS1 =
+            Env.socketTextStream("192.168.45.13", 7777)
+                .map(f -> {
+                    Integer b = 0;
+                    try{
+                    b = Integer.valueOf(f);}
+                    catch (Exception e)
+                    {
+                        b = 0;
+                    }
+                    return b;
+                });
+        DataStreamSource<String> DataS2 = Env.socketTextStream("192.168.45.13", 8888);
+
+        ConnectedStreams<Integer, String> DataCom = DataS1.connect(DataS2);
+
+        SingleOutputStreamOperator<String> connMap = DataCom.map(new CoMapFunction<Integer, String, String>()
+        {
+            @Override
+            public String map1(Integer integer) throws Exception
+            {
+                return "来源于数字流:" + integer;
+            }
+
+            @Override
+            public String map2(String s) throws Exception
+            {
+                return "来源于字符流:" + s;
+            }
+        });
+
+        connMap.print();
+
+        Env.execute();
+
+    }
+}
+```
+
+```java
+16> 来源于数字流:0
+17> 来源于数字流:0
+18> 来源于数字流:0
+19> 来源于数字流:0
+20> 来源于字符流:awdf
+21> 来源于字符流:aw
+22> 来源于字符流:g
+23> 来源于字符流:aw
+24> 来源于字符流:21
+1> 来源于字符流:21
+2> 来源于字符流:1
+```
+
+
+
+## 1.2 connect案例
+
+```java
+package combine;
+
+import org.apache.flink.api.java.functions.KeySelector;
+import org.apache.flink.api.java.tuple.Tuple2;
+import org.apache.flink.api.java.tuple.Tuple3;
+import org.apache.flink.streaming.api.datastream.ConnectedStreams;
+import org.apache.flink.streaming.api.datastream.DataStreamSource;
+import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
+import org.apache.flink.streaming.api.functions.co.CoProcessFunction;
+import org.apache.flink.util.Collector;
+
+import java.util.*;
+
+/***
+ * 要求 :
+ *      <br>将每条Key对应的值匹配上
+ *      <br>实现相互匹配的效果 两条流，不一定谁的数据先来
+ *          <br>1 每条流 有数据来，存到一个变量中
+ *              <br>hashmap
+ *              <br>-> key = id 第一个字段值
+ *              <br>-> value = List<数据>
+ *          <br>每条流有数据来的时候，除了存变量中 不知道对方是否有匹配的数据 要取另一条流存的变量中 查找是否有匹配上的
+ */
+public class Connect_Big_Demo
+{
+    public static void main(String[] args) throws Exception
+    {
+        StreamExecutionEnvironment Env = StreamExecutionEnvironment.getExecutionEnvironment();
+
+        DataStreamSource<Tuple2<Integer, String>> Data1 = Env.fromElements(
+            new Tuple2<>(1, "a1"),
+            new Tuple2<>(1, "a2"),
+            new Tuple2<>(2, "b"),
+            new Tuple2<>(3, "c")
+        );
+
+        DataStreamSource<Tuple3<Integer, String, Integer>> Data2 = Env.fromElements(
+            new Tuple3<>(1, "aa1", 1),
+            new Tuple3<>(1, "aa2", 1),
+            new Tuple3<>(2, "bb", 1),
+            new Tuple3<>(3, "cc", 1)
+        );
+
+        //在合流后必须进行KeyBy,不然数据散乱在各个线程 无法交互
+        ConnectedStreams<Tuple2<Integer, String>, Tuple3<Integer, String, Integer>> connect = Data1.connect(Data2).keyBy(f -> f.f0,v -> v.f0);
+
+        connect.process(new CoProcessFunction<Tuple2<Integer, String>, Tuple3<Integer, String, Integer>, String>() {
+            /**
+             * 用于存放流1的数据
+             */
+            Map<Integer,List<Tuple2<Integer,String>>> Value1 = new HashMap<>();
+
+            /**
+             * 用于存放流2的数据
+             */
+            Map<Integer,List<Tuple3<Integer, String, Integer>>> Value2 = new HashMap<>();
+
+            /**
+             * @param V1 传入的值
+             * @param context 上下文
+             * @param collector 发往下游
+             * @throws Exception x
+             */
+            @Override
+            public void processElement1(Tuple2<Integer, String> V1, CoProcessFunction<Tuple2<Integer, String>, Tuple3<Integer, String, Integer>, String>.Context context, Collector<String> collector) throws Exception
+            {
+                //containsKey如果包含 返回True
+                //如果不包含某个键 那么添加
+                if(!Value1.containsKey(V1.f0))
+                {
+                    List<Tuple2<Integer,String>> v1list = new ArrayList<>();
+                    v1list.add(V1);
+                    Value1.put(V1.f0,v1list);
+                }
+                //否则就是包含 直接往键值List塞这个V1
+                else
+                {
+                    //返回的是引用类型
+                    List<Tuple2<Integer, String>> v1list2 = Value1.get(V1.f0);
+                    v1list2.add(V1);
+                }
+
+                //遍历流2的Map进行匹配
+                if(Value2.containsKey(V1.f0))
+                {
+                    for (Tuple3<Integer, String, Integer> V2List : Value2.get(V1.f0))
+                    {
+                        collector.collect("流1 Tuple1:\t" + V1 + "\t<===========>\t" + "Tuple2:\t"  + V2List);
+                    }
+                }
+
+            }
+
+            @Override
+            public void processElement2(Tuple3<Integer, String, Integer> v2, CoProcessFunction<Tuple2<Integer, String>, Tuple3<Integer, String, Integer>, String>.Context context, Collector<String> collector) throws Exception
+            {
+                //先判断Map是否存在该键
+                if(!Value2.containsKey(v2.f0))
+                {
+                    //不存在直接创建
+                    List<Tuple3<Integer, String, Integer>> list = new ArrayList<>();
+                    list.add(v2);
+                    Value2.put(v2.f0,list);
+                }
+                else
+                {
+                    //存在直接放入
+                    Value2.get(v2.f0).add(v2);
+                }
+                //遍历流1
+                if(Value1.containsKey(v2.f0))
+                {
+                    for (Tuple2<Integer, String> listv2 : Value1.get(v2.f0))
+                    {
+                        collector.collect("流2 Tuple1:\t" + v2 + "\t<===========>\t" + "Tuple2:\t"  + listv2);
+                    }
+                }
+            }
+        }).print();
+
+
+        Env.execute();
+
+
+    }
+}
+```
+
+```java
+17> 流1 Tuple1:	(1,a1)	<===========>	Tuple2:	(1,aa1,1)
+22> 流1 Tuple1:	(3,c)	<===========>	Tuple2:	(3,cc,1)
+17> 流2 Tuple1:	(1,aa2,1)	<===========>	Tuple2:	(1,a1)
+24> 流1 Tuple1:	(2,b)	<===========>	Tuple2:	(2,bb,1)
+17> 流1 Tuple1:	(1,a2)	<===========>	Tuple2:	(1,aa1,1)
+17> 流1 Tuple1:	(1,a2)	<===========>	Tuple2:	(1,aa2,1)
+```
+
+
+
+# 3.2 输出算子
+
+> Flink的DataStream API专门提供了向外部写入数据的方法:addSink。与addSource类似，addSink方法对应着一个"Sink" 算子,主要就是用来实现与外部系统连接、并将数据提交写入；Flink程序中所有对外的输出操作，一般都是利用Sink算子完成的。
+
+## 1.1 File输出
+
+> 必须设置Env.enableCheckpointing 否则文件会一直处于使用状态, .inprogress
+
+```java
+package OutTrans;
+
+import org.apache.flink.api.common.eventtime.WatermarkStrategy;
+import org.apache.flink.api.common.restartstrategy.RestartStrategies;
+import org.apache.flink.api.common.serialization.SimpleStringEncoder;
+import org.apache.flink.api.common.serialization.SimpleStringSchema;
+import org.apache.flink.configuration.MemorySize;
+import org.apache.flink.connector.file.sink.FileSink;
+import org.apache.flink.connector.kafka.source.KafkaSource;
+import org.apache.flink.connector.kafka.source.KafkaSourceBuilder;
+import org.apache.flink.core.fs.Path;
+import org.apache.flink.streaming.api.CheckpointingMode;
+import org.apache.flink.streaming.api.datastream.CustomSinkOperatorUidHashes;
+import org.apache.flink.streaming.api.datastream.DataStreamSource;
+import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
+import org.apache.flink.streaming.api.functions.sink.filesystem.OutputFileConfig;
+import org.apache.flink.streaming.api.functions.sink.filesystem.RollingPolicy;
+import org.apache.flink.streaming.api.functions.sink.filesystem.bucketassigners.DateTimeBucketAssigner;
+import org.apache.flink.streaming.api.functions.sink.filesystem.rollingpolicies.DefaultRollingPolicy;
+
+import java.time.Duration;
+import java.time.ZoneId;
+
+public class OutFile
+{
+    public static void main(String[] args) throws Exception
+    {
+        StreamExecutionEnvironment Env = StreamExecutionEnvironment.getExecutionEnvironment();
+
+        //必须设置
+        Env.enableCheckpointing(200, CheckpointingMode.EXACTLY_ONCE);
+
+        KafkaSource<String> Source = KafkaSource
+            .<String>builder()
+            .setTopics("Kafka666")
+            .setBootstrapServers("192.168.45.13:9092")
+            .setGroupId("Kafka777")
+            .setValueOnlyDeserializer(new SimpleStringSchema())
+            .build();
+
+        DataStreamSource<String> KafkaSource = Env.fromSource(Source, WatermarkStrategy.noWatermarks(), "Kafwd66");
+
+        FileSink<String> sink = FileSink
+            //泛型方法
+            .<String>forRowFormat(
+                new Path("C:/temp"),
+                new SimpleStringEncoder<>())
+            //设置文件前缀和后缀
+            .withOutputFileConfig(
+                OutputFileConfig.builder()
+                    //前缀
+                    .withPartPrefix("run-")
+                    //后缀
+                    .withPartSuffix(".log")
+                    .build())
+            //按照目录分桶
+            .withBucketAssigner(new DateTimeBucketAssigner<>("yyyy_MM_dd_HH", ZoneId.systemDefault()))
+            //滚动策略
+            .withRollingPolicy(
+                DefaultRollingPolicy
+                    .builder()
+                    //设置多久一次 1分钟
+                    .withRolloverInterval(Duration.ofMinutes(1))
+                    //设置多大一次 1G
+                    .withMaxPartSize(new MemorySize(1024*1024*1024))
+                    .build())
+            .build();
+
+        KafkaSource.sinkTo(sink);
+
+        Env.execute();
+    }
+}
+```
+
+
+
+
+
+## 1.2 输出到Kafka
+
+```java
+package OutTrans;
+
+import org.apache.flink.api.common.serialization.SimpleStringSchema;
+import org.apache.flink.connector.base.DeliveryGuarantee;
+import org.apache.flink.connector.kafka.sink.KafkaRecordSerializationSchema;
+import org.apache.flink.connector.kafka.sink.KafkaRecordSerializationSchemaBuilder;
+import org.apache.flink.connector.kafka.sink.KafkaSink;
+import org.apache.flink.streaming.api.CheckpointingMode;
+import org.apache.flink.streaming.api.datastream.DataStreamSink;
+import org.apache.flink.streaming.api.datastream.DataStreamSource;
+import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
+import org.apache.kafka.clients.producer.ProducerConfig;
+import org.apache.kafka.common.serialization.StringSerializer;
+
+public class OutKafka
+{
+    public static void main(String[] args) throws Exception
+    {
+        StreamExecutionEnvironment Env = StreamExecutionEnvironment.getExecutionEnvironment();
+
+        ///如果是精准一次必须设置
+        ///设置了精准一次必须指定事务前缀
+        ///必须指定事务超时时间
+        Env.enableCheckpointing(500, CheckpointingMode.EXACTLY_ONCE);
+
+        DataStreamSource<String> SocketSource = Env.socketTextStream("192.168.45.13", 7777);
+
+
+        KafkaSink<String> SinkKafka = KafkaSink.<String>builder()
+                   .setBootstrapServers("192.168.45.13:9092")
+                   .setRecordSerializer(KafkaRecordSerializationSchema
+                       .builder()
+                       //设置Key序列化器
+                       .setKeySerializationSchema(new SimpleStringSchema())
+                       //设置Value序列化器
+                       .setValueSerializationSchema(new SimpleStringSchema())
+                       //设置要写入的Topic名称
+                       .setTopic("Kafka666")
+                       .build())
+                   //精准一次
+                   .setDeliveryGuarantee(DeliveryGuarantee.EXACTLY_ONCE)
+                   //设置事务ID前缀
+                   .setTransactionalIdPrefix("Kafka")
+                   //设置事务超时时间
+                   //事务超时时间 小于15分 大于上面设置的
+                   .setProperty(ProducerConfig.TRANSACTION_TIMEOUT_CONFIG, 10 * 60 * 1000 + "")
+                   .build();
+
+        DataStreamSink<String> run = SocketSource.sinkTo(SinkKafka);
+
+        Env.execute();
+    }
+}
+```
+
+
+
+## 1.2 指定Kafka的Key
+
+> 如果要指定写入kafka的Key
+>
+> 可以自定义反序列器：
+>
+> 1. 实现一个接口，重写序列化方法
+> 2. 指定key,转成字节数组
+> 3. 指定value 转成字节数组
+> 4. 返回一个producerRecord对象，把key value放进去
+
+```java
+package OutTrans;
+
+import org.apache.flink.api.common.serialization.SimpleStringSchema;
+import org.apache.flink.connector.base.DeliveryGuarantee;
+import org.apache.flink.connector.kafka.sink.KafkaRecordSerializationSchema;
+import org.apache.flink.connector.kafka.sink.KafkaSink;
+import org.apache.flink.streaming.api.CheckpointingMode;
+import org.apache.flink.streaming.api.datastream.DataStreamSink;
+import org.apache.flink.streaming.api.datastream.DataStreamSource;
+import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
+import org.apache.kafka.clients.producer.ProducerConfig;
+import org.apache.kafka.clients.producer.ProducerRecord;
+import org.apache.kafka.common.utils.Bytes;
+
+import javax.annotation.Nullable;
+
+public class OutKafkaKey
+{
+    public static void main(String[] args) throws Exception
+    {
+        StreamExecutionEnvironment Env = StreamExecutionEnvironment.getExecutionEnvironment();
+
+        ///如果是精准一次必须设置
+        ///设置了精准一次必须指定事务前缀
+        ///必须指定事务超时时间
+        Env.enableCheckpointing(500, CheckpointingMode.EXACTLY_ONCE);
+
+        DataStreamSource<String> SocketSource = Env.socketTextStream("192.168.45.13", 7777);
+
+
+        KafkaSink<String> SinkKafka = KafkaSink.<String>builder()
+                   .setBootstrapServers("192.168.45.13:9092")
+                   .setRecordSerializer(new KafkaRecordSerializationSchema<String>() {
+                       /**
+                        *
+                        * @param element 要被序列化的内容
+                        * @param context context to possibly determine target partition
+                        * @param timestamp timestamp
+                        * @return 。
+                        */
+                       @Nullable
+                       @Override
+                       public ProducerRecord<byte[], byte[]> serialize(String element, KafkaSinkContext context, Long timestamp)
+                       {
+                           //取前3个字符做Key
+                           StringBuffer sb = new StringBuffer();
+                           sb.append( element.charAt(0));
+                           sb.append( element.charAt(1));
+                           sb.append( element.charAt(2));
+                           byte[] key = sb.toString().getBytes();
+                           byte[] value = element.getBytes();
+                           //指定分区 key value
+                           return new ProducerRecord<>("Kafka666",key,value);
+                       }
+                   })
+                   //精准一次
+                   .setDeliveryGuarantee(DeliveryGuarantee.EXACTLY_ONCE)
+                   //设置事务ID前缀
+                   .setTransactionalIdPrefix("Kafka")
+                   //设置事务超时时间
+                   //事务超时时间 小于15分 大于上面设置的
+                   .setProperty(ProducerConfig.TRANSACTION_TIMEOUT_CONFIG, 10 * 60 * 1000 + "")
+                   .build();
+
+        SocketSource.sinkTo(SinkKafka);
+
+        Env.execute();
+    }
+}
+```
+
+
+
+## 1.3 MySQL JDBC
+
+```xml
+<dependency>
+  <groupId>mysql</groupId>
+  <artifactId>mysql-connector-java</artifactId>
+  <version>5.1.49</version>
+</dependency>
+
+<dependency>
+  <groupId>org.apache.flink</groupId>
+  <artifactId>flink-connector-jdbc</artifactId>
+  <version>3.2.0-1.18</version>
+</dependency>
+```
+
+> 创建数据库 test 内创建一个表 ws
+>
+> create table ws(
+>
+> id varchar(100) NOT NULL,
+>
+> ts bigint(20) default null,
+>
+> vc int(11) default null,
+>
+> primary key(id)
+>
+> )engine=InnoDB default charset=utf8
+
+```java
+package OutTrans;
+
+import WaterSensors.WaterSensor;
+import functions.WaterSensorMapFunction;
+import org.apache.flink.connector.jdbc.JdbcConnectionOptions;
+import org.apache.flink.connector.jdbc.JdbcSink;
+import org.apache.flink.connector.jdbc.JdbcStatementBuilder;
+import org.apache.flink.streaming.api.datastream.DataStreamSink;
+import org.apache.flink.streaming.api.datastream.SingleOutputStreamOperator;
+import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
+import org.apache.flink.streaming.api.functions.sink.SinkFunction;
+
+import java.sql.PreparedStatement;
+import java.sql.SQLException;
+
+public class OutJDBC
+{
+    public static void main(String[] args) throws Exception
+    {
+        StreamExecutionEnvironment Env = StreamExecutionEnvironment.getExecutionEnvironment();
+
+        //Socket数据源
+        SingleOutputStreamOperator<WaterSensor> socketSource = Env.socketTextStream("192.168.45.13", 7777)
+                                                         .map(new WaterSensorMapFunction());
+
+        SinkFunction<WaterSensor> jdbc = JdbcSink.sink("insert into ws values(?,?,?)", new JdbcStatementBuilder<WaterSensor>()
+        {
+            /**
+             *
+             * @param preparedStatement 占位符填充
+             * @param waterSensor   传入的数据
+             * @throws SQLException >
+             */
+            @Override
+            public void accept(PreparedStatement preparedStatement, WaterSensor waterSensor) throws SQLException
+            {
+                //填充上面的? 索引从1开始
+                preparedStatement.setString(1, waterSensor.getId());
+                preparedStatement.setLong(2, waterSensor.getTs());
+                preparedStatement.setInt(3, waterSensor.getVc());
+            }
+            //创建JDBC配置文件
+        }, new JdbcConnectionOptions.JdbcConnectionOptionsBuilder()
+            .withPassword("123456")
+            .withUrl("jdbc:mysql://192.168.45.13:3306/test?useSSL=false")
+            .withUsername("root")
+            //超时时间
+            .withConnectionCheckTimeoutSeconds(60)
+            .build());
+
+        //将数据写入Sink
+        socketSource.addSink(jdbc);
+
+        Env.execute();
+    }
+}
+```
+
+
+
+## 1.4 自定义Sink
+
+> 1，定义一个类 实现SinkFunction接口 / RichSinkFunction
+>
+> ​	创建链接要在RichSinkFunction里面写 （open方法）
+>
+> ​	销毁链接 close写里面
+>
+> 2，重写invoke方法 
+>
+> ​	sink的核心逻辑就写里面
+
+
+
+# 3.3 窗口
+
+> ​	在批处理统计中，可以等待一批数据都到齐后，统一处理。但是在实时处理统计钟，是来一条就处理一条，那么怎么统计最近一段时间内的数据呢？ 引入窗口
+
+> ​	窗口就是划定一段时间范围，也就是"**时间窗**";对在这范围内的数据进行处理，就是所谓的**窗口计算**。所以窗口和时间往往是分不开的。
+
+> 将无限的数据，切成有限的数据块处理 就是所谓的窗口
+
+- #### 例子
+
+```java
+// 有一个水龙头 源源不断的流水
+// 我们将水用水桶装起来再统计
+// 这一个一个水桶 就是窗口
+```
+
+
+
+- ### 正确理解
+
+> ​	在Flink中，窗口其实**并不是一个"框"**，应该把窗口理**解成一个”桶“**。在Flink中，窗口可以把流切割成有限大小的**多个"存储桶"**（bucket）;每个数据都会分发到对应的桶中，**当到达窗口结束时间时，就对每个桶中收集的数据进行计算处理**
+
+- ### tip
+
+> ​	Flink中窗口并不是静态准备好的，而是**动态创建**——当有落在这个窗口区间范围内的数据达到时，才创建对应的窗口。另外，到达窗口结束时间时，窗口就会触发计算并关闭，事实上“触发计算”和“窗口关闭”两个行为也可以分开
+
+
+
+## 3.3.1 窗口的类型
+
+- 按照驱动类型分
+
+  - 时间窗口(Time Window) => 每小时装一桶，过了就不装了
+  - 计数窗口(Count Window) => 不管时间，装满了才换下一个
+
+- 按照窗口分配数据的规则分类
+
+  - 滚动窗口(Tumbling Windows) => 窗口之间没有重叠，也不会有间隔 首尾相接
+    - 可以用来对每个时间段做聚合统计
+  - 滑动窗口(Sliding Windows) => 大小是固定的 窗口之间并不是首尾相接的 而是可以"错开"一定位置
+    - 0:1,	0.30:1.30,	1.00:2.00
+  - 会话窗口(SessionWindows)
+    - 基于"会话"(session)来对数据进行分组
+
+  ```java
+  //会话窗口
+  //只要有数据来，数据不断 他们就是一个会话
+  //如果最后一个数据过来后 设定的时间内没有数据过来 那么会话就断了
+  //再来就开启新的会话
+  ```
+
+  - 全局窗口(GlobalWindows) 窗口没有结束的时候 默认页是不会触发计算的

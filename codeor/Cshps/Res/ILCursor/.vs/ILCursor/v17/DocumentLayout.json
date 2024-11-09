@@ -1,68 +1,12 @@
 {
   "Version": 1,
   "WorkspaceRootPath": "C:\\Users\\Administrator\\Documents\\GitHub\\Learning-Notes\\codeor\\Cshps\\Res\\ILCursor\\",
-  "Documents": [
-    {
-      "AbsoluteMoniker": "D:0:0:{E92F9BBC-24E7-49B1-BF54-7D61F983B564}|..\\ILClass\\ILClass.csproj|c:\\users\\administrator\\documents\\github\\learning-notes\\codeor\\cshps\\res\\ilclass\\class1.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
-    },
-    {
-      "AbsoluteMoniker": "D:0:0:{9E721B70-1195-44E5-B662-F5FB30CFA471}|..\\ConseIL\\ConseIL.csproj|c:\\users\\administrator\\documents\\github\\learning-notes\\codeor\\cshps\\res\\conseil\\program.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
-    },
-    {
-      "AbsoluteMoniker": "D:0:0:{B4BB09DC-84DE-497E-BE3D-3B2EF5DE9E5A}|..\\ILRun2\\ILRun2.csproj|c:\\users\\administrator\\documents\\github\\learning-notes\\codeor\\cshps\\res\\ilrun2\\program.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
-    }
-  ],
+  "Documents": [],
   "DocumentGroupContainers": [
     {
       "Orientation": 0,
       "VerticalTabListWidth": 256,
-      "DocumentGroups": [
-        {
-          "DockedWidth": 200,
-          "SelectedChildIndex": 2,
-          "Children": [
-            {
-              "$type": "Document",
-              "DocumentIndex": 2,
-              "Title": "Program.cs",
-              "DocumentMoniker": "C:\\Users\\Administrator\\Documents\\GitHub\\Learning-Notes\\codeor\\Cshps\\Res\\ILRun2\\Program.cs",
-              "RelativeDocumentMoniker": "..\\ILRun2\\Program.cs",
-              "ToolTip": "C:\\Users\\Administrator\\Documents\\GitHub\\Learning-Notes\\codeor\\Cshps\\Res\\ILRun2\\Program.cs",
-              "RelativeToolTip": "..\\ILRun2\\Program.cs",
-              "ViewState": "AgIAAAYAAAAAAAAAAAAAACoAAAA9AAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2024-11-05T12:30:25.159Z",
-              "EditorCaption": ""
-            },
-            {
-              "$type": "Document",
-              "DocumentIndex": 1,
-              "Title": "Program.cs",
-              "DocumentMoniker": "C:\\Users\\Administrator\\Documents\\GitHub\\Learning-Notes\\codeor\\Cshps\\Res\\ConseIL\\Program.cs",
-              "RelativeDocumentMoniker": "..\\ConseIL\\Program.cs",
-              "ToolTip": "C:\\Users\\Administrator\\Documents\\GitHub\\Learning-Notes\\codeor\\Cshps\\Res\\ConseIL\\Program.cs",
-              "RelativeToolTip": "..\\ConseIL\\Program.cs",
-              "ViewState": "AgIAABQAAAAAAAAAAAAkwCMAAAARAAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2024-11-05T12:08:48.401Z",
-              "EditorCaption": ""
-            },
-            {
-              "$type": "Document",
-              "DocumentIndex": 0,
-              "Title": "Class1.cs",
-              "DocumentMoniker": "C:\\Users\\Administrator\\Documents\\GitHub\\Learning-Notes\\codeor\\Cshps\\Res\\ILClass\\Class1.cs",
-              "RelativeDocumentMoniker": "..\\ILClass\\Class1.cs",
-              "ToolTip": "C:\\Users\\Administrator\\Documents\\GitHub\\Learning-Notes\\codeor\\Cshps\\Res\\ILClass\\Class1.cs",
-              "RelativeToolTip": "..\\ILClass\\Class1.cs",
-              "ViewState": "AgIAAAAAAAAAAAAAAAAAAA8AAABYAAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2024-11-05T11:59:38.949Z",
-              "EditorCaption": ""
-            }
-          ]
-        }
-      ]
+      "DocumentGroups": []
     }
   ]
 }

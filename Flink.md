@@ -2255,7 +2255,7 @@ public class OutJDBC
 
 
 
-## 3.3.1 窗口的类型
+## 1.0 窗口的类型
 
 - 按照驱动类型分
 
@@ -2279,3 +2279,1069 @@ public class OutJDBC
   ```
 
   - 全局窗口(GlobalWindows) 窗口没有结束的时候 默认页是不会触发计算的
+
+
+
+> #### 如果窗口没有按照Key分组，那么并行度强行为1
+>
+> #### 如果按照Key分组，一种Key就是一个窗口
+
+## 1.1 窗口API
+
+> 1. 需要先指定窗口分配器 如何开窗
+> 2. 指定窗口函数 窗口内的计算逻辑
+
+```java
+        SingleOutputStreamOperator<WaterSensor> socketData = Env.socketTextStream("192.168.45.13", 7777)
+                                                         .map(new WaterSensorMapFunction());
+        KeyedStream<WaterSensor, String> Keyby = socketData.keyBy(f -> f.getId());
+
+        //会话窗口 超时时间为10秒
+        socketData.windowAll(ProcessingTimeSessionWindows.withGap(Time.seconds(10)));
+
+        //滚动窗口 窗口长度10秒
+        socketData.windowAll(TumblingProcessingTimeWindows.of(Time.seconds(10)));
+
+        //滑动窗口 窗口长度10秒，间距5秒会出一个新的窗口
+        socketData.windowAll(SlidingProcessingTimeWindows.of(Time.seconds(10),Time.seconds(5)));
+
+        //计数窗口与计数滑动窗口
+        socketData.countWindowAll(10);
+        socketData.countWindowAll(10,5);
+
+        //全局窗口 需要自定义
+        socketData.windowAll(GlobalWindows.create());
+```
+
+
+
+> ## 聚合
+
+```java
+package Window;
+
+import WaterSensors.WaterSensor;
+import functions.WaterSensorMapFunction;
+import org.apache.flink.api.common.functions.ReduceFunction;
+import org.apache.flink.streaming.api.datastream.SingleOutputStreamOperator;
+import org.apache.flink.streaming.api.datastream.WindowedStream;
+import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
+import org.apache.flink.streaming.api.windowing.assigners.TumblingProcessingTimeWindows;
+import org.apache.flink.streaming.api.windowing.time.Time;
+import org.apache.flink.streaming.api.windowing.windows.TimeWindow;
+
+public class reduceWin
+{
+    public static void main(String[] args) throws Exception
+    {
+        StreamExecutionEnvironment Env = StreamExecutionEnvironment.getExecutionEnvironment();
+
+        SingleOutputStreamOperator<WaterSensor> sockData =
+            Env.socketTextStream("192.168.45.13", 7777)
+                .map(new WaterSensorMapFunction());
+
+        WindowedStream<WaterSensor, String, TimeWindow> window =
+            //滚动窗口 10秒
+            sockData.keyBy(f -> f.getId())
+                    .window(TumblingProcessingTimeWindows.of(Time.seconds(10)));
+
+        //只有达到窗口设定的时间，才会进行输出，而不是计算一条输出一条
+        SingleOutputStreamOperator<WaterSensor> reduce = window.reduce(new ReduceFunction<WaterSensor>()
+        {
+            /**
+             * 对数据进行聚合
+             * @param waterSensor 先前的数据
+             * @param t1 传入的数据
+             * @return 计算后的数据
+             * @throws Exception e
+             */
+            @Override
+            public WaterSensor reduce(WaterSensor waterSensor, WaterSensor t1) throws Exception
+            {
+                return new WaterSensor(waterSensor.getId(), t1.getTs() + waterSensor.getTs(), t1.getVc() + waterSensor.getVc());
+            }
+        });
+        reduce.print();
+        Env.execute();
+    }
+}
+```
+
+
+
+## 1.2 聚合函数 AggregateFunction
+
+> #### 输入 聚合 输出
+>
+> #### 3种状态的数据类型可以不同
+
+```java
+package Window;
+
+import WaterSensors.WaterSensor;
+import functions.WaterSensorMapFunction;
+import org.apache.flink.api.common.functions.AggregateFunction;
+import org.apache.flink.streaming.api.datastream.SingleOutputStreamOperator;
+import org.apache.flink.streaming.api.datastream.WindowedStream;
+import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
+import org.apache.flink.streaming.api.windowing.assigners.TumblingProcessingTimeWindows;
+import org.apache.flink.streaming.api.windowing.time.Time;
+import org.apache.flink.streaming.api.windowing.windows.TimeWindow;
+
+public class AggWin
+{
+    public static void main(String[] args) throws Exception
+    {
+        StreamExecutionEnvironment Env = StreamExecutionEnvironment.getExecutionEnvironment();
+        SingleOutputStreamOperator<WaterSensor> sockData =
+            Env.socketTextStream("192.168.45.13", 7777)
+               .map(new WaterSensorMapFunction());
+        WindowedStream<WaterSensor, String, TimeWindow> window =
+            //滚动窗口 10秒
+            sockData.keyBy(f -> f.getId())
+                    .window(TumblingProcessingTimeWindows.of(Time.seconds(10)));
+
+        SingleOutputStreamOperator<String> aggregate = window.aggregate(new AggregateFunction<WaterSensor, Integer, String>()
+        {
+
+            /**
+             * 初始化累加器
+             * @return 初始值
+             */
+            @Override
+            public Integer createAccumulator()
+            {
+                System.out.println("初始化器被调用了");
+                return 0;
+            }
+
+            /**
+             * 聚合逻辑
+             * @param waterSensor 传入值
+             * @param integer 累加器的值
+             * @return 聚合后的值
+             */
+            @Override
+            public Integer add(WaterSensor waterSensor, Integer integer)
+            {
+                System.out.println("聚合被调用了");
+                return waterSensor.getVc() + integer;
+            }
+
+            /**
+             * 最终返回值
+             * @param integer 累加器的值
+             * @return 最终值
+             */
+            @Override
+            public String getResult(Integer integer)
+            {
+                System.out.println("值被获取了");
+                return integer.toString();
+            }
+
+            /**
+             * 会话窗口才会用到的
+             * @param integer
+             * @param acc1
+             * @return
+             */
+            @Override
+            public Integer merge(Integer integer, Integer acc1)
+            {
+                return 0;
+            }
+        });
+
+        aggregate.print();
+
+        Env.execute();
+    }
+}
+```
+
+
+
+## 1.3 全窗口函数
+
+```java
+package Window;
+
+import WaterSensors.WaterSensor;
+import functions.WaterSensorMapFunction;
+import org.apache.commons.lang3.time.DateFormatUtils;
+import org.apache.flink.streaming.api.datastream.DataStreamSource;
+import org.apache.flink.streaming.api.datastream.KeyedStream;
+import org.apache.flink.streaming.api.datastream.SingleOutputStreamOperator;
+import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
+import org.apache.flink.streaming.api.functions.windowing.ProcessWindowFunction;
+import org.apache.flink.streaming.api.windowing.assigners.TumblingProcessingTimeWindows;
+import org.apache.flink.streaming.api.windowing.time.Time;
+import org.apache.flink.streaming.api.windowing.windows.TimeWindow;
+import org.apache.flink.util.Collector;
+
+import java.util.Iterator;
+
+public class processWin
+{
+    public static void main(String[] args) throws Exception
+    {
+        StreamExecutionEnvironment Env = StreamExecutionEnvironment.getExecutionEnvironment();
+
+        SingleOutputStreamOperator<WaterSensor> socketData =
+            Env.socketTextStream("192.168.45.13", 7777)
+            .map(new WaterSensorMapFunction());
+
+
+        KeyedStream<WaterSensor, String> KeyData = socketData.keyBy(f -> f.getId());
+
+        KeyData.window(TumblingProcessingTimeWindows.of(Time.seconds(10))).process(
+            /**
+             * WaterSensor 输入的类型
+             * String 输出的类型
+             * String Key的类型
+             * TimeWindow 窗口的类型
+             */
+            new ProcessWindowFunction<WaterSensor, String, String, TimeWindow>() {
+
+                /**
+                 * 只有在窗口到时的时候才会触发一次
+                 * @param s Key
+                 * @param context 上下文
+                 * @param iterable 窗口内的所有数据
+                 * @param collector 发送器
+                 * @throws Exception e
+                 */
+                @Override
+                public void process(String s, ProcessWindowFunction<WaterSensor, String, String, TimeWindow>.Context context, Iterable<WaterSensor> iterable, Collector<String> collector) throws Exception
+                {
+                    //context.window可以获取窗口上下文
+                    long startTime = context.window().getStart();
+                    long endTime = context.window().getEnd();
+                    //时间转换
+                    String start = DateFormatUtils.format(startTime, "HH:mm:ss");
+                    String end = DateFormatUtils.format(endTime, "HH:mm:ss");
+
+                    System.out.println("===================窗口起始:" + start + " ===================");
+                    System.out.println("===================窗口Key:" + s + " 内容===================");
+                    Iterator<WaterSensor> iterator = iterable.iterator();
+                    while (iterator.hasNext()){
+                        System.out.println(iterator.next());
+                    }
+                    System.out.println("===================窗口结束:" + end + " ===================");
+                }
+            }
+        ).print();
+
+        Env.execute();
+
+    }
+}
+```
+
+```java
+===================窗口起始:10:19:50 ===================
+===================窗口Key:s1 内容===================
+WaterSensor{id='s1', ts=0, vc=0}
+WaterSensor{id='s1', ts=2, vc=2}
+WaterSensor{id='s1', ts=2, vc=3}
+WaterSensor{id='s1', ts=23, vc=2}
+===================窗口结束:10:20:00 ===================
+```
+
+
+
+## 1.4 双函数聚合
+
+```java
+package Window;
+
+import WaterSensors.WaterSensor;
+import functions.WaterSensorMapFunction;
+import org.apache.commons.lang3.time.DateFormatUtils;
+import org.apache.flink.api.common.functions.AggregateFunction;
+import org.apache.flink.streaming.api.datastream.SingleOutputStreamOperator;
+import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
+import org.apache.flink.streaming.api.functions.windowing.ProcessWindowFunction;
+import org.apache.flink.streaming.api.windowing.assigners.ProcessingTimeSessionWindows;
+import org.apache.flink.streaming.api.windowing.time.Time;
+import org.apache.flink.streaming.api.windowing.windows.TimeWindow;
+import org.apache.flink.util.Collector;
+
+public class AggManyWin
+{
+    public static void main(String[] args) throws Exception
+    {
+        StreamExecutionEnvironment Env = StreamExecutionEnvironment.getExecutionEnvironment();
+
+        SingleOutputStreamOperator<WaterSensor> socketData =
+            Env.socketTextStream("192.168.45.13", 7777)
+               .map(new WaterSensorMapFunction());
+
+        socketData.keyBy(f->f.getId())
+                  .window(ProcessingTimeSessionWindows
+                  .withGap(Time.seconds(10)))
+                  .aggregate(new MyAggFunction(),new MyProcessFunction())
+                  .print();
+
+        Env.execute();
+    }
+
+    /**
+     * 1,传入的值的类型<br>
+     * 2,过程钟值的类型<br>
+     * 3,最终返回的类型<br>
+     */
+    public static class MyAggFunction implements AggregateFunction<WaterSensor,Integer,String>{
+
+        public Integer createAccumulator()
+        {
+            System.out.println("初始化聚合值");
+            return 0;
+        }
+
+        public Integer add(WaterSensor waterSensor, Integer integer)
+        {
+            System.out.println("触发聚合逻辑");
+            //返回总vc值
+            return integer + waterSensor.getVc();
+        }
+
+        public String getResult(Integer integer)
+        {
+            System.out.println("取得聚合结果");
+            return integer.toString();
+        }
+
+        public Integer merge(Integer integer, Integer acc1)
+        {
+            return 0;
+        }
+    }
+
+
+    /**
+     * 由于是双函数调用<br>
+     * 这个函数最终被传入的值是Agg的返回值<br>
+     *<br>
+     * 1，输入类型<br>
+     * 2，输出类型<br>
+     * 3，Key 类型<br>
+     * 4，窗口类型<br>
+     */
+    public static class MyProcessFunction extends ProcessWindowFunction<String,String,String, TimeWindow>{
+
+        public void process(String s, ProcessWindowFunction<String, String, String, TimeWindow>.Context context, Iterable<String> iterable, Collector<String> collector) throws Exception
+        {
+            //获取上下文 获取窗口的起始结束时间
+            TimeWindow window = context.window();
+            String startTime = DateFormatUtils.format(window.getStart(), "HH:mm:ss");
+            String endTime = DateFormatUtils.format(window.getEnd(), "HH:mm:ss");
+
+            System.out.println("窗口"+s+"开始时间: " + startTime);
+            System.out.println("窗口"+s+"结束时间: " + endTime);
+            System.out.println("窗口"+s+"最终结果: " + iterable.toString());
+
+            collector.collect(iterable.toString() + "是Process哦");
+        }
+    }
+}
+```
+
+
+
+- ### 输入s1,2,3
+
+> #### 最终结果由Process接管
+
+```java
+初始化聚合值
+触发聚合逻辑
+取得聚合结果
+窗口s1开始时间: 11:12:06
+窗口s1结束时间: 11:12:16
+窗口s1最终结果: [3]
+24> [3]是Process哦
+```
+
+
+
+## 1.5 会话窗口
+
+> .window(ProcessingTimeSessionWindows)
+>
+> .withDynamicGap => 动态时长，另一个是指定时长
+
+```java
+package Window;
+
+import WaterSensors.WaterSensor;
+import functions.WaterSensorMapFunction;
+import org.apache.commons.lang3.time.DateFormatUtils;
+import org.apache.flink.streaming.api.datastream.KeyedStream;
+import org.apache.flink.streaming.api.datastream.SingleOutputStreamOperator;
+import org.apache.flink.streaming.api.datastream.WindowedStream;
+import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
+import org.apache.flink.streaming.api.functions.windowing.ProcessWindowFunction;
+import org.apache.flink.streaming.api.windowing.assigners.ProcessingTimeSessionWindows;
+import org.apache.flink.streaming.api.windowing.assigners.SessionWindowTimeGapExtractor;
+import org.apache.flink.streaming.api.windowing.windows.TimeWindow;
+import org.apache.flink.util.Collector;
+
+import java.util.Iterator;
+
+public class SessionWin
+{
+    public static void main(String[] args) throws Exception
+    {
+        StreamExecutionEnvironment Env = StreamExecutionEnvironment.getExecutionEnvironment();
+        SingleOutputStreamOperator<WaterSensor> socketData = Env.socketTextStream("192.168.45.13", 7777)
+                                                                .map(new WaterSensorMapFunction());
+        KeyedStream<WaterSensor, String> Keyby = socketData.keyBy(f -> f.getId());
+
+        Keyby
+            //使用会话窗口
+            .window(ProcessingTimeSessionWindows
+                //动态会话时常 单位是ms毫秒
+            .withDynamicGap(new SessionWindowTimeGapExtractor<WaterSensor>()
+            {
+                @Override
+                public long extract(WaterSensor waterSensor)
+                {
+                    return waterSensor.getVc() * 1000L;
+                }
+            }))
+            .process(new ProcessWindowFunction<WaterSensor, String, String, TimeWindow>()
+                     {
+                         public void process(String s, ProcessWindowFunction<WaterSensor, String, String, TimeWindow>.Context context, Iterable<WaterSensor> iterable, Collector<String> collector) throws Exception
+                         {
+                             //context.window可以获取窗口上下文
+                             long startTime = context
+                                 .window()
+                                 .getStart();
+                             long endTime = context
+                                 .window()
+                                 .getEnd();
+                             //时间转换
+                             String start = DateFormatUtils.format(startTime, "HH:mm:ss");
+                             String end = DateFormatUtils.format(endTime, "HH:mm:ss");
+
+                             System.out.println("===================窗口起始:" + start + " ===================");
+                             System.out.println("===================窗口Key:" + s + " 内容===================");
+                             Iterator<WaterSensor> iterator = iterable.iterator();
+                             while (iterator.hasNext())
+                             {
+                                 System.out.println(iterator.next());
+                             }
+                             System.out.println("===================窗口结束:" + end + " ===================");
+
+                         }
+                     }
+            ).print();
+
+        Env.execute();
+    }
+}
+```
+
+> 输入
+>
+> s1,3,4
+>
+> s1,2,3
+
+> 输出
+>
+> ===================窗口起始:11:36:05 ===================
+> ===================窗口Key:s1 内容===================
+> WaterSensor{id='s1', ts=3, vc=4}
+> WaterSensor{id='s1', ts=2, vc=3}
+> ===================窗口结束:11:36:12 ===================
+
+## 1.6 会话窗口
+
+> 对于会话窗口而言
+>
+> 滑动步长就是每次触发计算的间隔
+>
+> 每隔步长，一定有一个窗口触发和输出
+>
+> （5，2）
+>
+> 1，2，3，4，5，6
+>
+> 2，3，4，5，6 => 到这个窗口的时候，他已经无法包含到1了
+
+## 1.7 触发器 Trigger
+
+> 用来触发计算和输出
+
+```java
+/**
+	TODO 1,窗口什么时候触发 或者输出
+		时间进展 >= 窗口的最大时间戳（end - 1ms）
+
+/
+```
+
+## 1.8 移除器 Evictor
+
+> ​	Evictor是个接口	
+>
+> ​	移除器主要用来定义移除某些数据的逻辑。基于WindowedStreamd调用.evictor()方法，就可以传入一个自定义的移除器
+>
+> ​	不同窗口类型都有各自的预实现的移除器
+
+
+
+## 1.9 窗口的开始原理
+
+- ### 时间
+
+- #### 启动 => 向下取整，取窗口长度的整数倍
+
+- #### 结束 => start + 窗口长度
+
+- #### 窗口左闭右开 => 属于本窗口的 最大时间戳 = end - 1ms
+
+- #### 窗口的生命周期
+
+  - ##### 创建 ： 属于本窗口的第一条数据来的时候，new的 , 放入一个singleton单例的集合中
+
+  - ##### 销毁(关窗) : 时间进展 >= 窗口的最大时间戳 (end - 1ms)  + 允许迟到的时间(默认0)
+
+```java
+long start = TimeWindow.getWindowsStartWithOffset(
+	now,(globalOffset + staggerOffset) % size, size);
+)
+    
+    
+//timestamp 是当前时间(now)
+//offset是调整窗口便宜
+//windowSize 窗口长度
+getWindowStartWithOffset(long timestamp,long offset,long windowSize){
+    final long remainder = (timestamp - offset) % windowSize;
+    //如果当前时间是13秒，偏移量是0
+    //(13s -0) % 10 = 3
+    if(remainder < 0){
+		return timestamp - (remainder + windowSize);
+    }else{
+        //13-3=10s
+        return timestamp - remainder;
+    }
+    
+}
+```
+
+
+
+# 3.4 时间语义
+
+> 事件时间 : 一个数据产生的时间(时间戳Timestamp)
+>
+> 处理时间 : 数据真正被处理的时刻
+>
+> 例子
+>
+> ​	一瓶牛奶的生产日期是一月一号,买了后你也不会直接去喝，而是二号才去喝
+>
+> ​	1.1就是事件时间，1.2就是处理时间
+
+> 统计窗口中8-9点的区间活动,到底应该用什么时间呢。
+>
+> ​	事件时间
+
+- 到底以哪种时间作为衡量标准，就是所谓的时间语义。
+
+
+
+# 3.5 水位线
+
+> ​	在窗口的处理过程中，可以基于数据的时间戳，自定义一个**“逻辑时钟”**。这个时钟的时间不会自动流逝；它的时间进展，就是靠着新到数据的时间戳来推动的。
+>
+> ​	这样的好处在于，计算的过程可以**完全不依赖处理时间（系统时间）**，不论什么时候进行统计处理，得到的结果都是正确的。而一般实时流处理的场景中，事件时间可以基本**与处理时间保持同步，只是略微有一点延迟**，同时保证了窗口计算的正确性。
+
+> ​	在Flink中，用来衡量 **事件时间**进展的标记，就被称作**"水位线"(Watermark)**
+>
+> ​	具体是线上，水位线可以看作一条特殊的数据记录，它是插入到数据流中的一个标记点，主要内容就是一个时间戳，用来指示当前的事件时间。
+
+
+
+> ### 有序流中的水位线
+>
+> ​	理想状态 -数据量小- ，数据应该按照**生成的先后顺序**进入流中，**每条数据产生一个水位线**；
+>
+> 来了一条数据 ，把当前数据的事件事件抽出来，就是水位线
+>
+> - 实际应用中，如果当前**数据量非常大**，且同时涌来的数据事件差非常小（比如几毫秒），往往对处理计算也没什么影响。所以**为了提高效率**，一般会**每隔一段时间生成一个水位线**。
+
+
+
+> ### 乱序流中的水位线
+>
+> ​	在分布式系统中，数据在节点间传输，会因为网络传输延迟的不确定性，导致顺序发生改变，这就是所谓的“**乱序数据**”
+>
+> ​	乱序+数据量小：还是靠数据来驱动，每来一个数据就提取它的时间戳、插入一个水位线。在乱序的情况下，**先判断一下时间戳是否比之前的大，否则不生成新的水位线。**
+>
+> ​	只有数据的时间戳比当前时钟大，才能推动时钟前进，这时才插入水位线。
+
+> ​	乱序+数据量大 : 周期性的生成水位线。只需保存之前所有数据中的最大时间戳，需要插入水位线时，就直接以它的时间戳生成新的水位线
+
+> ​	乱序+迟到数据 : 为了让窗口能正确收集到迟到的数据，可以等上一段时间，比如2秒。用当前已有数据的最大时间戳减去2秒，就是要插入的水位线的时间戳。
+>
+> 水位线就代表了当前的事件时钟，而且可以在数据的时间戳基础上加上一些延迟保证数据不丢失。
+
+
+
+> 水位线特性
+
+- 水位线是插入到数据流中的一个标记，可以认为是一个特殊的数据
+- 主要内容是一个时间戳，用来表示当前事件时间的进展
+- 是基于数据的时间戳生成的
+- 时间戳必须单调递增，以确保任务的事件时间时钟一直向前推进
+- 可以通过设置延迟，保证正确处理乱序数据
+- 一个水位线Watermark(t)，表示在当前流中事件事件已经达到了时间戳t，这代表t之前的所有数据都到齐了，之后流中不会出现时间戳t' ≤ t的数据
+- 是保证结果正确性的核心机制，往往跟窗口结合，解决数据乱序
+
+
+
+## 1.1 水位线的设置
+
+> ​	完美的水位线“绝对正确”的，也就是一个水位线一旦出现，就表示这个时间之前的数据已经全部到齐、之后就再也不会出现了。**如果要保证绝对正确，就必须等足够长的时间，这会带来更高的延迟。**
+
+- 使用WatermarkStrategy创建水位线策略
+- .<WaterSensor>forMonotonousTimestamps() 指定水位线模式，并指定数据类型
+-  .withTimestampAssigner 指定水位线数据块
+- 数据源.assignTimestampsAndWatermarks(e) 应用水位线策略
+-  TumblingEventTimeWindows 窗口使用事件时间窗口
+
+> 乱序
+>
+> ```java
+> //指定单调递增时间戳 改为 乱序便宜时间 传入一个java.time的Duration时间
+> .<WaterSensor>forBoundedOutOfOrderness(Duration.ofSeconds(3))
+> ```
+
+```java
+public class WaterSensorsMono
+{
+    public static void main(String[] args) throws Exception
+    {
+        StreamExecutionEnvironment Env = StreamExecutionEnvironment.getExecutionEnvironment();
+        //并行度
+        Env.setParallelism(1);
+
+
+        SingleOutputStreamOperator<WaterSensor> socketData =
+            Env.socketTextStream("192.168.45.13", 7777)
+            .map(new WaterSensorMapFunction());
+
+        //升序时间
+        //创建水位线策略
+        WatermarkStrategy<WaterSensor> e = WatermarkStrategy
+            //指定单调递增时间戳
+            .<WaterSensor>forMonotonousTimestamps()
+            //设定时间戳获取方法
+            .withTimestampAssigner(
+                new SerializableTimestampAssigner<WaterSensor>()
+                {
+                    @Override
+                    public long extractTimestamp(WaterSensor waterSensor, long l)
+                    {
+                        System.out.println(waterSensor);
+                        //使用Ts作为时间戳 单位是ms毫秒
+                        return waterSensor.getTs() * 1000L;
+                    }
+                }
+            );
+
+        //应用水位线策略
+        SingleOutputStreamOperator<WaterSensor> TimeWater = socketData.assignTimestampsAndWatermarks(e);
+
+
+        TimeWater.keyBy(f -> f.getId())
+        //使用事件事件
+            .window(TumblingEventTimeWindows.of(Time.seconds(10))).process(
+            new ProcessWindowFunction<WaterSensor, String, String, TimeWindow>() {
+                @Override
+                public void process(String s, ProcessWindowFunction<WaterSensor, String, String, TimeWindow>.Context context, Iterable<WaterSensor> iterable, Collector<String> collector) throws Exception
+                {
+                    //context.window可以获取窗口上下文
+                    long startTime = context.window().getStart();
+                    long endTime = context.window().getEnd();
+                    //时间转换
+                    String start = DateFormatUtils.format(startTime, "HH:mm:ss");
+                    String end = DateFormatUtils.format(endTime, "HH:mm:ss");
+
+                    System.out.println("===================窗口起始:" + start + " ===================");
+                    System.out.println("===================窗口Key:" + s + " 内容===================");
+                    Iterator<WaterSensor> iterator = iterable.iterator();
+                    while (iterator.hasNext()){
+                        System.out.println(iterator.next());
+                    }
+                    System.out.println("===================窗口结束:" + end + " ===================");
+                }
+            }
+        ).print();
+
+        Env.execute();
+
+    }
+}
+```
+
+
+
+```java
+//输入
+s1,1,1
+s1,2,2
+s1,3,3
+s1,5,6
+s1,10,1
+s1,20,1
+    
+//输出
+WaterSensor{id='s1', ts=1, vc=1}
+WaterSensor{id='s1', ts=2, vc=2}
+WaterSensor{id='s1', ts=3, vc=3}
+WaterSensor{id='s1', ts=5, vc=6}
+WaterSensor{id='s1', ts=10, vc=1}
+===================窗口起始:08:00:00 ===================
+===================窗口Key:s1 内容===================
+WaterSensor{id='s1', ts=1, vc=1}
+WaterSensor{id='s1', ts=2, vc=2}
+WaterSensor{id='s1', ts=3, vc=3}
+WaterSensor{id='s1', ts=5, vc=6}
+===================窗口结束:08:00:10 ===================
+WaterSensor{id='s1', ts=20, vc=1}
+===================窗口起始:08:00:10 ===================
+===================窗口Key:s1 内容===================
+WaterSensor{id='s1', ts=10, vc=1}
+===================窗口结束:08:00:20 ===================
+```
+
+
+
+## 1.2 内置的水位线生成
+
+> 内置Watermark的生成原理
+>
+> 1. 都是周期性生成的，默认200ms
+> 2. 有序流 : watermark = 当前最大的事件时间 减去 1ms
+> 3. 乱序流 : watermark = 当前最大的事件时间 减去 延迟时间 减去 1ms
+
+
+
+## 1.3 自定义水位线生成
+
+- 实现WatermarkGenerator接口
+- 实现两个方法
+  - onEvent 每条数据来都会调用一次，可以用来提取最大的事件时间保存下来
+  - onPeriodicEmit 周期性调用 用来生成 watermark
+
+
+
+```java
+//自定义水位线
+//创建水位线策略
+WatermarkStrategy<WaterSensor> e = WatermarkStrategy
+    //指定水位线策略
+    .forGenerator(new WatermarkGeneratorSupplier<WaterSensor>() {
+        @Override
+        public WatermarkGenerator<WaterSensor> createWatermarkGenerator(Context context)
+        {
+            return new MyWatermarkStrategy<>();
+        }
+    })
+```
+
+
+
+```java
+WaterSensor{id='s1', ts=2, vc=1}
+WaterSensor{id='s1', ts=3, vc=1}
+WaterSensor{id='s1', ts=5, vc=1}
+WaterSensor{id='s1', ts=9, vc=1}
+WaterSensor{id='s1', ts=7, vc=1}
+WaterSensor{id='s1', ts=10, vc=1}
+WaterSensor{id='s1', ts=11, vc=1}
+WaterSensor{id='s1', ts=13, vc=1}
+===================窗口起始:08:00:00 ===================
+===================窗口Key:s1 内容===================
+WaterSensor{id='s1', ts=2, vc=1}
+WaterSensor{id='s1', ts=3, vc=1}
+WaterSensor{id='s1', ts=5, vc=1}
+WaterSensor{id='s1', ts=9, vc=1}
+WaterSensor{id='s1', ts=7, vc=1}
+===================窗口结束:08:00:10 ===================
+```
+
+
+
+> ## 水位线代码
+
+```java
+package functions;
+
+import org.apache.flink.api.common.eventtime.Watermark;
+import org.apache.flink.api.common.eventtime.WatermarkGenerator;
+import org.apache.flink.api.common.eventtime.WatermarkOutput;
+
+public class MyWatermarkStrategy<T> implements WatermarkGenerator<T>
+{
+    /**
+     *timeInter = 乱序等待时间
+     *new Time = 新的时间
+     */
+    private long timeInter;
+    private long newTime;
+
+    //设置空参构造，不传值就 给个3秒的延迟
+    public MyWatermarkStrategy(){
+        this.timeInter = 3000L;
+        this.newTime = Long.MIN_VALUE + 3001L;
+    }
+
+    public MyWatermarkStrategy(long timeInter) {
+        this.timeInter = timeInter;
+        this.newTime = Long.MIN_VALUE + timeInter + 1;
+    }
+
+    /**
+     * 每次有数据来就执行一次
+     * @param t e
+     * @param l 提取到的数据的事件时间
+     * @param watermarkOutput e
+     */
+    @Override
+    public void onEvent(T t, long l, WatermarkOutput watermarkOutput)
+    {
+        //获取最大的时间戳
+        this.newTime = Math.max(l,newTime);
+    }
+
+    /**
+     * 用来创建水位线
+     * @param watermarkOutput e
+     */
+    @Override
+    public void onPeriodicEmit(WatermarkOutput watermarkOutput)
+    {
+        watermarkOutput.emitWatermark(new Watermark(this.newTime - this.timeInter - 1));
+    }
+}
+```
+
+> #### 在onEvent中同样提供了WatermarkOutput,可以在每条数据到来时就创建一个水位线
+
+
+
+## 1.4 水位线的传递
+
+> 取最小
+>
+> 广播给所有下游
+
+- 有数据 1,2,5,7,8,10,12,13,14 也代表水位线，水位线偏移设置3，2个子任务 ，KeyBy这些数据走往同一个分区
+-  1 -> 水位线更新为 -2
+- 2 -> 水位线还是 -2 暂存水位线 -1
+- 5 -> 水位线变为 -1 暂存水位线 2
+- 7 -> 水位线变为 2 暂存水位线 4
+- 8 -> 水位线变为 4 暂存水位线 5
+- 10 -> 水位线 5 暂存7
+- 12 -> 水位线 7 暂存 9
+- 13 -> 水位线 9 暂存 10
+- 14 -> 水位线 11 窗口结束
+
+
+
+- 多线程
+- 任务1 1 -> L最小值
+- 任务2 5-> L最小值
+- 任务2 7-> L最小值
+- 无论任务2怎么发任务，水位线始终为最小的，而最小的就是任务1传过来的
+- 不是暂存，是分别存储各个线程所对应的水位线
+- 然后比较各个水位线值 取最小
+
+
+
+> 核心
+>
+> 1，接收到上游多个，取最小
+>
+> 2，往下游多个发送，广播
+
+```java
+WatermarkStrategy.WithIdleness(Duration.ofSeconds(5)) //空闲等待5秒，不管上游其他人了 处理时间
+```
+
+
+
+## 1.5 迟到数据
+
+- 对水位线设置了等待时间，等待时间已经过了还有却又出现了该窗口的数据就是迟到数据
+
+- 在开窗后可以设置迟到
+
+```java
+.allowedLateness(Time.seconds(2))//推迟2秒关窗
+```
+
+- 迟到的数据来一条触发一次计算
+
+
+
+
+
+## 1.6 迟到处理
+
+> 侧输出流
+
+- 在开窗后 `.sideOutputLateData(new OutputTag)`
+
+
+
+> > 乱序与迟到的区别
+> >
+> > ​	乱序 : 数据的顺序乱了，出现时间小的比时间大的晚来
+> >
+> > ​	迟到 : 数据的时间戳 < 当前的watermark
+>
+> > 乱序、迟到数据的处理
+> >
+> > ​	如果开窗，设置窗口允许迟到
+> >
+> > ​	=> 推迟关窗时间，在关窗之前，迟到数据来了，还能被窗口计算，来一条迟到数据触发一次计算
+> >
+> > ​	=> 关窗后，迟到数据不会被计算
+> >
+> > 关窗后的迟到数据 放入侧输出流
+>
+> 如果watermark等待3s，窗口允许迟到2s，为什么不之间watermark等待5s或者窗口允许迟到5s
+>
+> => watermark等待时间不会设太大 ===> 影响计算的延迟
+>
+> ​	如果3s => 窗口第一次触发计算和输出 , 13s的数据来。 13-3 = 10s
+>
+> ​	如果5s => 窗口第一次触发计算和输出 , 15s的数据来。 15-5 = 10s
+>
+> => 窗口允许迟到，是对大部分迟到数据的处理，尽量让结果准确
+>
+> ​	如果只设置允许迟到5秒，就会导致频繁重新输出
+
+> ### 设置经验
+>
+> 1. watermark等待时间，设置一个不算特别大的，一般是秒级，在乱序和延迟取舍
+> 2. 设置一定的窗口允许迟到，只考虑大部分的迟到数据，极端小部分迟到很久的数据，不管
+> 3. 极端小部分迟到很久的数据，放到侧输出流。获取到之后就可以做各种处理
+
+
+
+# 3.6 Join
+
+## 1.1 WindowJoin
+
+> 1. 落在同一个时间窗口范围内才能匹配
+>
+> 2. 根据指定的key(where - equalTo)，来进行匹配关联
+> 3. 只能拿到匹配上的数据
+
+
+
+```java
+package Join_;
+
+public class WindowJoin_
+{
+    public static void main(String[] args) throws Exception
+    {
+        StreamExecutionEnvironment Env = StreamExecutionEnvironment.getExecutionEnvironment();
+        Env.setParallelism(1);
+
+        SingleOutputStreamOperator<Tuple2<String, Integer>> tuple2 = Env
+            .fromElements(
+                new Tuple2<>("a", 1),
+                new Tuple2<>("a", 2),
+                new Tuple2<>("c", 10),
+                new Tuple2<>("b", 10),
+                new Tuple2<>("c", 115)
+            )
+            .assignTimestampsAndWatermarks(WatermarkStrategy
+                .<Tuple2<String, Integer>>forMonotonousTimestamps()
+                .withTimestampAssigner(new SerializableTimestampAssigner<Tuple2<String, Integer>>()
+                {
+                    @Override
+                    public long extractTimestamp(Tuple2<String, Integer> stringIntegerTuple2, long l)
+                    {
+                        return stringIntegerTuple2.f1 * 1000L;
+                    }
+                }));
+
+
+        //Tuple3数据源
+        SingleOutputStreamOperator<Tuple3<String, Integer, Integer>> tuple3 = Env
+            .fromElements(
+                new Tuple3<>("a", 1, 2),
+                new Tuple3<>("b", 5, 2),
+                new Tuple3<>("a", 6, 2),
+                new Tuple3<>("c", 7, 2),
+                new Tuple3<>("a", 10, 2),
+                new Tuple3<>("a", 15, 2),
+                new Tuple3<>("a", 23, 2)
+            )
+            //TODO 设置水位线逻辑
+            .assignTimestampsAndWatermarks(WatermarkStrategy
+                //TODO 升序水位线
+                .<Tuple3<String, Integer, Integer>>forMonotonousTimestamps()
+                //TODO 水位线设置水位线字段
+                .withTimestampAssigner(new SerializableTimestampAssigner<Tuple3<String, Integer, Integer>>()
+                {
+                    @Override
+                    public long extractTimestamp(Tuple3<String, Integer, Integer> stringIntegerIntegerTuple3, long l)
+                    {
+                        return stringIntegerIntegerTuple3.f1 * 1000L;
+                    }
+                }));
+
+        tuple2
+            // TODO 要join的另一条流
+            .join(tuple3)
+            //TODO join左边的键
+            .where(k -> k.f0)
+            //TODO join右边的键
+            .equalTo(k -> k.f0)
+            //TODO 开窗 JOIN只会在该窗口内匹配 非窗口的数据不匹配
+            .window(TumblingEventTimeWindows.of(Time.seconds(10)))
+            //TODO 进JOIN
+            .apply(new JoinFunction<Tuple2<String, Integer>, Tuple3<String, Integer, Integer>, String>()
+            {
+                // TODO 数据匹配后的join逻辑
+                /**
+                 * 关联上的数据
+                 * @param stringIntegerTuple2 数据1
+                 * @param stringIntegerIntegerTuple3 数据2
+                 * @return 自定义返回
+                 * @throws Exception e
+                 */
+                @Override
+                public String join(Tuple2<String, Integer> stringIntegerTuple2, Tuple3<String, Integer, Integer> stringIntegerIntegerTuple3) throws Exception
+                {
+                    return stringIntegerTuple2 + "\t \t \t" + stringIntegerIntegerTuple3;
+                }
+            }).print();
+
+        Env.execute();
+    }
+}
+```
+
+
+
+```java
+(a,1)	 	 	(a,1,2)
+(a,1)	 	 	(a,6,2)
+(a,2)	 	 	(a,1,2)
+(a,2)	 	 	(a,6,2)
+```
+

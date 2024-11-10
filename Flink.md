@@ -3972,7 +3972,7 @@ public class TopNs_
 
 
 
-## 1.5 状态管理
+# 1.5 状态管理
 
 > 在Flink中 算子任务可以分为 无状态和有状态两种
 >
@@ -4046,3 +4046,256 @@ public class StateDemo
     }
 }
 ```
+
+
+
+## 1.1 列表状态
+
+| Iterable<T> get()      | 获取当前的列表状态，返回的是可迭代类型Iterable<T> |
+| ---------------------- | ------------------------------------------------- |
+| update(List<T> values) | 传入一个列表values 直接对状态进行覆盖             |
+| add(T value)           | 在状态列表添加一个元素value                       |
+| addAll(List<T> value)  | 向列表中添加多个元素，以列表values形式传入。      |
+
+
+
+> ## 取各组水位线最高的前三
+
+```java
+package State_;
+public class StateList
+{
+    public static void main(String[] args) throws Exception
+    {
+        StreamExecutionEnvironment Env = StreamExecutionEnvironment.getExecutionEnvironment();
+
+        Env.socketTextStream("192.168.45.13",7777)
+               .map(new WaterSensorMapFunction())
+                   .assignTimestampsAndWatermarks(WatermarkStrategy.<WaterSensor>forMonotonousTimestamps()
+                       .withTimestampAssigner(new SerializableTimestampAssigner<WaterSensor>() {
+                           public long extractTimestamp(WaterSensor waterSensor, long l)
+                           {
+                               return waterSensor.getTs() * 1000L;
+                           }
+                       }))
+                //TODO 按照键分组
+               .keyBy(f -> f.getId())
+               .process(new KeyedProcessFunction<String, WaterSensor, String>() {
+                   @Override
+                   public void open(Configuration parameters) throws Exception
+                   {
+                       //TODO 在Open方法初始化 只会初始化一次，能保证任务启动后初始化
+                       super.open(parameters);
+                       state = getRuntimeContext().getListState(new ListStateDescriptor<>("dawf", Types.INT));
+                   }
+
+                   private ListState<Integer> state;
+                   public void processElement(WaterSensor value, KeyedProcessFunction<String, WaterSensor, String>.Context ctx, Collector<String> out) throws Exception
+                   {
+                       //TODO 其返回的是可迭代类型
+                       Iterable<Integer> integers = state.get();
+                       //TODO 创建一个List用来存放值
+                       ArrayList<Integer> list = new ArrayList<>();
+                       for (Integer integer : integers)
+                       {
+                           list.add(integer);
+                       }
+                       list.add(value.getVc());
+                       //TODO 排序
+                       list.sort((o1,o2) -> o2 - o1);
+                       //TODO 只取前三
+                       if(list.size() > 3) list.remove(3);
+                       //TODO 返回
+                       out.collect("Key:" + value.getId() + "\t" + list.toString());
+
+                       //TODO 覆盖
+                       state.update(list);
+                       list.clear();
+                   }
+               }).print();
+
+        Env.execute();
+    }
+}
+```
+
+
+
+## 1.2 Map状态
+
+> ### 统计各个传感器 各个水位线出现的次数
+
+```java
+package State_;
+public class StateMap
+{
+    public static void main(String[] args) throws Exception
+    {
+        StreamExecutionEnvironment Env = StreamExecutionEnvironment.getExecutionEnvironment();
+
+        Env.socketTextStream("192.168.45.13",7777)
+               .map(new WaterSensorMapFunction())
+                   .assignTimestampsAndWatermarks(WatermarkStrategy.<WaterSensor>forMonotonousTimestamps()
+                       .withTimestampAssigner(new SerializableTimestampAssigner<WaterSensor>() {
+                           public long extractTimestamp(WaterSensor waterSensor, long l)
+                           {
+                               return waterSensor.getTs() * 1000L;
+                           }
+                       }))
+                //TODO 按照键分组
+               .keyBy(f -> f.getId())
+                //TODO 目标
+                //TODO 统计每种水位出现的次数
+               .process(new KeyedProcessFunction<String, WaterSensor, String>() {
+                   //TODO 这里不初始化
+                   //TODO 键是水位 值是次数
+                   MapState<Integer,Integer> mapState;
+
+                   public void open(Configuration parameters) throws Exception
+                   {
+                       super.open(parameters);
+                       //TODO 在open初始化
+                       mapState = getRuntimeContext().getMapState(new MapStateDescriptor<>("mapsta",Types.INT,Types.INT));
+                   }
+
+                   public void processElement(WaterSensor value, KeyedProcessFunction<String, WaterSensor, String>.Context ctx, Collector<String> out) throws Exception
+                   {
+                       int vc = value.getVc();
+                       //TODO 返回true存在
+                        if(mapState.contains(value.getVc())) mapState.put(vc, mapState.get(vc) + 1);
+                        //TODO 不存在
+                        if(!mapState.contains(value.getVc())) mapState.put(vc, 1);
+
+                        //TODO 遍历拼接返回
+                       Iterator<Map.Entry<Integer, Integer>> iterator = mapState.iterator();
+                       StringBuilder stb = new StringBuilder();
+                       stb.append(value.getId() + "\n===========================\n");
+//                       while (iterator.hasNext())
+//                       {
+//                           Map.Entry<Integer, Integer> next = iterator.next();
+//                           stb.append(next.getKey() + "\t" + next.getValue() + "\n");
+//                       }
+
+                       //TODO 以水位线大小排序
+                       List<Tuple2<Integer,Integer>> list = new ArrayList<>();
+                       while (iterator.hasNext())
+                       {
+                           Map.Entry<Integer, Integer> next = iterator.next();
+                           list.add(new Tuple2<>(next.getKey(),next.getValue()));
+                       }
+                       list.sort((o1,o2) -> o1.f0 - o2.f0);
+                       for (Tuple2<Integer, Integer> e : list)
+                       {
+                           stb.append(e.f0 + "\t" + e.f1 + "\n");
+                       }
+
+                       out.collect(stb.toString());
+                   }
+               }).print();
+
+        Env.execute();
+    }
+}
+```
+
+
+
+## 1.3 归约状态
+
+> ## Reducing
+
+> ### 统计水位线总值
+
+```java
+.process(new KeyedProcessFunction<String, WaterSensor, String>() {
+    ReducingState<Integer> reducingState;
+    @Override
+    public void open(Configuration parameters) throws Exception
+    {
+        super.open(parameters);
+        reducingState = getRuntimeContext().getReducingState(new ReducingStateDescriptor<>(
+            "Name",
+            //TODO 可以简化为喇嘛大
+            new ReduceFunction<Integer>() {
+                //TODO 直接累加
+                @Override
+                public Integer reduce(Integer integer, Integer t1) throws Exception
+                {
+                    return integer + t1;
+                }
+            },
+            Types.INT
+        ));
+    }
+    @Override
+    public void processElement(WaterSensor value, KeyedProcessFunction<String, WaterSensor, String>.Context ctx, Collector<String> out) throws Exception
+    {
+        //将水位线传过去
+         reducingState.add(value.getVc());
+         out.collect("Key:" + value.getId() + "\t 水位线: " + reducingState.get());
+    }
+}).print();
+```
+
+
+
+## 1.4 聚合状态
+
+> ### AggregatingState
+
+> 取水位均值
+
+```java
+//TODO 按照键分组
+.keyBy(f -> f.getId())
+.process(new KeyedProcessFunction<String, WaterSensor, String>() {
+    //TODO 第一个泛型 输入类型，第二个泛型 输出类型
+    AggregatingState<Integer,Integer> aggstate;
+    @Override
+    public void open(Configuration parameters) throws Exception
+    {
+        super.open(parameters);
+        aggstate = getRuntimeContext().getAggregatingState(new AggregatingStateDescriptor<Integer, Tuple2<Integer,Integer>, Integer>(
+            "NameAgg",
+            new AggregateFunction<Integer, Tuple2<Integer,Integer>, Integer>() {
+                //初始化
+                @Override
+                public Tuple2<Integer, Integer> createAccumulator()
+                {
+                    return new Tuple2<>(0,0);
+                }
+                //累加逻辑
+                @Override
+                public Tuple2<Integer, Integer> add(Integer Input, Tuple2<Integer, Integer> ACC)
+                {
+                    //TODO f0存放总量，f1存放次数
+                    return Tuple2.of(ACC.f0 + Input,ACC.f1 + 1);
+                }
+                //最终返回
+                @Override
+                public Integer getResult(Tuple2<Integer, Integer> ACC)
+                {
+                    //TODO取平均值
+                    return ACC.f0 / ACC.f1;
+                }
+                @Override
+                public Tuple2<Integer, Integer> merge(Tuple2<Integer, Integer> integerIntegerTuple2, Tuple2<Integer, Integer> acc1)
+                {
+                    return null;
+                }
+            },
+            Types.TUPLE(Types.INT,Types.INT)
+            ));
+    }
+    @Override
+    public void processElement(WaterSensor value, KeyedProcessFunction<String, WaterSensor, String>.Context ctx, Collector<String> out) throws Exception
+    {
+         aggstate.add(value.getVc());
+         out.collect("Key:" + value.getId() + "\t" + "水位均值: " + aggstate.get());
+    }
+}).print();
+```
+
+
+
+## 1.5 状态生存时间 （TTL）

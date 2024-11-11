@@ -3972,7 +3972,7 @@ public class TopNs_
 
 
 
-# 1.5 状态管理
+# 3.8 状态管理
 
 > 在Flink中 算子任务可以分为 无状态和有状态两种
 >
@@ -4299,3 +4299,611 @@ public class StateMap
 
 
 ## 1.5 状态生存时间 （TTL）
+|StateTtlConfig	|  |
+|---------------------------------------|--------------------|
+|						|	|
+| .newBuilder(Time)   | 创建TTL                          |
+| .setUpdateType      | 设置模式                         |
+| .setStateVisibility | 状态可见性<br>被标记了是否可访问 |
+| .build              |                                  |
+|                     |                                  |
+
+```java
+package State_;
+public class StateTTL
+{
+    public static void main(String[] args) throws Exception
+    {
+        StreamExecutionEnvironment Env = StreamExecutionEnvironment.getExecutionEnvironment();
+
+        Env.socketTextStream("192.168.45.13",7777)
+               .map(new WaterSensorMapFunction())
+                   .assignTimestampsAndWatermarks(WatermarkStrategy.<WaterSensor>forMonotonousTimestamps()
+                       .withTimestampAssigner((waterSensor, l) -> waterSensor.getTs() * 1000L))
+               .keyBy(f -> f.getId())
+               .process(new KeyedProcessFunction<String, WaterSensor, String>() {
+                   ValueState<Integer> valueState;
+
+                   @Override
+                   public void open(Configuration parameters) throws Exception
+                   {
+                       StateTtlConfig.Builder TTLConfig =
+                                StateTtlConfig
+                               //TODO 创建TTL 传入过期时间
+                               .newBuilder(Time.seconds(10))
+                               //TODO 选择更新状态的模式
+                               //TODO 在给定情况下，状态的TTL会被重置
+                               .setUpdateType(StateTtlConfig.UpdateType.OnReadAndWrite)
+                               //TODO 选择被标记清除的状态是否能被读取
+                               //TODO 默认是这个 不能，另一个是可以 - ReturnExpiredIfNotCleanedUp
+                               .setStateVisibility(StateTtlConfig.StateVisibility.NeverReturnExpired);
+
+                       ValueStateDescriptor<Integer> VSD =  new ValueStateDescriptor<>("ValueTTL",Types.INT);
+                       //TODO 启用TTL 并给定TTL配置
+                       VSD.enableTimeToLive(TTLConfig.build());
+                       valueState = getRuntimeContext().getState(VSD);
+                       super.open(parameters);
+                   }
+
+                   @Override
+                   public void processElement(WaterSensor value, KeyedProcessFunction<String, WaterSensor, String>.Context ctx, Collector<String> out) throws Exception
+                   {
+                       System.out.println("Key:" + value.getId() + "\t上一个水位:" + valueState.value());
+                       valueState.update(value.getVc());
+                   }
+               }).print();
+
+        Env.execute();
+    }
+}
+```
+
+
+
+# 3.9 算子状态
+
+> #### 作用范围被限定为当前算子任务，算子状态跟数据的Key无关
+>
+> - ##### 不同Key的数据只要被分发到同一个并行子任务就会访问到同一个算子状态(Operator State)
+>
+> 算子状态的实际应用场景不如Keyed State多，一般用在Source或者Sink等外部系统连接
+
+
+
+## 1.0 ListState
+
+> ##### 与Keyed的不同，这个是一个子任务一个List，而Keyed的是一个Key一个List
+>
+> #### 在无状态算子中 注册状态，必须实现CheckpointedFunction接口
+
+| snapshotState   | 将本地变量拷贝到算子状态中，持久化本地变量                   |
+| --------------- | ------------------------------------------------------------ |
+| initializeState | (down掉重启)初始化本地变量，把本地变量从状态中恢复，每个子任务调用一次 |
+
+1. ##### 实现CheckpointedFunction接口
+
+2. ##### 定义一个计数变量
+
+3. ##### 定义一个状态 ListState
+
+4. ##### 在snapshotState内将变量持久化进状态
+
+   - ##### 情况算子状态 .clear();
+
+   - ##### 将本地变量添加到算子状态中
+
+5. 在initializeState
+   - 获取算子状态
+     - context.getOperatorStateStore().getListState
+
+
+
+> 计算数据条数 每个子任务独立
+
+```java
+package State_;
+public class OperMapState
+{
+    public static void main(String[] args) throws Exception
+    {
+        StreamExecutionEnvironment Env = StreamExecutionEnvironment.getExecutionEnvironment();
+
+        Env.setParallelism(2);
+        Env.socketTextStream("192.168.45.13",7777)
+               .map(new MyMapFunction()).print();
+
+        Env.execute();
+    }
+
+    public static class MyMapFunction implements MapFunction<String,Long>, CheckpointedFunction{
+
+        public Long map(String s) throws Exception
+        {
+            return ++conunt;
+        }
+
+        Long conunt = 0L;
+        ListState<Long> listState;
+        /**
+         * 将本地变量拷贝到状态 持久化
+         * TODO 一个线程触发一次 只有在首次运行时触发
+         * @param context 上下文
+         * @throws Exception e
+         */
+        public void snapshotState(FunctionSnapshotContext context) throws Exception
+        {
+            System.out.println("snapshotState被调用");
+            //TODO 清空算子状态
+            listState.clear();
+            //TODO 放入算子状态
+            listState.add(conunt);
+        }
+
+        /**
+         * 初始本地变量 在down重启后
+         * @param context 上下文
+         * @throws Exception e
+         */
+        public void initializeState(FunctionInitializationContext context) throws Exception
+        {
+            System.out.println("initializeState被调用");
+            //TODO 使用上下文获取算子状态
+            //TODO 由于我们情况了又放入 所以每个线程算子状态列表始终只有一个值
+            //TODO 将状态值取出后累加
+
+            //TODO 判断是否恢复成功 true false 直意
+            if (context.isRestored())
+            {
+                Iterable<Long> le = context
+                    .getOperatorStateStore()
+                    .getListState(new ListStateDescriptor<Long>("LE", Types.LONG))
+                    .get();
+                le.forEach(f -> conunt += f);
+            }
+        }
+    }
+}
+```
+
+​     
+
+> List与unionList的区别 :
+>
+> ​	并行度改变时，怎么重新分配状态
+>
+> - List
+>   - 将各个子任务的列表状态收集起来，(分片)然后轮询发送状态
+> - unionList
+>   - 将各个子任务的列表状态收集起来，(完整)全部发给各个并行度
+
+
+
+## 2.0 广播状态
+
+> #### 所有流的分区任务都访问同一个状态
+
+
+
+> ### 水位状态到达阈值进行报警，阈值可以动态修改
+
+1. ##### 创建一个广播流
+
+2. ##### Source流内的 broadcast方法传入一个 Map状态
+
+3. ##### 将数据流和广播流合流 connect 使用数据流合流广播流
+
+4. ##### 调用process
+
+| processBroadcastElement | 广播后的配置流处理方法 |
+| ----------------------- | ---------------------- |
+
+5. 通过上下文获取广播状态，往里面写数据
+
+
+
+```java
+package State_;
+public class BroadState
+{
+    public static void main(String[] args) throws Exception
+    {
+        StreamExecutionEnvironment Env = StreamExecutionEnvironment.getExecutionEnvironment();
+
+        SingleOutputStreamOperator<WaterSensor> Data = Env
+            .socketTextStream("192.168.45.13", 7777)
+            .map(new WaterSensorMapFunction());
+
+        //TODO 定义一个流 用来充当广播流
+        DataStreamSource<String> Brod = Env.socketTextStream("192.168.45.13", 8888);
+        //TODO 创建广播状态
+        MapStateDescriptor<String, Integer> MapStateStream = new MapStateDescriptor<>("Broadcast", Types.STRING, Types.INT);
+        //TODO 将流加入广播状态
+        BroadcastStream<String> broadcast = Brod.broadcast(MapStateStream);
+        //TODO 将需要共享广播状态的流与广播流进行合并
+        BroadcastConnectedStream<WaterSensor, String> BrodAllStream = Data.connect(broadcast);
+
+        //TODO 第一个泛型 第一条流的类型
+        //TODO 第二个泛型 第二条流的类型
+        //TODO 第三个泛型 输出的类型
+        BrodAllStream.process(new BroadcastProcessFunction<WaterSensor, String, String>() {
+
+            @Override
+            public void processElement(WaterSensor value, BroadcastProcessFunction<WaterSensor, String, String>.ReadOnlyContext ctx, Collector<String> out) throws Exception
+            {
+                //TODO 取得广播流数据
+                Integer MAX = ctx
+                    .getBroadcastState(MapStateStream)
+                    .get("runErr");
+                //TODO 判断广播流数据是否为空
+                int IsExNULL = (MAX == null ? 0 : MAX);
+                if(value.getVc() > IsExNULL) out.collect(value + "\t" + "水位过高 报警");
+            }
+
+            /**
+             *广播流的数据处理
+             * @param value 传入的值
+             * @param ctx 上下文 可以用来更新广播状态
+             * @param out 采集器
+             * @throws Exception e
+             */
+            @Override
+            public void processBroadcastElement(String value, BroadcastProcessFunction<WaterSensor, String, String>.Context ctx, Collector<String> out) throws Exception
+            {
+                //TODO 得到流
+                BroadcastState<String, Integer> ErrStream = ctx.getBroadcastState(MapStateStream);
+                //TODO 覆写数据
+                ErrStream.put("runErr",Integer.valueOf(value));
+            }
+        }).print();
+
+        Env.execute();
+    }
+}
+```
+
+
+
+## 3.0 状态后端
+
+> ### State Backends
+>
+> 管理状态的存储 访问 以及维护
+>
+> 主要负责管理本地状态的存储方式和位置
+
+### 1.1 哈希表状态后端
+
+- #### HashMapStateBackend
+
+  ​	是把状态存放在内存里。
+
+  - 在内部会直接把状态当作对象 objects  报错在Taskmanager的JVM堆上(任务节点的堆内存)
+  - 底层是一个哈希表HashMap
+
+  
+
+### 2.2 内嵌RocksDB
+
+> 内嵌RocksDB状态后端,EmbeddedRocksDBStateBackend
+
+- RocksDB是内嵌的key-value存储介质，可以把数据持久化到本地硬盘。默认存储在TaskManager的本地数据目录、
+- RocksDB的状态数据被存储为序列化的字节数组
+- 因为做了序列化 key的比较会按照字节进行 而不是直接调用hashCode 和eq
+- 始终执行异步快照，不会因为保存检查点而阻塞数据的处理 增量式保存检查点
+
+
+
+### 2.3
+
+- ##### HashMap效率更快，存储上限更低
+
+- ##### RocksDB安全性更高，存储上限更高
+
+
+
+### 2.4 配置状态后端
+
+> ##### Flink flink-conf.yaml
+>
+> state.backend.type : hashmap
+>
+> - 增量 / 全量 false => 全量
+>
+>   state.backend.incremental : false
+
+> ### 代码中指定状态后端
+
+```JAVA
+env.setStateBackend(new HashMapStateBackend());
+```
+
+
+
+> ### 代码中设置 RocksDB
+
+```xml
+<dependency>
+  <groupId>org.apache.flink</groupId>
+  <artifactId>flink-statebackend-rocksdb</artifactId>
+  <version>1.17.0</version>
+</dependency>
+```
+
+```java
+Env.setStateBackend(new HashMapStateBackend());
+//TODO 可以传入一个true表示启用增量保存 不指定就是全量
+Env.setStateBackend(new EmbeddedRocksDBStateBackend());
+```
+
+
+
+> All
+
+- #### 代码中指定状态后端
+
+  - 负责管理 本地状态
+  - hashmap
+    - 存在JVM的堆内存(任务节点) 读写快，缺点是存不了太多 受限于TaskManager的内存
+  - rocksdb
+    - 存在任务节点的rocksdb数据库，存到磁盘中 写需要序列化，读需要反序列化
+
+- 配置方式
+
+  - 配置文件 默认值 flink-conf.yaml
+  - 代码中指定
+  - 提交参数指定
+    - flink run-application -t yarn-application
+    - -p 3 (并行度)
+    - -Dstate.backend.type=rocksdb   => 这里指定
+    - -c 全类名
+    - jar包
+
+
+
+# 4.0 容错机制
+
+## 1.1 检查点
+
+> #### 检查点 Checkpoint
+
+> ​	可以用存档读档的思路，将之前某个时间点所有的状态保存下来 这个存档就是检查点
+>
+> ​	与大盘故障重启的时候，可以从检查点中读取存档，恢复之前的状态
+>
+> ​	这个检查，其实是针对故障恢复效果而言的，故障恢复后继续处理的结果应该与发生故障前完全一致
+>
+> **需要检查结果的正确性**，所有checkpoint叫做**一致性检查点**
+
+
+
+## 1.2 检查点的保存
+
+> ​	应该在所有任务(算子)都恰好处理完一个相同的输入数据的时候，将它们的状态保存下来。
+
+- 周期性的触发保存
+
+  - 在Flink中，检查点的保存是周期性触发的，间隔时间可以进行设置。不建议一条一保存
+
+- 保存的时间点
+
+  - ### **应该在所有任务(算子)都恰好处理完一个相同的输入数据的时候，将它们的状态保存下来**
+
+  - 一条数据被所有任务(算子)完整的处理完，状态得到了保存。
+
+    - 不管中间状态 只管最终状态
+
+  - **只需要让源(source)任务向数据源重新提交偏移量，请求重放数据就可以了**
+
+    - **数据已经经过部分算子 但是没有到最终状态 直接丢弃状态**
+    - **只需要让源申请保存的偏移量开始读取数据，就是重放**
+    - 需要源任务可以把偏移量作为算子状态保存下来 而且外部数据源能够重置偏移量
+
+- Checkpoint由JobManager发送指令触发检查点保存；Source任务中插入一个分界线，并将偏移量保存到远程的持久化存储中
+
+  - 发送指令即 在数据流中插入了特殊的数据结构
+  - 状态持久化后 Source会返回JobManager一个ack
+
+
+
+- 算子一对多的时候 会将特殊结构进行广播给下游 **barrier(特殊结构)**
+
+  - 下游只有等上游的特殊结构全部到达的时候才会进行状态持久化
+
+  - 如果上游一个特殊结构已经到了，有一个还每到，而到了的那个又发来了一条数据，不会被计算
+
+    - 特殊结构前面的数据才会被处理，后面的不处理，等结构对齐
+
+  - ### 精准一次 数据不越位
+
+
+
+- 如果是至少一次 那么后来的数据会直接计算 等到下一个Barrier到达时做状态的保存
+
+  - 故障重启时，介于两个Barrier之间的分界线已经到达分区任务传过来的数据会再次计算(重复计算)
+
+  - ### **至少一次** 数据越位
+
+
+
+- 非对齐
+  - 一个到了 直接跨过，然后存储这一批的数据 故障恢复 数据恢复到缓冲区
+  - 将越过的数据 还有在Barrier前面的数据一并备份
+  - IO压力更大 备份大小更大
+
+
+
+- 触发检查点 JobManager向Source发送Barrier
+- Barrier发送 向下游广播发送
+- Barrier对齐
+- 状态保存
+- 处理缓存数据 然后正常继续处理
+
+
+
+## 1.3 检查点算法
+
+> 采用了基于Chandy-Lamport算法的分布式快照，可以不暂停整体流处理的前提下 将状态备份到检查点
+
+​	借鉴水位线的设计，在数据流中插入了一个特殊的数据结构，专门用来表示触发检查点保存的时间点。
+
+
+
+- 特殊结构经过谁，谁就保存状态
+
+
+
+> 在多线程下，算子只有接收到上游的全部的特殊结构才会保存自身状态
+
+
+
+## 1.4 All
+
+1. Barrier对齐 ： 一个Task收到所有上游同一个编号的barrier之后，才会对自己的本地状态做备份
+   - 精准一次 : 在barrier对齐过程中，barrier后面的数据 阻塞等待 不会越过barrier
+   - 至少一次 : 在barrier对齐过程中，先到的barrier，后面的数据不阻塞 接着计算
+2. 非Barrier对齐 ：一个Task收到第一个barrier时，就开始执行备份
+   - 先到的barrier,将本地状态备份，后面的数据接着计算输出
+   - 未到的barrier,前面的数据接着计算输出，同时保存到备份中
+   - 最后一个barrier到时，Task备份结束
+
+
+
+## 1.5 编码配置
+
+- ### 如果使用HDFS存储需要导入依赖
+
+- 加上<scope>provided</scope>
+
+```xml
+<dependency>
+  <groupId>org.apache.hadoop</groupId>
+  <artifactId>hadoop-client</artifactId>
+  <version>3.3.4</version>
+</dependency>
+```
+
+
+
+## 1.6
+
+>Flink1.15之后 checkpoint(changelog) 通用增量
+>
+>Map也支持增量
+
+
+
+# 4.1 保存点
+
+> ### Savepoint
+
+- 版本管理和归档存储
+- 更新Flink版本
+- 更新应用程序
+- 调整并行度
+- 暂停应用程序
+
+
+
+> ### 每个算子都能指定UID
+>
+> #### 每个算子都能指定一个name -> 别名
+
+
+
+- 保存点的使用
+  - 在命令行为运行的作业创建一个保存点镜像
+  - jobId => 填充要做镜像保存的作业ID
+  - targetDirectory是目标路径 可选，表示保存点存储的路径
+
+```sh
+bin/flink savepoint :jobId [:targetDirectory]
+```
+
+- - flink-conf.yaml中的state.savepoints.dir
+
+
+```xml
+state.savepoints.dir: hdfs:///flink/savepoints
+```
+
+- - 程序中
+
+```java
+env.setDefaultSavepointDir("Path");
+```
+
+- - 作业停止 推荐 Source必须实现StoppableFunction接口
+
+```sh
+bin/flink stop --savepointPath [:targetDirectory] :jobId
+```
+
+- - 立即停止
+
+```sh
+bin/flink cancel -s Path job-id -yid application-id
+```
+
+
+
+
+
+
+
+> 从保存点加载
+
+```sh
+bin/flink run -s :savepointPath [:runArgs]
+```
+
+
+
+> 如果是yarn还需要跟上 => -yid application-id
+
+- 例
+
+```sh
+bin/flink run-application -d -t yarn-application -s 保持点完整路径 -c 全类名 ./jar包
+```
+
+> 从保存的checkpint 恢复需要指定到-id目录
+
+
+
+- 依赖分析插件 maven helper
+- 直接pom指定冲突依赖
+
+
+
+# 4.2 状态一致性
+
+- ##### 最多一次(At-Most-Once) =>不重复
+
+- ##### 至少一次(At-Least-Once) =>会重复
+
+- ##### 精确一次(Exactly-Once) => 不会重复
+
+
+
+> 端到端一致性
+>
+> ​	要考虑输入端支不支持重放，也要考虑输出端支不支持重放
+
+- 能否达到exactly-once级别 流处理器内部，数据源，外部存储都要有相应的保证机制
+- 如 源只能保证至少一次 其他能保证精准一次 最终也只能至少一次
+
+
+
+## 1.1 端到端精确一次
+
+- 输入端 要求数据可重放
+  - 如kafka 可重置读取数据偏移量
+- Flink处理 开启checkpoint且精准一次
+  - barrier对齐精准一次
+  - 非barrier对齐精准一次
+- 输出端 幂等 或 事务
+  - 幂等
+    - 利用mysql的主键upsert hbase的rowkey唯一
+  - 事务 外部系统提供 事务 : 要么成功要么失败，失败就回滚
+    - 两阶段提交写kafka
+    - 两阶段提交写mysql XA事务

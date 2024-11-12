@@ -4784,6 +4784,46 @@ Env.setStateBackend(new EmbeddedRocksDBStateBackend());
 
 
 
+```java
+StreamExecutionEnvironment Env = StreamExecutionEnvironment.getExecutionEnvironment();
+System.setProperty("HADOOP_USER_NAME","root");
+
+//TODO 默认barrier对齐 第一个参数是设置多久一次ms , 第二个参数是模式 精准一次
+Env.enableCheckpointing(5000, CheckpointingMode.EXACTLY_ONCE);
+
+//TODO 获取配置文件
+CheckpointConfig config = Env.getCheckpointConfig();
+
+//TODO 设置保存路径
+config.setCheckpointStorage("hdfs://192.168.45.13:8020/chk");
+
+//TODO checkpoint的超时时间 默认10分组
+config.setCheckpointTimeout(60000);
+
+//TODO 同时运行中的checkpoint的最大数
+config.setMaxConcurrentCheckpoints(2);
+
+//TODO 最小等待间隔 上一轮checkpoint结束到下一轮checkpoint开始 之间的间隔 设置>0并发就会变成1
+config.setMinPauseBetweenCheckpoints(1000);
+
+//TODO 取消作业时 checkpoint的数据是否保留在外部系统  => 在取消时删除
+//TODO 程序突然挂掉 无法删除
+config.setExternalizedCheckpointCleanup(CheckpointConfig.ExternalizedCheckpointCleanup.DELETE_ON_CANCELLATION);
+
+//TODO 运行checkpoint最大失败次数 默认0,如果失败job（作业）就挂掉
+config.setTolerableCheckpointFailureNumber(10);
+
+//TODO 开启非对其检查点 必须精准一次才能
+//TODO setMaxConcurrentCheckpoints必须为1
+config.enableUnalignedCheckpoints();
+
+//TODO 如果大于0 ，非对齐检查点启用时候，先使用对齐检查点
+//TODO 如果对齐检查点超时 超过设定时间 切换为非对齐 Flink 16后
+config.setAlignedCheckpointTimeout(Duration.ofSeconds(1));
+```
+
+
+
 ## 1.6
 
 >Flink1.15之后 checkpoint(changelog) 通用增量
@@ -4907,3 +4947,633 @@ bin/flink run-application -d -t yarn-application -s 保持点完整路径 -c 全
   - 事务 外部系统提供 事务 : 要么成功要么失败，失败就回滚
     - 两阶段提交写kafka
     - 两阶段提交写mysql XA事务
+
+
+
+预写入日志只能保证至少一次，因为一批写，还要等待恢复，如果数据已经写入，确认信息故障，就会重读
+
+
+
+## 1.2 两阶段提交
+
+> ##### 用来解决分布式场景下的事务
+
+1. 上一次检查点完成，barrier后续的数据开始进行预提交 (sink多个子任务都在往外写)
+
+   - 节点的数据写入到外部系统临时文件（打上一个标签） 多个子任务一起
+
+2. 当新的检查点完成时，各个节点进行正式提交
+
+   - 检查点定期检查各个节点的数据时候都提交成功了
+   - 如果有一个不成功 全部回滚
+   - 如果都提交成功了 成为正式数据（撕掉标签）
+   - - 当Sink任务收到JobManager发来的检查点完成的通知时，正式提交事务，写入的结果就真正可用了
+
+
+
+- #### Sink任务必须能够在进程失败后恢复事务
+
+- #### 提交事务必须是幂等操作。事务的宠物提交应该是无效的
+
+- #### 外部系统必须提供事务支持，或者Sink任务必须能够模拟外部系统上的事务
+
+   
+
+- Kafka的事务超时时间必须大于checkpoint设置的时间
+
+- checkpint必须为精准一次，不论是否Barrier
+
+
+
+- Kafka数据源必须设置消费隔离级别为
+  - ConsumerConfig.ISOLATION_LEVEL_CONFIG,"read_committed"
+
+
+
+
+
+# 4.3 SQL
+
+> bin/sql-client.sh [embedded] -s yarn-session
+
+- 设置结果显示模式
+
+```sh
+#默认table 可以设置为tableau changelog
+set sql-client.execution.result-mode=changelog;
+```
+
+
+
+- 设置执行环境
+
+```sh
+#默认streaming（流），也可以设置batch （批）
+set execution.runtime-mode=streaming;
+```
+
+
+
+- 设置并行度
+
+```sh
+set parallelism.default=1;
+```
+
+
+
+- 设置状态生命周期 TTL
+
+```sh
+set table.exec.state.ttl=1000;
+```
+
+
+
+> ### SQL文件初始化
+
+- /opt/mysql.sql
+
+```sql
+create database tables;
+```
+
+```sh
+bin/sql-client.sh embedded -s yarn-session -i /opt/mysql.sql
+```
+
+
+
+## 1.1 动态表
+
+> 查询一旦开始 就停不了了
+
+每来一条数据，SQL都会重新执行一次
+
+动态表转流，采用撤回追加，有新的数据来，将旧的数据删除，新的数据插入
+
+
+
+- ### 更新插入upsrt
+
+> 其实就是 update 和 insert 的合成词，对于更新插入流来说，INSERT插入和UPDATE更新操作，统一被编码为upsrt消息，而DELETE删除操作则被编码为delete消息
+
+
+
+## 1.2 时间属性
+
+> ### 事件事件
+
+```sql
+create table tableName(
+	usee string,
+    url string,
+    ts timestamp(3), #精确到毫秒
+    #将ts字段作为 水位线字段 允许迟到5秒
+    WATERMARK FOR ts AS ts - INTERVAL '5' SECOND
+)
+```
+
+- 时间戳类型必须是TIMESTAMP或者TIMESTAMP_LTZ类型。
+
+- 一般得到的时间戳都是秒或者毫秒的BIGINT类型
+
+- #### UNIX_TIMESTAMP得到秒的时间戳
+
+```sql
+ts BIGINT,
+time_ltz as TO_TIMESTAMP_LTZ(ts,3),
+```
+
+
+
+> ### 处理事件
+
+```sql
+create table tableName(
+	usee string,
+    url string,
+    ts as proctime(),
+)
+```
+
+
+
+## 1.3 主键 parymary key
+
+> ##### 主键只支持not enforce必须要加的
+
+```sql
+create table tableName(
+	userid bingint,
+    name string,
+    PARYMARY KEY(userid) not enforce
+) with (
+	connector = kafka
+    ...
+)
+```
+
+
+
+## 1.4 like
+
+> #### 直接从旧表字段创建新表
+
+```SQL
+create table NewTableName(corName ClassName) like oldTableName;
+```
+
+
+
+## 1.5 Kafka映射表
+
+```sql
+create table TableName(
+	userid bingint,
+    name string,
+    ts timestamp(3) metadata from 'timestamp' #将kafka的时间戳获取成为字段 如果字段名与要获取的元数据名一致可以自动 不用from
+) with (
+	'connector' = 'kafka', #外部连接器
+    'topic' = 'topicName', #主题
+    'properties.bootstrap.servers' = 'hostname:port', #服务器
+    'properties.group.id' = 'groupName', #组ID
+    'scan.startup.mode' = 'earliest-offset', #模式
+    'format' = 'csv' #格式
+)
+```
+
+
+
+## 1.6 数据生成源表
+
+```SQL
+create table source(
+	id int,
+    ts bigint,
+    vc int
+)with(
+    'connector' = 'datagen',
+    'rows-per-second' = '1', #时间限制
+    'fields.id.kind' = 'sequence', #自增
+    'fields.id.start' = '1', #id字段起始
+    'fields.id.end' = '100000', #id字段终止
+    
+    'fields.ts.kind' = 'sequence', 
+    'fields.ts.start' = '1', 
+    'fields.ts.end' = '100000', 
+    
+    'fields.vc.kind' = 'random', 
+    'fields.vc.start' = '1', 
+    'fields.vc.end' = '100',
+);
+```
+
+
+
+## 1.7 with临时表
+
+```sql
+with TmepTableName(column_name[,...]) as (
+	select * from source
+)
+select * from TmepTableName;
+```
+
+
+
+## 1.8 分组聚合Group by
+
+```sql
+select id,count(vc) from source group by id
+```
+
+
+
+## 1.9 去重distinct
+
+```sql
+select distinct 字段 from 表
+```
+
+
+
+# 4.4 SQL编码
+
+> ##### 只要用到了DataStreamAPI就要.execute()
+
+- #### 依赖
+
+```xml
+<dependency>
+    <groupId>org.apache.flink</groupId>
+    <artifactId>flink-table-api-java-bridge</artifactId>
+    <version>1.17.0</version>
+</dependency>
+
+<!--  FlinkSQL -->
+    <dependency>
+      <groupId>org.apache.flink</groupId>
+      <artifactId>flink-table-planner-loader</artifactId>
+      <version>1.17.0</version>
+    </dependency>
+
+    <dependency>
+      <groupId>org.apache.flink</groupId>
+      <artifactId>flink-table-runtime</artifactId>
+      <version>1.17.0</version>
+    </dependency>
+
+    <dependency>
+      <groupId>org.apache.flink</groupId>
+      <artifactId>flink-connector-files</artifactId>
+      <version>1.17.0</version>
+    </dependency>
+    <!-- Flink SQL Client -->
+    <dependency>
+      <groupId>org.apache.flink</groupId>
+      <artifactId>flink-sql-client</artifactId>
+      <version>1.17.0</version>
+    </dependency>
+
+```
+
+
+
+```xml
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+
+  <groupId>env</groupId>
+  <artifactId>Flink</artifactId>
+  <version>1.0-SNAPSHOT</version>
+  <packaging>maven-plugin</packaging>
+
+  <name>Flink Maven Plugin</name>
+
+  <!-- FIXME change it to the project's website -->
+  <url>http://maven.apache.org</url>
+
+
+
+
+  <properties>
+    <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+  </properties>
+
+  <dependencies>
+    <dependency>
+      <groupId>org.apache.flink</groupId>
+      <artifactId>flink-streaming-java</artifactId>
+<!--      <scope>provided</scope> &lt;!&ndash; 打包的时候不会打包进去 &ndash;&gt;-->
+      <version>1.17.0</version>
+    </dependency>
+
+    <dependency>
+      <groupId>org.apache.flink</groupId>
+      <artifactId>flink-clients</artifactId>
+<!--      <scope>provided</scope>-->
+      <version>1.17.0</version>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.flink</groupId>
+      <artifactId>flink-runtime-web</artifactId>
+      <version>1.17.0</version>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.flink</groupId>
+      <artifactId>flink-connector-files</artifactId>
+      <version>1.17.0</version>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.flink</groupId>
+      <artifactId>flink-connector-kafka</artifactId>
+      <version>1.17.0</version>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.flink</groupId>
+      <artifactId>flink-connector-datagen</artifactId>
+      <version>1.17.0</version>
+    </dependency>
+
+    <dependency>
+      <groupId>org.apache.flink</groupId>
+      <artifactId>flink-connector-jdbc</artifactId>
+      <version>3.1.2-1.17</version>
+    </dependency>
+
+    <dependency>
+      <groupId>org.apache.flink</groupId>
+      <artifactId>flink-statebackend-rocksdb</artifactId>
+      <version>1.17.0</version>
+    </dependency>
+
+<!--    <dependency>-->
+<!--      <groupId>org.apache.flink</groupId>-->
+<!--      <artifactId>flink-table-planner_2.12</artifactId>-->
+<!--      <version>1.17.0</version>-->
+<!--    </dependency>-->
+
+
+<!--  FlinkSQL -->
+    <dependency>
+      <groupId>org.apache.flink</groupId>
+      <artifactId>flink-table-planner-loader</artifactId>
+      <version>1.17.0</version>
+    </dependency>
+
+    <dependency>
+      <groupId>org.apache.flink</groupId>
+      <artifactId>flink-table-runtime</artifactId>
+      <version>1.17.0</version>
+    </dependency>
+
+    <dependency>
+      <groupId>org.apache.flink</groupId>
+      <artifactId>flink-connector-files</artifactId>
+      <version>1.17.0</version>
+    </dependency>
+    <!-- Flink SQL Client -->
+    <dependency>
+      <groupId>org.apache.flink</groupId>
+      <artifactId>flink-sql-client</artifactId>
+      <version>1.17.0</version>
+    </dependency>
+
+
+
+    <dependency>
+      <groupId>org.apache.hadoop</groupId>
+      <artifactId>hadoop-client</artifactId>
+      <version>3.3.4</version>
+      <exclusions>
+        <exclusion>
+          <artifactId>jsr305</artifactId>
+          <groupId>com.google.code.findbugs</groupId>
+        </exclusion>
+      </exclusions>
+    </dependency>
+
+    <dependency>
+      <groupId>mysql</groupId>
+      <artifactId>mysql-connector-java</artifactId>
+      <version>8.0.27</version>
+    </dependency>
+
+
+      <dependency>
+        <groupId>org.apache.flink</groupId>
+        <artifactId>flink-table-api-java-bridge</artifactId>
+        <version>1.17.0</version>
+      </dependency>
+      <dependency>
+        <groupId>org.apache.flink</groupId>
+        <artifactId>flink-table-api-java</artifactId>
+        <version>1.17.0</version>
+      </dependency>
+      <dependency>
+        <groupId>org.apache.flink</groupId>
+        <artifactId>flink-streaming-java</artifactId>
+        <version>1.17.0</version>
+      </dependency>
+
+    <dependency>
+      <groupId>org.apache.flink</groupId>
+      <artifactId>flink-table-common</artifactId>
+      <version>1.17.0</version>
+    </dependency>
+
+    <dependency>
+      <groupId>org.apache.maven</groupId>
+      <artifactId>maven-plugin-api</artifactId>
+      <version>2.0</version>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.maven.plugin-tools</groupId>
+      <artifactId>maven-plugin-annotations</artifactId>
+      <version>3.2</version>
+<!--      <scope>provided</scope>-->
+    </dependency>
+    <dependency>
+      <groupId>org.codehaus.plexus</groupId>
+      <artifactId>plexus-utils</artifactId>
+      <version>3.0.8</version>
+    </dependency>
+    <dependency>
+      <groupId>junit</groupId>
+      <artifactId>junit</artifactId>
+      <version>4.8.2</version>
+      <scope>test</scope>
+    </dependency>
+  </dependencies>
+
+
+
+
+  <build>
+    <plugins>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-shade-plugin</artifactId>
+        <version>3.6.0</version>
+        <configuration>
+          <!-- put your configurations here -->
+        </configuration>
+        <executions>
+          <execution>
+            <phase>package</phase>
+            <goals>
+              <goal>shade</goal>
+            </goals>
+            <configuration>
+<!--              <minimizeJar>true</minimizeJar>-->
+              <artifactSet>
+                <excludes>
+                  <exclude>com.google.code.findbugs:jsr305</exclude>
+                  <exclude>org.slf4j:*</exclude>
+                  <exclude>log4j:*</exclude>
+                </excludes>
+              </artifactSet>
+              <filters>
+                <filter>
+                  <aftifact>*:*</aftifact>
+                  <excludes>
+                    <exclude>META-INF/*.SF</exclude>
+                    <exclude>META-INF/*.DSA</exclude>
+                    <exclude>META-INF/*.RSA</exclude>
+                  </excludes>
+                </filter>
+              </filters>
+              <transformers combine.children="append">
+                <transformer implementation="org.apache.maven.plugins.shade.resource.ServicesResourceTransformer">
+                </transformer>
+              </transformers>
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>
+    </plugins>
+  </build>
+
+</project>
+```
+
+
+
+- ### 测试
+
+```java
+//TODO 1.创建FlinkEnv
+StreamExecutionEnvironment flinkEnv = StreamExecutionEnvironment.getExecutionEnvironment();
+
+//TODO 2.使用FlinkEnv创建TableEnv
+StreamTableEnvironment tableEnv = StreamTableEnvironment.create(flinkEnv);
+
+//TODO 3.创建一个socket流
+DataStreamSource<String> data = flinkEnv.socketTextStream("192.168.45.13", 7777);
+
+//TODO 4.将socket流转换为表视图
+//TODO 第一个参数是视图名，第二个是流
+tableEnv.createTemporaryView("socket",data);
+
+//TODO 调用TableEnv的sql查询
+Table table = tableEnv.sqlQuery("select * from socket");
+
+//TODO 将表转流打印
+tableEnv.toChangelogStream(table).print();
+flinkEnv.execute();
+```
+
+
+
+- 输入r,1 r,2 输出r,3
+
+```java
+public class WordCount
+{
+    public static void main(String[] args) throws Exception
+    {
+        //TODO 1.创建FlinkEnv
+        StreamExecutionEnvironment flinkEnv = StreamExecutionEnvironment.getExecutionEnvironment();
+        //TODO 2.使用FlinkEnv创建TableEnv
+        StreamTableEnvironment tableEnv = StreamTableEnvironment.create(flinkEnv);
+
+
+        //TODO 3.创建一个socket流
+        DataStreamSource<String> data = flinkEnv.socketTextStream("192.168.45.13", 7777);
+
+        //TODO 4.将socket流数据转换为2元组
+        DataStream<Tuple2<String, Integer>> map = data.map(f ->
+        {
+            String[] split = f.split(",");
+            return new Tuple2<>(split[0], Integer.valueOf(split[1]));
+            //TODO 注意泛型擦除
+        }).returns(Types.TUPLE(Types.STRING,Types.INT));
+        //TODO 创建视图 指定列名
+        tableEnv.createTemporaryView("mapTable",map,org.apache.flink.table.api.Expressions.$("Word"),org.apache.flink.table.api.Expressions.$("num"));
+
+
+        //TODO 调用TableEnv的sql查询
+        //TODO 分组求和
+        Table table = tableEnv.sqlQuery("select Word,sum(num) from mapTable group by Word");
+
+        //TODO 将表转流打印
+        tableEnv.toChangelogStream(table).print();
+
+        flinkEnv.execute();
+
+    }
+}
+```
+
+
+
+## 1.0 UDF函数
+
+### 1.0 标量函数
+
+- ##### 继承ScalarFunction => 标量函数
+
+- 写eval方法，需要public 无重写
+
+- ##### eval方法参数需要 @DataTypeHint(inputGroup = inputGroup.类型) 用来指定输入类型
+
+  - 如果是Object就是ANY
+
+```java
+tableEnv.createTemporaryFunction("FunctionName",MyFunction.class);
+
+//Table对象打印可以直接这样写
+//就不用调用Env的execute()了
+table.execute().print(); 
+```
+
+
+
+### 2.0 表函数
+
+- ##### 继承 TableFunction<返回的类型>
+
+- 手敲
+
+```java
+
+//如果是Row
+@functionHint(output = @DataTypeHint("ROW<返回时的名称 类型(STRING),...>"))
+public class MyFunction extends TableFunction<Row>
+{
+    public void eval(输入类型 cl)
+    {
+        collect(结果);
+    }
+}
+
+//注册
+tableEnv.createTemporaryFunction("FunctionName",MyFunction.class);
+//lateral是交叉联结，使用表函数必须联结
+//如果使用左右边关联需要(键 = 键)on true
+tableEnv.sqlQuery("select 字段名1,返回结果的字段名,... from tabelName,lateral table(FunctionName(字段名1))");
+tableEnv.sqlQuery("select 字段名1,返回结果的字段名,... from tabelName left join lateral table(FunctionName(字段名1)) on true");
+```
+

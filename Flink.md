@@ -5577,3 +5577,135 @@ tableEnv.sqlQuery("select 字段名1,返回结果的字段名,... from tabelName
 tableEnv.sqlQuery("select 字段名1,返回结果的字段名,... from tabelName left join lateral table(FunctionName(字段名1)) on true");
 ```
 
+
+
+# 4.5 JSON
+
+> ### 使用Kafka的数据 JSON格式创建表
+
+```sql
+CREATE TABLE user_behavior (
+  user_id BIGINT,
+  item_id BIGINT,
+  category_id BIGINT,
+  behavior STRING,
+  ts TIMESTAMP(3) -- 获取时间戳
+) WITH (
+ 'connector' = 'kafka', --指定模式
+ 'topic' = 'user_behavior', --指定主题可以多选
+ 'properties.bootstrap.servers' = 'localhost:9092', --指定链接
+ 'properties.group.id' = 'testGroup', --消费者组
+ 'format' = 'json', --解析格式 JSON
+ 'json.fail-on-missing-field' = 'false', --(字段缺失)解析失败是否跳过 false报错
+ 'json.ignore-parse-errors' = 'true' --(单纯的异常)解析异常跳过还是报错 false报错
+)
+```
+
+
+
+
+
+# 4.6 Flink流式导入HBase
+
+> https://www.bilibili.com/video/BV1gk4y1z7EQ/?spm_id_from=333.337.search-card.all.click&vd_source=6cfabdd9118b8397a529eb6df87378b6
+
+- 拷贝hbase shaderd的jar包到flink opt目录下
+
+```sh
+flink/flink-connectors/flink-sql-connector-hbase/target/flink-s
+flink/build-target/opt
+```
+
+
+
+- 拷贝kafka shaderd的jar包到flink opt目录下
+
+```sh
+flink/flink-connectors/flink-sql-connector-kafka/tarfet/flink-s
+flink/build-target/opt
+```
+
+
+
+- 拷贝json相关的jar包到 flink opt目录下
+
+```sh
+flink/flink-formats/flink-json/target/flink-json-SNAPSHOT.jar
+flink/build-target/opt
+```
+
+
+
+- 启动Flink集群
+- 启动Kafka集群
+
+
+
+## 1.1 Kafka源表json的读取
+
+```sql
+create table 表名Kafka(
+	urerName string,
+    visitURL string,
+    click_ts DECIMAL(38,18)
+) with (
+	'connector.type' = 'kafka',
+    'topic' = '主题名称',
+    'startup-mode' = 'earliest-offset', --读取方式
+    'connector.properties.bootstrap.server' = '192.168.45.12:9092', --集群地址 bootstrap.server
+    'format' = 'json',
+    'json-schema' = '{
+    	"type" : "object",
+    	"properties": {
+    		"userName":{
+    			"type": "string"
+    		},
+    		"visitURL":{
+    			"type": "string"
+    		},
+    		"click_ts":{
+    			"type": "number"
+    		}
+    	}
+    }'
+)
+```
+
+
+
+- 启动Hbase集群
+
+```sh
+./bin/start-hbase.sh
+```
+
+
+
+## 1.2 Flink Hbase Sink表
+
+```sql
+create table 表名Hbase(
+	url_address string,
+    url_agg row<total_visit_count BIGINT,distinct_users BIGINT>
+) with (
+    'connector' = 'hbase',
+    'table-name' = 'Hbase表名',
+    'zookeeper.quorum' = '192.168.45.13:2181 ->?/hbase',
+    ?-- zookeeper.znode.parent = '/hbase',
+    [
+        write.buffer-flush.max-size = '10mb',
+        write.buffer-flush.max-rows = '1000',
+        write.buffer-flush.interval = '2s',
+    ]
+);
+```
+
+
+
+- 通过SQL将Kafka的数据导入到 Hbase表
+
+```sql
+插入到，表明Hbase              click_ts键(Row_key)，行 urerName,visitURL
+insert into 表名Hbase select click_ts,ROW(urerName,visitURL) from 表名Kafka;
+```
+

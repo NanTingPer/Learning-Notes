@@ -232,3 +232,74 @@ case $1 in #条件判断 $1 是用户根在脚本后的一个参数
 esac
 ```
 
+
+
+
+
+# 1.0 乌班图apt无法自动下载依赖的问题
+
+```sh
+sudo apt install aptitude
+```
+
+- 后面使用apt安装软件的时候改用aptitude就行了
+
+```sh
+sudo aptitude install xxx
+```
+
+
+
+
+
+# 2.0 乌班图桌面安装搜狗输入法
+
+- 官网下载deb安装包
+- 乌班图默认好像是fcitx5 但是我后面下载的时候要的是fcitx4
+
+- 安装 aptitude
+
+```sh
+sudo apt install aptitude
+```
+
+- 安装fcitx
+  - tip : 不带任何东西
+
+```sh
+sudo aptitude fcitx
+```
+
+- - 如果让你选择Y你就选择Y 会卸载自带的fcitx5
+
+
+
+- 好了后左下角打开那个软件选择的界面 打开语言支持
+- 然后帮助上面的那个选择选成fcitx
+- 添加或删除语言里面把**汉语(中国)**安装一下
+- 在上面的那个框框 拖动 把汉语拖到最上面
+- reboot重启
+
+
+
+- 然后去下载的路径
+
+```sh
+sudo dpkg -i sogo.deb
+```
+
+- 重启就好了
+
+
+# 3.0 乌班图桌面安装Clash Verge
+
+libicu70_70.1-2_amd64 这是第一个要装的
+
+libicu67 这三第二个要安装的
+https://packages.debian.org/zh-cn/bullseye/libicu67
+
+libjavascriptcoregtk-4.0-18 (= 2.36.0-2ubuntu1) 这个是第三个要安装的
+https://ubuntu.pkgs.org/22.04/ubuntu-main-amd64/libjavascriptcoregtk-4.0-18_2.36.0-2ubuntu1_amd64.deb.html
+
+libwebkit2gtk-4.0-37_2.36.0-2ubuntu1_amd64.deb 这三第4个要安装的
+

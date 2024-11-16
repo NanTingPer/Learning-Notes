@@ -358,15 +358,16 @@ namespace AppLeng
 - 统称 .NET
 
 - 建立公共类库建议直接使用 .NET Standard 1.6版本
+  
   - .NET Core全版本可用
   - .NET Framework 4.6.1后可用
+
 - or .NET Standard 1.1
+  
   - .NET Core版本可用
   - .NET Framework 4.5后可用
 
 - .NET5 后 默认.NET指的是.NET Core
-
-
 
 # 1.1 .NET Core 的项目文件
 
@@ -375,3 +376,326 @@ namespace AppLeng
 - 目标运行时选择可移植的，任何操作系统都可以运行，但需要安装.NET运行环境
 
 - 目标运行时选择独立时，所选架构的，无需.NET运行时环境
+
+# 1.2 NetGe包管理
+
+- Install-Package 包名 Version 指定版本 / 不指定就是最新稳定版
+
+- Uninstall-Package 包名 / 卸载
+
+- Update-Package 包名 / 更新
+
+# 1.3 异步编程
+
+- 异步不能提高单个任务的运行速度
+
+- 关键字
+  
+  - async
+  
+  - await
+
+> async、await不等于多线程
+> 
+> 是简化版的
+
+        使用async关键字修饰的方法就是异步方法，规范的方法名称应该以Async结尾
+
+        异步方法的返回值一般都是**Task<T> T是真正的返回值类型**
+
+        即使**没有返回值**也建议使用Task作为返回值
+
+- 只要方法内部使用了**await**，方法必须修饰**async**
+
+- **调用异步方法**时，一般在方法前面**加上await关键字**，这样拿到的**返回值**就是泛型**指定的T类型**
+
+- 即便目标异步方法返回Task 就应当要加上await关键字 不加 另有解决方法
+  
+  - 线程安全问题 await会让主线程等待当前方法完成
+
+- 如果方法被async修饰了，就应当遵循返回Task
+
+```cs
+class Program  
+{  
+ static async Task Main(string[] args)  
+ {  
+ //使用异步写入  
+ await File.WriteAllTextAsync("/home/r/桌面/1.txt", "Hello World!");  
+ //使用异步读取  
+ string str = await File.ReadAllTextAsync("/home/r/桌面/1.txt");  
+ Console.WriteLine(str);  
+ }  
+}
+```
+
+- 如果方法不支持async，内部调用带有返回值的异步方法时，可以不使用await 直接使用.Result，如果不带返回值可以调用.Wait
+  - 尽量不要这要使用，会造成线程阻塞
+
+## Lambda内的异步方法
+
+- 加上 async 修饰 因为Lambda本质是匿名方法
+
+```cs
+MethonName(async () => {
+    await File.WriteAllTextAsync(fliePath,"aaaaa");
+});
+```
+
+## 异步方法实现
+
+```csharp
+public async Task<int> HttpDown(string url,string filePath)
+{
+    //创建会生成一个流，导致一直占用文件 可以进行手动释放
+    //.Close()
+    await using (File.Create(filePath)) ;
+
+    //有实现 IDisposable接口
+    //需要使用using进行资源的释放
+    using (HttpClient client = new HttpClient())
+    {
+        //获取
+        string str = await client.GetStringAsync(url);
+        //写入
+        await File.WriteAllTextAsync(filePath,str);
+        return str.Length;
+    }
+}
+
+
+
+async_Mthon method = new async_Mthon();
+int len = await method.HttpDown("https://www.baidu.com",
+                "/home/r/桌面/1.txt");
+Console.WriteLine(len);
+```
+
+## async、await原理揭秘
+
+    async方法会被编译器编译成一个类，然后里面使用状态机模型(switch语句),根据await切成多个case,然后这个类会被反复调用,每次调用num的值都会改变(case条件使用该值)
+
+- await仅仅阻塞当前线程 &
+
+- await调用的等待期间 .NET会把当前的线程返回给线程池，等待异步方法调用完成后，再从线程池取出一个新线程供后续代码继续执行
+
+## 异步方法不等于多线程
+
+        调用.NET的内置库的异步方法 线程ID会变是因为方法内部使用了类型Task.run类似的方法，开辟了新的线程。
+
+        实际上不手动给异步方法丢到其他线程，其线程是不变的
+
+## 异步方法不使用async修饰
+
+        异步方法内直接将Task<T>返回回去，让调用者取出值
+
+- async方法会生成一个类，影响运行效率，没有普通调用效率高
+
+- 可能会占用非常多的线程
+  
+  因此在必要情况下不使用async修饰，直接将Task返回
+
+- ### 什么情况下能不使用async修饰
+
+         **如果一个异步方法只是对其他异步方法的调用，并没有其他太复杂的逻辑**，例如 等待A的返回结果再调用B，然后把A的返回结果拿到内部处理再返回。**那么就可以不使用async修饰**
+
+## 异步编程不要使用Sleep()
+
+        如果想在异步方法中暂停一段时间，应该使用await Task.Delay()。使用Thread.Sleep()会造成线程阻塞
+
+## CancellationToken
+
+> 有时需要提前终止任务，比如：请求超时、用户取消请求
+> 
+> CancellationTokenSource xx = new CancellationTokenSource();
+
+```csharp
+CancellationTokenSource cts = new CancellationTokenSource();
+cts.Cancel();//发出终止信号
+```
+
+```csharp
+public static async Task Run(string url,int num,CancellationToken token)
+{
+    using (HttpClient client = new HttpClient())
+    {
+        //循环下载指定次数
+        for (int i = 0; i < num; i++)
+        {
+            string s = await client.GetStringAsync(url);
+            //如果发出停止就抛异常
+            if (token.IsCancellationRequested)
+            {
+                throw new OperationCanceledException();
+            }
+        }
+    }
+}
+//创Token对象
+CancellationTokenSource cts = new CancellationTokenSource();
+//单位是毫秒，到这个时间了 就会触发停止
+cts.CancelAfter(5000);
+CancellationToken token = cts.Token;
+await CancellationToken_.Run("https://www.baidu.com/", 100, token);
+//手动终止
+// cts.Cancel();
+
+//创Token对象
+CancellationTokenSource cts = new CancellationTokenSource();
+//单位是毫秒，到这个时间了 就会触发停止
+cts.CancelAfter(5000);
+CancellationToken token = cts.Token;
+await CancellationToken_.Run("https://www.baidu.com/", 100, token);
+//手动终止
+// cts.Cancel();
+
+```
+
+```csharp
+//创Token对象
+CancellationTokenSource cts = new CancellationTokenSource();
+//单位是毫秒，到这个时间了 就会触发停止
+cts.CancelAfter(5000);
+CancellationToken token = cts.Token;
+await CancellationToken_.Run("https://www.baidu.com/", 100, token);
+//手动终止
+// cts.Cancel();
+```
+
+
+
+
+
+## 1.1 线程池
+
+> - 一组预先创建的线程，可以被重复使用来执行多个任务
+> 
+> - 避免频繁地创建和销毁线程，从而减少了线程创建和销毁的开销，提高了系统的性能和效率
+> 
+> - 异步编程默认使用线程池
+
+- 原子操作
+
+        在执行过程中不会被中断的操作。不可分割，**要么完全执行，要么完全不执行，没有中间状态**
+
+        在多线程环境下，原子操作能够保证数据的一致性和可靠性，避免出现竞态条件和数据竞争的问题
+
+
+
+- 线程的创建
+
+> 创建Thread实例，并传入ThreadStart委托 还可以配置线程，如是否为后台线程
+> 
+> 调用Thread.Start方法，还可以传参
+
+
+
+- 线程的终止
+
+> 调用Thread.Join方法 等待线程的结束
+> 
+> - 会阻塞主线程
+> 
+> 
+> 
+> 调用Thread.Interrupt方法，中断线程的执行
+> 
+> - 会在相应的线程中抛出ThreadInterruptedException 捕获即可
+> 
+> - 如果线程中包含一个while(true)循环，那么需要保证包含等待方法，Thread.Sleep等（如IO操作）
+> 
+> 
+> 
+> 不能用Abort?
+> 
+> - 使用Abort方法来强制终止线程可能导致一些严重的问题 包括资源泄漏和不可预测的行为
+> 
+> - 较新版本的.NET中如果使用这个方法会报错 PlatformNotSupportedException
+> 
+> - 推荐使用Thread.Interrupt或CancellationToken
+
+
+
+- 线程的挂起与恢复
+
+> Thread.Suspend以及Thread.Resume
+> 
+> 较新版本的.NET中，这两个方法已经被标记过时 而且调用会报错
+> 
+> 推荐使用锁 信号量等方式实现这一逻辑
+
+
+
+### 线程安全与同步机制
+
+> #### Thread-Safety
+
+- 锁与信号量
+
+> - lock & Monitor
+> 
+> - Mutex
+> 
+> - Semaphore
+> 
+> > 线程间同步 使用一种方式告知其他线程我目前的工作，别打扰我，等我干完 资源让出来
+> 
+> - WaitHandle
+>   
+>   - ManualResetEvent
+>     
+>     > 如果多个线程都在用WaitOne等待信号量，那么每次Set(),这些WaitOne会被全部释放
+>     > 
+>     > 调用WaitOne后，保持开放 需要手动调用Reset()方法
+>   
+>   - AutoResetEvent
+>     
+>     > 如果多个线程都在用WaitOne等待信号量，
+>     > 
+>     > 那么每次Set(),只会释放一个WaitOne
+>     > 
+>     > 调用WaitOne后，会自动调用Reset()方法
+> 
+> - ReaderWriterLock
+>   
+>   > 允许多个Reader去读，只允许一个Writer去写，只允许一种，写的时候不能读，读的时候不能写
+
+
+
+- 轻量型
+
+> - SemaphoreSlim
+> 
+> - ManualResetEventSlim
+> 
+> - ReaderWriterLockSlim
+
+
+
+- 不要自己造轮子
+
+> - 线程安全的单例 : Lazy
+> 
+> - 线程安全的集合类型 : ConcurrentBag、ConcurrentStack、ConcurrentQueue、ConcurrentDictionary
+> 
+> - 阻塞集合 : BlockingCollection
+>   
+>   - 不适用异步编程
+> 
+> - 通道 : Channel
+> 
+> - 原子操作 : Interlocked
+> 
+> - 周期任务 : PeriodicTimer
+
+
+
+锁会阻塞线程更建议使用信号量
+
+### 信号量
+
+        轻量，底层，看起来好像是在阻塞一个线程，但那个线程确实就该被阻塞，其无非就是在等待一个命令 比如队列又有了新的消息，其也不知道它要不要开始干活，突然信号来了告诉它要开始干活了，它就会去干一下。
+
+        信号量阻塞相当于让线程挂起，可以让出自己的位置让CPU更好的处理其他线程，等到信号来了，又醒过来开始干活。
+
+        比轮询效率更高，更准确

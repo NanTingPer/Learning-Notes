@@ -20,7 +20,7 @@ public class CreateInivte : ICreateInivte
     ///             使用 Connection(公共属性) 的 InsertAsync()
     /// </summary>
     
-    private const string tableName = "TableName";
+    private const string tableName = "TableName.sqlit3";
     private static readonly string TableFilePath = Path.Combine(PathReturn.getApplicConfPath(), tableName);
     
     //SQLite连接器
@@ -46,6 +46,10 @@ public class CreateInivte : ICreateInivte
     /// </summary>
     public async Task InitiaAsync()
     {
+        if(!File.Exists(TableFilePath))
+        {
+           File.Create(TableFilePath).Close();
+        }
         //异步创建数据表
         await Connection.CreateTableAsync<SQLDataType>();
     }
@@ -67,6 +71,6 @@ public class CreateInivte : ICreateInivte
     /// <returns></returns>
     public Task DeleteAsync(SQLDataType sqlDataType)
     {
-        return Connection.DeleteAsync<SQLDataType>(sqlDataType);
+        return Connection.DeleteAsync(sqlDataType);
     }
 }

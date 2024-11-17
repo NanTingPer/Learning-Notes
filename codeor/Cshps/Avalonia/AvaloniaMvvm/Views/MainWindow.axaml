@@ -13,11 +13,28 @@
         <!-- 上面的语句，用于获取MainWindowViewModel对象 --> 
         <StackPanel>
                 <!-- 将文本绑定到Text中 -->
-                <TextBlock Text="{Binding Message}" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                <TextBlock Text="{Binding SQLDataOne}" HorizontalAlignment="Center" VerticalAlignment="Center"/>
                 <!-- 这里绑定Command 一但事件被调用，Message内容就会被更改 而Text刚好绑定了Message这个内容 -->
                 <Button Content="Clink My" Command="{Binding SayHelloCommand}">
                 </Button>
-        </StackPanel>
+
+                <Button Content="删除数据" Command="{Binding DeleteDataCommand}"></Button>
+          
+                <Button Content="初始化数据库" Command="{Binding InitiaCommand}"></Button>
+          
+                <Button Content="插入数据" Command="{Binding InsDataCommand}"></Button>
+          
+                <Button Content="查看数据" Command="{Binding GetSQLDataCommand}"></Button>
+          
+                <ItemsControl ItemsSource="{Binding SQLDataList}">
+                  <ItemsControl.ItemTemplate>
+                    <DataTemplate>
+                      <TextBlock Text="{Binding Name}"></TextBlock>
+                    </DataTemplate>
+                  </ItemsControl.ItemTemplate>
+                </ItemsControl>
+          
+          </StackPanel>
     
 
 </Window>

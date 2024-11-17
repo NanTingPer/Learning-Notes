@@ -63,6 +63,10 @@
               "target": "Package",
               "version": "[8.2.1, )"
             },
+            "Microsoft.Extensions.DependencyInjection": {
+              "target": "Package",
+              "version": "[8.0.1, )"
+            },
             "sqlite-net-pcl": {
               "target": "Package",
               "version": "[1.9.172, )"

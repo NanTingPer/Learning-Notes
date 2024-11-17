@@ -26,6 +26,8 @@
 /home/r/.nuget/packages/harfbuzzsharp/7.3.0.2/lib/net6.0/HarfBuzzSharp.dll
 /home/r/.nuget/packages/microcom.runtime/0.11.0/lib/net5.0/MicroCom.Runtime.dll
 /usr/lib/dotnet/packs/Microsoft.NETCore.App.Ref/8.0.10/ref/net8.0/Microsoft.CSharp.dll
+/home/r/.nuget/packages/microsoft.extensions.dependencyinjection.abstractions/8.0.2/lib/net8.0/Microsoft.Extensions.DependencyInjection.Abstractions.dll
+/home/r/.nuget/packages/microsoft.extensions.dependencyinjection/8.0.1/lib/net8.0/Microsoft.Extensions.DependencyInjection.dll
 /usr/lib/dotnet/packs/Microsoft.NETCore.App.Ref/8.0.10/ref/net8.0/Microsoft.VisualBasic.Core.dll
 /usr/lib/dotnet/packs/Microsoft.NETCore.App.Ref/8.0.10/ref/net8.0/Microsoft.VisualBasic.dll
 /usr/lib/dotnet/packs/Microsoft.NETCore.App.Ref/8.0.10/ref/net8.0/Microsoft.Win32.Primitives.dll
@@ -33,6 +35,10 @@
 /usr/lib/dotnet/packs/Microsoft.NETCore.App.Ref/8.0.10/ref/net8.0/mscorlib.dll
 /usr/lib/dotnet/packs/Microsoft.NETCore.App.Ref/8.0.10/ref/net8.0/netstandard.dll
 /home/r/.nuget/packages/skiasharp/2.88.8/lib/net6.0/SkiaSharp.dll
+/home/r/.nuget/packages/sqlite-net-pcl/1.9.172/lib/netstandard2.0/SQLite-net.dll
+/home/r/.nuget/packages/sqlitepclraw.bundle_green/2.1.2/lib/netstandard2.0/SQLitePCLRaw.batteries_v2.dll
+/home/r/.nuget/packages/sqlitepclraw.core/2.1.2/lib/netstandard2.0/SQLitePCLRaw.core.dll
+/home/r/.nuget/packages/sqlitepclraw.provider.e_sqlite3/2.1.2/lib/net6.0/SQLitePCLRaw.provider.e_sqlite3.dll
 /usr/lib/dotnet/packs/Microsoft.NETCore.App.Ref/8.0.10/ref/net8.0/System.AppContext.dll
 /usr/lib/dotnet/packs/Microsoft.NETCore.App.Ref/8.0.10/ref/net8.0/System.Buffers.dll
 /usr/lib/dotnet/packs/Microsoft.NETCore.App.Ref/8.0.10/ref/net8.0/System.Collections.Concurrent.dll

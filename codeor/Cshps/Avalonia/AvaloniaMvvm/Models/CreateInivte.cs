@@ -1,13 +1,13 @@
-using System.Diagnostics;
+using System.Collections.Generic;
 using System.IO;
 using System.Threading.Tasks;
 using AvaloniaMvvm.Servicer;
 using SQLite;
-using Tmds.DBus.Protocol;
+using AvaloniaMvvm.Models;
 
 namespace AvaloniaMvvm.Models;
 
-public class DbRun : ICreateInivte
+public class CreateInivte : ICreateInivte
 {
     /// <summary>
     /// 步骤
@@ -35,10 +35,10 @@ public class DbRun : ICreateInivte
     /// <summary>
     /// 插入数据
     /// </summary>
-    /// <param name="process"> 插入的内容 </param>
-    public async Task InsterAsync(Process process)
+    /// <param name="sqlDataType"> 插入的内容 </param>
+    public async Task InsterAsync(SQLDataType sqlDataType)
     {
-        await Connection.InsertAsync(process);
+        await Connection.InsertAsync(sqlDataType);
     }
 
     /// <summary>
@@ -47,6 +47,26 @@ public class DbRun : ICreateInivte
     public async Task InitiaAsync()
     {
         //异步创建数据表
-        await Connection.CreateTableAsync<Process>();
+        await Connection.CreateTableAsync<SQLDataType>();
+    }
+
+    
+    /// <summary>
+    /// 返回全部数据
+    /// </summary>
+    public Task<List<SQLDataType>> ScanAsync()
+    {
+        //因为取数据需要知道具体类型 所以需要使用Table打开表
+        return Connection.Table<SQLDataType>().ToListAsync();
+    }
+
+    /// <summary>
+    /// 删除数据
+    /// </summary>
+    /// <param name="sqlDataType"></param>
+    /// <returns></returns>
+    public Task DeleteAsync(SQLDataType sqlDataType)
+    {
+        return Connection.DeleteAsync<SQLDataType>(sqlDataType);
     }
 }

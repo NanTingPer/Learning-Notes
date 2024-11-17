@@ -548,7 +548,6 @@ CancellationToken token = cts.Token;
 await CancellationToken_.Run("https://www.baidu.com/", 100, token);
 //手动终止
 // cts.Cancel();
-
 ```
 
 ```csharp
@@ -561,10 +560,6 @@ await CancellationToken_.Run("https://www.baidu.com/", 100, token);
 //手动终止
 // cts.Cancel();
 ```
-
-
-
-
 
 ## 1.1 线程池
 
@@ -580,15 +575,11 @@ await CancellationToken_.Run("https://www.baidu.com/", 100, token);
 
         在多线程环境下，原子操作能够保证数据的一致性和可靠性，避免出现竞态条件和数据竞争的问题
 
-
-
 - 线程的创建
 
 > 创建Thread实例，并传入ThreadStart委托 还可以配置线程，如是否为后台线程
 > 
 > 调用Thread.Start方法，还可以传参
-
-
 
 - 线程的终止
 
@@ -596,15 +587,11 @@ await CancellationToken_.Run("https://www.baidu.com/", 100, token);
 > 
 > - 会阻塞主线程
 > 
-> 
-> 
 > 调用Thread.Interrupt方法，中断线程的执行
 > 
 > - 会在相应的线程中抛出ThreadInterruptedException 捕获即可
 > 
 > - 如果线程中包含一个while(true)循环，那么需要保证包含等待方法，Thread.Sleep等（如IO操作）
-> 
-> 
 > 
 > 不能用Abort?
 > 
@@ -614,8 +601,6 @@ await CancellationToken_.Run("https://www.baidu.com/", 100, token);
 > 
 > - 推荐使用Thread.Interrupt或CancellationToken
 
-
-
 - 线程的挂起与恢复
 
 > Thread.Suspend以及Thread.Resume
@@ -623,8 +608,6 @@ await CancellationToken_.Run("https://www.baidu.com/", 100, token);
 > 较新版本的.NET中，这两个方法已经被标记过时 而且调用会报错
 > 
 > 推荐使用锁 信号量等方式实现这一逻辑
-
-
 
 ### 线程安全与同步机制
 
@@ -660,8 +643,6 @@ await CancellationToken_.Run("https://www.baidu.com/", 100, token);
 >   
 >   > 允许多个Reader去读，只允许一个Writer去写，只允许一种，写的时候不能读，读的时候不能写
 
-
-
 - 轻量型
 
 > - SemaphoreSlim
@@ -669,8 +650,6 @@ await CancellationToken_.Run("https://www.baidu.com/", 100, token);
 > - ManualResetEventSlim
 > 
 > - ReaderWriterLockSlim
-
-
 
 - 不要自己造轮子
 
@@ -687,8 +666,6 @@ await CancellationToken_.Run("https://www.baidu.com/", 100, token);
 > - 原子操作 : Interlocked
 > 
 > - 周期任务 : PeriodicTimer
-
-
 
 锁会阻塞线程更建议使用信号量
 

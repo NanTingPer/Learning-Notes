@@ -4,7 +4,15 @@
              xmlns:local="using:AvaloniaMvvm"
              RequestedThemeVariant="Default">
              <!-- "Default" ThemeVariant follows system theme variant. "Dark" or "Light" are other available options. -->
-
+    
+             <!-- 用于注册全局App资源 -->
+    <Application.Resources>
+        <ResourceDictionary>
+            <!-- local指向依赖注入容器  x:key 表示调用时使用的名 -->
+            <local:ServiceLocator x:Key="ServiceLocator"></local:ServiceLocator>
+        </ResourceDictionary>
+    </Application.Resources>
+             
     <Application.DataTemplates>
         <local:ViewLocator/>
     </Application.DataTemplates>

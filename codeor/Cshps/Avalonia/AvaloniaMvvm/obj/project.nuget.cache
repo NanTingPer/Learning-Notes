@@ -1,6 +1,6 @@
 {
   "version": 2,
-  "dgSpecHash": "/4EcW5GcRLE=",
+  "dgSpecHash": "5+0XIH8jHJE=",
   "success": true,
   "projectFilePath": "/home/r/桌面/Learning-Notes/codeor/Cshps/Avalonia/AvaloniaMvvm/AvaloniaMvvm.csproj",
   "expectedPackageFiles": [
@@ -27,6 +27,8 @@
     "/home/r/.nuget/packages/harfbuzzsharp.nativeassets.webassembly/7.3.0.3-preview.2.2/harfbuzzsharp.nativeassets.webassembly.7.3.0.3-preview.2.2.nupkg.sha512",
     "/home/r/.nuget/packages/harfbuzzsharp.nativeassets.win32/7.3.0.2/harfbuzzsharp.nativeassets.win32.7.3.0.2.nupkg.sha512",
     "/home/r/.nuget/packages/microcom.runtime/0.11.0/microcom.runtime.0.11.0.nupkg.sha512",
+    "/home/r/.nuget/packages/microsoft.extensions.dependencyinjection/8.0.1/microsoft.extensions.dependencyinjection.8.0.1.nupkg.sha512",
+    "/home/r/.nuget/packages/microsoft.extensions.dependencyinjection.abstractions/8.0.2/microsoft.extensions.dependencyinjection.abstractions.8.0.2.nupkg.sha512",
     "/home/r/.nuget/packages/skiasharp/2.88.8/skiasharp.2.88.8.nupkg.sha512",
     "/home/r/.nuget/packages/skiasharp.nativeassets.linux/2.88.8/skiasharp.nativeassets.linux.2.88.8.nupkg.sha512",
     "/home/r/.nuget/packages/skiasharp.nativeassets.macos/2.88.8/skiasharp.nativeassets.macos.2.88.8.nupkg.sha512",

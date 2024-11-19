@@ -47,3 +47,5 @@ codeor/AcortDome/
 /codeor/Cshps/Avalonia/AvaloniaMvvm/obj
 /codeor/Cshps/Avalonia/AvaloniaMvvm/obj
 /codeor/Cshps/Avalonia/AvaloniaMvvm/bin
+/codeor/Cshps/Avalonia/AvaloniaMvvm/obj
+*.targets

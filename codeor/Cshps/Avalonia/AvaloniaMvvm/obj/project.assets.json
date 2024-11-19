@@ -1864,31 +1864,25 @@
     ]
   },
   "packageFolders": {
-    "C:\\Users\\23759\\.nuget\\packages\\": {},
-    "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages": {}
+    "/home/r/.nuget/packages/": {}
   },
   "project": {
     "version": "1.0.0",
     "restore": {
-      "projectUniqueName": "D:\\CodeRun\\Learning-Notes\\codeor\\Cshps\\Avalonia\\AvaloniaMvvm\\AvaloniaMvvm.csproj",
+      "projectUniqueName": "/home/r/桌面/Learning-Notes/codeor/Cshps/Avalonia/AvaloniaMvvm/AvaloniaMvvm.csproj",
       "projectName": "AvaloniaMvvm",
-      "projectPath": "D:\\CodeRun\\Learning-Notes\\codeor\\Cshps\\Avalonia\\AvaloniaMvvm\\AvaloniaMvvm.csproj",
-      "packagesPath": "C:\\Users\\23759\\.nuget\\packages\\",
-      "outputPath": "D:\\CodeRun\\Learning-Notes\\codeor\\Cshps\\Avalonia\\AvaloniaMvvm\\obj\\",
+      "projectPath": "/home/r/桌面/Learning-Notes/codeor/Cshps/Avalonia/AvaloniaMvvm/AvaloniaMvvm.csproj",
+      "packagesPath": "/home/r/.nuget/packages/",
+      "outputPath": "/home/r/桌面/Learning-Notes/codeor/Cshps/Avalonia/AvaloniaMvvm/obj/",
       "projectStyle": "PackageReference",
-      "fallbackFolders": [
-        "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages"
-      ],
+      "UsingMicrosoftNETSdk": false,
       "configFilePaths": [
-        "C:\\Users\\23759\\AppData\\Roaming\\NuGet\\NuGet.Config",
-        "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.FallbackLocation.config",
-        "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.Offline.config"
+        "/home/r/.nuget/NuGet/NuGet.Config"
       ],
       "originalTargetFrameworks": [
         "net8.0"
       ],
       "sources": {
-        "C:\\Program Files (x86)\\Microsoft SDKs\\NuGetPackages\\": {},
         "https://api.nuget.org/v3/index.json": {}
       },
       "frameworks": {
@@ -1901,13 +1895,7 @@
         "warnAsError": [
           "NU1605"
         ]
-      },
-      "restoreAuditProperties": {
-        "enableAudit": "true",
-        "auditLevel": "low",
-        "auditMode": "all"
-      },
-      "SdkAnalysisLevel": "9.0.100"
+      }
     },
     "frameworks": {
       "net8.0": {
@@ -1962,7 +1950,7 @@
             "privateAssets": "all"
           }
         },
-        "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\9.0.100/PortableRuntimeIdentifierGraph.json"
+        "runtimeIdentifierGraphPath": "/usr/lib/dotnet/sdk/8.0.110/PortableRuntimeIdentifierGraph.json"
       }
     }
   }

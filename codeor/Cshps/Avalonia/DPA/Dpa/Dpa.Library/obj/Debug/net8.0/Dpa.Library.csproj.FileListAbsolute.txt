@@ -1,0 +1,13 @@
+/home/r/桌面/Learning-Notes/codeor/Cshps/Avalonia/DPA/Dpa/Dpa.Library/bin/Debug/net8.0/Dpa.Library.deps.json
+/home/r/桌面/Learning-Notes/codeor/Cshps/Avalonia/DPA/Dpa/Dpa.Library/bin/Debug/net8.0/Dpa.Library.dll
+/home/r/桌面/Learning-Notes/codeor/Cshps/Avalonia/DPA/Dpa/Dpa.Library/bin/Debug/net8.0/Dpa.Library.pdb
+/home/r/桌面/Learning-Notes/codeor/Cshps/Avalonia/DPA/Dpa/Dpa.Library/obj/Debug/net8.0/Dpa.Library.csproj.AssemblyReference.cache
+/home/r/桌面/Learning-Notes/codeor/Cshps/Avalonia/DPA/Dpa/Dpa.Library/obj/Debug/net8.0/Dpa.Library.GeneratedMSBuildEditorConfig.editorconfig
+/home/r/桌面/Learning-Notes/codeor/Cshps/Avalonia/DPA/Dpa/Dpa.Library/obj/Debug/net8.0/Dpa.Library.AssemblyInfoInputs.cache
+/home/r/桌面/Learning-Notes/codeor/Cshps/Avalonia/DPA/Dpa/Dpa.Library/obj/Debug/net8.0/Dpa.Library.AssemblyInfo.cs
+/home/r/桌面/Learning-Notes/codeor/Cshps/Avalonia/DPA/Dpa/Dpa.Library/obj/Debug/net8.0/Dpa.Library.csproj.CoreCompileInputs.cache
+/home/r/桌面/Learning-Notes/codeor/Cshps/Avalonia/DPA/Dpa/Dpa.Library/obj/Debug/net8.0/Dpa.Library.sourcelink.json
+/home/r/桌面/Learning-Notes/codeor/Cshps/Avalonia/DPA/Dpa/Dpa.Library/obj/Debug/net8.0/Dpa.Library.dll
+/home/r/桌面/Learning-Notes/codeor/Cshps/Avalonia/DPA/Dpa/Dpa.Library/obj/Debug/net8.0/refint/Dpa.Library.dll
+/home/r/桌面/Learning-Notes/codeor/Cshps/Avalonia/DPA/Dpa/Dpa.Library/obj/Debug/net8.0/Dpa.Library.pdb
+/home/r/桌面/Learning-Notes/codeor/Cshps/Avalonia/DPA/Dpa/Dpa.Library/obj/Debug/net8.0/ref/Dpa.Library.dll

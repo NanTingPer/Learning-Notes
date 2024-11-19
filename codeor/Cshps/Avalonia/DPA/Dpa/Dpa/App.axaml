@@ -1,0 +1,17 @@
+<Application xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             x:Class="Dpa.App"
+             xmlns:local="using:Dpa"
+             xmlns:semi="https://irihi.tech/semi"
+             RequestedThemeVariant="Default"
+             xmlns:avalonia="https://irihi.tech/semi">
+             <!-- "Default" ThemeVariant follows system theme variant. "Dark" or "Light" are other available options. -->
+
+    <Application.DataTemplates>
+        <local:ViewLocator/>
+    </Application.DataTemplates>
+             
+    <Application.Styles>
+        <avalonia:SemiTheme Locale="zh-CN" />
+    </Application.Styles>
+</Application>

@@ -68,13 +68,7 @@ public partial class MainWindowViewModel : ViewModelBase
     //赋给定的值
     //@ 3
     private void SayHello() { Message = "adawfa"; }
-
-    private string _sqldataone;
-    public string SQLDataOne
-    {
-        get => _sqldataone; 
-        set => SetProperty(ref _sqldataone,value);
-    }
+    
 
     /// <summary>
     /// 数据集
@@ -92,7 +86,6 @@ public partial class MainWindowViewModel : ViewModelBase
         {
             SQLDataList.Add(sqlDataType);
         }
-        SQLDataOne = SQLDataList[0].Id.ToString() + SQLDataList[0].Name.ToString();
     }
 
     /// <summary>

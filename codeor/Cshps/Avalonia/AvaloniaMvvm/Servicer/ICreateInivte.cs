@@ -23,7 +23,6 @@ public interface ICreateInivte
     /// <summary>
     /// 查
     /// </summary>
-    /// <typeparam name="T"> 数据库返回的类型 </typeparam>
     /// <returns>返回全部数据</returns>
     Task<List<Models.SQLDataType>> ScanAsync();
     

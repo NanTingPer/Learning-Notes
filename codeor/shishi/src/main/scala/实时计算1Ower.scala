@@ -54,14 +54,10 @@ object 实时计算1Ower {
                     if(mapState.contains(value._1)) {
                         var unit = mapState.get(value._1) ;
                         val value1 = unit._1
-                        var trSet = new util.TreeSet[Int]()
-                        value1.forEach(f => trSet.add(f))
-                        trSet.add(value._2)
-                        var list = new util.ArrayList[Integer]()
-                        trSet.forEach(f => list.add(f))
-                        mapState.put(value._1,(list,unit._2+1))
+                        value1.add(value._2)
+                        mapState.put(value._1,(value1,unit._2+1))
                     }else{
-                        var treeset = new util.ArrayList[Integer]()
+                        var treeset = new util.TreeSet[Integer]()
                         treeset.add(value._2)
                         mapState.put(value._1,(treeset,1))
                     }

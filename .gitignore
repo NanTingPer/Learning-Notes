@@ -49,3 +49,6 @@ codeor/AcortDome/
 /codeor/Cshps/Avalonia/AvaloniaMvvm/bin
 /codeor/Cshps/Avalonia/AvaloniaMvvm/obj
 *.targets
+/codeor/Cshps/Avalonia/DPA/Dpa/Dpa.Library/bin
+/codeor/Cshps/Avalonia/DPA/Dpa/Dpa/obj
+/codeor/Cshps/Avalonia/DPA/Dpa/Dpa.Library/bin

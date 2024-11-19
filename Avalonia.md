@@ -685,8 +685,6 @@ private async Task DeleteData()
 
 4. 流对流拷贝 `await 资源流.CopyToAsync(目标流)`
 
-
-
 ## 2.0 单元测试
 
 > 新建 Unit Test项目 项目名自定义 规范化: `项目名.UnitTest` 类型xUnit
@@ -724,7 +722,188 @@ public async Task InitializeAsync_Def()
     await poetrySty.InitializeAsync();
     //如果文件存在 测试通过
     Assert.True(File.Exists(poetrySty.DbPath));
-    
+
     File.Delete(poetrySty.DbPath);
 }
 ```
+
+### 2.1 单元测试的资源清理
+
+1. 单元测试类继承 IDisposable接口
+
+2. 定义Dispose方法 里面实现/调用方法 进行资源清理
+
+```cs
+public class PoetryStyTest : IDisposable
+{
+    private PoetrySty poetrySty;
+    [Fact]
+    public async Task InitializeAsync_Def()
+    {
+        poetrySty = new PoetrySty();
+        //如果文件不存在测试通过
+        Assert.False(File.Exists(poetrySty.DbPath));
+        //调用
+        await poetrySty.InitializeAsync();
+        //如果文件存在 测试通过
+        Assert.True(File.Exists(poetrySty.DbPath));
+    }
+    public void Dispose()
+    {
+        Delete.Del(poetrySty.DbPath);
+    }
+}
+
+namespace Dpa.Test.DeleteDatabases;
+public class Delete
+{
+    public static void Del(string FilePath) => File.Delete(FilePath);
+}
+```
+
+3. 在测试函数运行之前也应该清理一次
+   
+   在构造函数内清理一次
+
+
+
+## 3.0 键值存储
+
+1. 定义接口
+   
+   1. Get Set方法 第一个参数三key,第二个是value
+   
+   2. 分别建立 int,string,DataTime类型的GetSet
+
+2. 创建类实现读写
+   
+   1. GetSet方法，键是文件名，值是内容
+
+3. 在事务类构造函数 依赖于 存储类 （类型写接口）, 
+   
+   1. 定义一个私有变量
+   
+   2. 构造函数内赋值
+
+4. 在事务类内，定义一个版号判断的方法
+
+> #### IConfig接口
+
+```cs
+namespace Dpa.Library.ConfigFile;
+public interface IConfig
+{
+    void Set(string key,string value);
+    string Get(string key, string value);
+    
+    void Set(string key,int value);
+    int Get(string key, int value);
+    
+    void Set(string key,DateTime value);
+    DateTime Get(string key, DateTime value);
+}
+
+```
+
+> #### Config
+
+```cs
+namespace Dpa.Library.ConfigFile;
+public class Config : IConfig
+{
+    /// <summary>
+    /// 写入配置数据
+    /// </summary>
+    /// <param name="key"> 配置名 </param>
+    /// <param name="value"> 写入的值 </param>
+    private void SetData(string key, string value)
+    {
+        string filePath = PathFile.GetFileOrCreate(key);
+        File.WriteAllText(filePath,value);
+    }
+    /// <summary>
+    /// 读取配置数据
+    /// </summary>
+    /// <param name="key"> 键 </param>
+    /// <returns></returns>
+    private String Get(string key) => File.ReadAllText(PathFile.GetFileOrCreate(key));
+    public void Set(string key, string value)
+    {
+        SetData(key,value);
+    }
+    public string Get(string key, string value)
+    {
+        if(Get(key) == null) return value;
+        return Get(key);
+    }
+    public void Set(string key, int value)
+    {
+        SetData(key,value.ToString());
+    }
+    public int Get(string key, int value)
+    {
+        if(Get(key) == null) return value;
+        return int.Parse(Get(key));
+    }
+    public void Set(string key, DateTime value)
+    {
+        SetData(key,value.ToString());
+    }
+    public DateTime Get(string key, DateTime value)
+    {
+        if(Get(key) == null) return value;
+        return Convert.ToDateTime(Get(key));
+    }
+}
+```
+
+> #### PoetrySty
+
+```cs
+/// <summary>
+/// 判断版本号
+/// </summary>
+public bool IsInitialized => _config.Get(PoetryStyConfigName.VersionKey, default(int)) == PoetryStyConfigName.Version;
+
+private IConfig _config;
+public PoetrySty(IConfig config)
+{
+    _config = config;
+}
+
+/// <summary>
+/// 迁移数据库文件
+/// </summary>
+public async System.Threading.Tasks.Task InitializeAsync()
+{
+    if (!IsInitialized)
+    {
+        //目标文件流，模式为 存在打开 不存在 创建
+        await using FileStream FromStream = new FileStream(DbPath, FileMode.OpenOrCreate);
+        //资源文件流
+        await using Stream DbStream = typeof(PoetrySty).Assembly.GetManifestResourceStream(DbName);
+        //复制流
+        await DbStream.CopyToAsync(FromStream);
+        //版本迁移
+        _config.Set(PoetryStyConfigName.VersionKey, PoetryStyConfigName.Version);
+    }
+}
+
+public static class PoetryStyConfigName
+{
+    public static readonly int Version = 1;
+    public static readonly string VersionKey = nameof(PoetryStyConfigName) + "." + nameof(Version);
+}
+```
+
+
+
+
+
+
+
+### 3.1单元测试
+
+> 由于为构造函数设置了传入参数 所以单元测试报错了
+> 
+> 安装Moq NuGet包 （Mock技术）

@@ -5,13 +5,20 @@ import org.apache.flink.api.common.state.{MapState, MapStateDescriptor}
 import org.apache.flink.api.common.typeinfo.{TypeInformation, Types}
 import org.apache.flink.api.scala.createTypeInformation
 import org.apache.flink.configuration.Configuration
+import org.apache.flink.connector.jdbc.table.JdbcTableSource
 import org.apache.flink.connector.kafka.source.KafkaSource
 import org.apache.flink.streaming.api.functions.{KeyedProcessFunction, ProcessFunction}
 import org.apache.flink.streaming.api.scala.StreamExecutionEnvironment
-import org.apache.flink.table.api.$
+import org.apache.flink.streaming.api.scala.function.ProcessAllWindowFunction
+import org.apache.flink.streaming.api.windowing.assigners.TumblingProcessingTimeWindows
+import org.apache.flink.streaming.api.windowing.time.Time
+import org.apache.flink.streaming.api.windowing.windows.TimeWindow
+import org.apache.flink.table.api._
 import org.apache.flink.table.api.bridge.scala.StreamTableEnvironment
 import org.apache.flink.util.Collector
 
+import java.time.LocalDateTime
+import java.time.format.DateTimeFormatter
 import java.util
 import javax.xml.crypto.{AlgorithmMethod, KeySelector, KeySelectorResult, XMLCryptoContext}
 import javax.xml.crypto.dsig.keyinfo.KeyInfo
@@ -35,45 +42,111 @@ object 实时计算1Ower {
             .setGroupId("waf")
             .build();
 
+        var source_jdbc_table_create =
+        """
+            |  CREATE TABLE product_info_source (
+            |  product_id BIGINT,
+            |  product_core STRING,
+            |  product_name STRING,
+            |  bar_code STRING,
+            |  brand_id BIGINT,
+            |  one_category_id INTEGER,
+            |  two_category_id INTEGER,
+            |  three_category_id INTEGER,
+            |  supplier_id BIGINT,
+            |  price DOUBLE,
+            |  average_cost DOUBLE,
+            |  publish_status INTEGER,
+            |  audit_status INTEGER,
+            |  weight DOUBLE,
+            |  length DOUBLE,
+            |  height DOUBLE,
+            |  width DOUBLE,
+            |  color_type INTEGER,
+            |  production_date STRING,
+            |  shelf_life BIGINT,
+            |  descript STRING,
+            |  indate STRING,
+            |  modified_time STRING,
+            |  PRIMARY KEY (product_id) NOT ENFORCED
+            |) WITH (
+            |   'connector'='jdbc',
+            |   'username'='root',
+            |   'password'='123456',
+            |   'url'='jdbc:mysql://192.168.45.13:3306/ds_db01?useSSL=false&serverTimezone=Asia/Shanghai&useUnicode=true',
+            |   'table-name'='product_info'
+            |)
+        """.stripMargin
+        envtable.executeSql(source_jdbc_table_create)
+        envtable.executeSql("select * from product_info_source limit 10").print()
+
+
+
         //product_id 商品ID
         //customer_id 用户ID
         //modified_time 202411093
         //{"log_id":"71118181231727","product_id":2051,"customer_id":12874,"gen_order":0,"order_sn":"0","modified_time":"20241109113426"}
+/*
         val DataStream = env.fromSource(kafkaSource, WatermarkStrategy.noWatermarks(), "awf")
+
             .map(f => {
                 val product_id = f.split(",")(1).replaceAll("[\" ]", "").split(":")(1)
                 val customer_id = f.split(",")(2).replaceAll("[\" ]", "").split(":")(1)
                 Tuple2(product_id.toInt, customer_id.toInt)
             }).keyBy(f => f._1)
+            .windowAll(TumblingProcessingTimeWindows.of(Time.seconds(60)))
+            .process(new ProcessAllWindowFunction[(Int,Int),(String,Long, Long, Long),TimeWindow] {
+                //TODO _1 = product_id
+                //TODO _2 = customer_id 不要重复
+                override def process(context: Context, values : Iterable[(Int, Int)], out: Collector[(String, Long, Long, Long)]): Unit = {
+                    var AllMap = new util.HashMap[Int,(util.TreeSet[Int],Int)]()
+                    values.foreach(f => {
+                        if(AllMap.containsKey(f._1)){
+                            //TODO 存在
+                            val tuple = AllMap.get(f._1)
+                            val value = tuple._1
+                            value.add(f._2)
+                            AllMap.put(f._1,(value,tuple._2 + 1))
+                        }else{
+                            //TODO 不存在
+                            var treeSet = new util.TreeSet[Int]()
+                            treeSet.add(f._2)
+                            AllMap.put(f._1,(treeSet,1))
+                        }
+                    })
 
-            .process(new ProcessFunction[(Int, Int), (String, String, String,Int)] {
-                var nums = 0;
-                var mapState : MapState[Integer,(util.TreeSet[Integer],Integer)] = null;
-                override def processElement(value: (Int, Int), ctx: ProcessFunction[(Int, Int), (String, String, String, Int)]#Context, out: Collector[(String, String, String, Int)]): Unit = {
-                    nums+=1;
-                    if(mapState.contains(value._1)) {
-                        var unit = mapState.get(value._1) ;
-                        val value1 = unit._1
-                        value1.add(value._2)
-                        mapState.put(value._1,(value1,unit._2+1))
-                    }else{
-                        var treeset = new util.TreeSet[Integer]()
-                        treeset.add(value._2)
-                        mapState.put(value._1,(treeset,1))
-                    }
-                    var uuuu = mapState.get(value._1)
-                    out.collect(s"${value._1}",s"${uuuu._1.size()}",s"${uuuu._2}",nums)
-                }
-                override def open(parameters: Configuration): Unit = {
-                    super.open(parameters)
-                    mapState = getRuntimeContext.getMapState[Integer,(util.TreeSet[Integer],Integer)](new MapStateDescriptor(
-                        "MapState",
-                        Types.INT,
-                        TypeInformation.of(classOf[(util.TreeSet[Integer],Integer)])))
+                    var timeStr = "2024-11-19 15-59-44"
+                    AllMap.forEach((k,v) =>{
+                        var timess = s"${timeStr}-${k}"
+                        out.collect(timess,k,v._1.size(),v._2);
+                    })
                 }
             })
-        envtable.fromDataStream(DataStream,$("商品ID"),$("用户数量"),$("访问次数"),${"e"}).execute().print()
 
-//        env.execute()
+        // _1,_2,_3,_4
+        envtable.createTemporaryView("table2",DataStream)
+//        val table = envtable.fromDataStream(DataStream)
+//        table
+
+        val table1 =
+            """
+              |CREATE TEMPORARY TABLE product_pv_uv_hbase (
+              |   row_key STRING,
+              |   info ROW<product_id BIGINT,uv BIGINT, pv BIGINT>
+              |) WITH ('connector' = 'hbase-2.2',
+              |        'table-name' = 'ads:online_uv_pv',
+              |        'zookeeper.quorum' = '192.168.45.13:2181'
+              |)
+              |""".stripMargin
+        envtable.executeSql(table1)
+        envtable.sqlQuery(
+            """
+              |select _1 as row_key,
+              |ROW(_2, _3, _4) as info
+              |from table2
+            """.stripMargin)
+            .executeInsert("product_pv_uv_hbase")
+        env.execute()
+*/
     }
 }

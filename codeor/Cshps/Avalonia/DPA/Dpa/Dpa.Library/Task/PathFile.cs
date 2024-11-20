@@ -2,7 +2,11 @@ namespace Dpa.Library.Task;
 
 public class PathFile
 {
-    private static string getPath()
+    /// <summary>
+    /// 返回应用的文件存放的目录
+    /// </summary>
+    /// <returns> 目录 </returns>
+    public static string getPath()
     {
         return Path.Combine(System.Environment.CurrentDirectory,"Dpa");
     }

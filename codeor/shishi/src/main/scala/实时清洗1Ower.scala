@@ -24,10 +24,10 @@ object 实时清洗1Ower {
                 .setTopicSelector(new TopicSelector[String] {
                     override def apply(t: String): String = {
                         if(t.contains("order_detail_id")) {
-                            return "fact_order_detail";
+                            "fact_order_detail";
                         }
                         else{
-                            return "fact_order_master";
+                            "fact_order_master";
                         }
                     }
                 })

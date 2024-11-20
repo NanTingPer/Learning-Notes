@@ -1,5 +1,15 @@
 ### Avalonia
 
+
+
+# App.axaml / axaml
+
+> - xmlns:名字="using:dpa" => 这个名字直接代表这个命名空间
+> 
+> - local:ServiceLocator => 表示dpa.ServiceLocator
+
+
+
 - ??=
   
   - Rxxx ??= xxx
@@ -765,8 +775,6 @@ public class Delete
    
    在构造函数内清理一次
 
-
-
 ## 3.0 键值存储
 
 1. 定义接口
@@ -795,14 +803,13 @@ public interface IConfig
 {
     void Set(string key,string value);
     string Get(string key, string value);
-    
+
     void Set(string key,int value);
     int Get(string key, int value);
-    
+
     void Set(string key,DateTime value);
     DateTime Get(string key, DateTime value);
 }
-
 ```
 
 > #### Config
@@ -896,14 +903,102 @@ public static class PoetryStyConfigName
 }
 ```
 
-
-
-
-
-
-
 ### 3.1单元测试
 
 > 由于为构造函数设置了传入参数 所以单元测试报错了
 > 
 > 安装Moq NuGet包 （Mock技术）
+> 
+> Mock用于伪造一个接口实现
+> 
+> 只有采用面向接口设计，才能在单元测试的时候，使用Mock来进行测试
+
+```cs
+Mock<IConfig> IConfig = new Mock<IConfig>();
+IConfig MockIConfig = IConfig.Object;
+poetrySty = new PoetrySty(MockIConfig);
+```
+
+### 3.2 版本判断单元测试
+
+| Setup  | 控制Mock对象的行为 |
+| ------ | ----------- |
+| Verify | 验证调用行为规范    |
+
+```cs
+private IPoetrySty poetrySty_IsInitialized;
+[Fact]
+public void IsInitialized_Default()
+{
+    Mock<IConfig> IConfig = new Mock<IConfig>();
+
+    //如果有人使用 PoetryStyConfigName.VersionKey,default(int) 去调用这个函数
+    //返回PoetryStyConfigName.Version
+    IConfig
+        .Setup(f => f.Get(PoetryStyConfigName.VersionKey,default(int)))
+        .Returns(PoetryStyConfigName.Version);
+    IConfig Config = IConfig.Object;
+
+    poetrySty_IsInitialized = new PoetrySty(Config);
+
+    //测试是否为True(断言这里为True)
+    Assert.True(poetrySty_IsInitialized.IsInitialized); 
+
+    //是否有人使用给定参数，并且调用了一次
+    IConfig.Verify(f => f.Get(PoetryStyConfigName.VersionKey,default(int)), Times.Once());
+
+}
+```
+
+# 3.1 诗歌全加载
+
+# 3.2  ViewModel
+
+> ViewModel只为View层准备数据，不与View层发生关系，应该独立
+> 
+> 因此ViewModel也方在Library
+> 
+> **前提 CommunityToolkit.Mvvm (nuget包)**
+> 
+> 项目之间不能相互依赖，所以还需要创建一个ViewModelBase继承ObservableObject
+
+1. 创建ViewModel类，继承ViewModelBase
+
+2. ViewModel内使用ICommxxx包装 业务
+
+3. 创建依赖注入 ServiceLocator
+
+4. 在App.axaml内 注册资源
+
+5. 删除MainWindow自带的Design.DataContext 并绑定
+
+```sc
+DataContext="{Binding xxxxViewModel,Source={StaticResource ServiceLocator} }"
+```
+
+6. 删除 x:DataType="vm:MainWindowViewModel"
+
+7. 在Veiw显示诗 使用ItemsControl控件 绑定 诗歌集合`ItemsSource="{Binding xxx}"`
+   
+   <DataTemplate><TextBlock Text="{Binding Name}"> 
+   
+   只是现在显示用 后面还得删
+
+8. 在View模块安装 Avalonia.Xaml.Behaviors nuget包
+
+9. 引入两个名称空间
+
+```xml
+xmlns:i="using:Avalonia.Xaml.Interactivity"
+xmlns:ia="using:Avalonia.Xaml.Interactions.Core"
+```
+
+10. 对事件的触发进行绑定
+    
+    事件名 = Initialized
+    
+    ```xml
+    <i:Interaction.Behaviors>
+        <ia:EventTriggerBehavior EventName="事件名">
+            <ia:InvokeCommandAction Command="{Binding ICommand名}">
+    ```

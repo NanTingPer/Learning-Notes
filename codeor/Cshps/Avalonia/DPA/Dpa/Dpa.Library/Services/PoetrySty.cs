@@ -1,3 +1,4 @@
+using System.Linq.Expressions;
 using Dpa.Library.ConfigFile;
 using Dpa.Library.Models;
 using Dpa.Library.Task;
@@ -63,15 +64,32 @@ public class PoetrySty : IPoetrySty
         }
     }
 
+    /// <summary>
+    /// 获取给定ID的数据
+    /// </summary>
+    /// <param name="id"> 要获取的id </param>
+    /// <returns> 返回对应的数据 </returns>
     public Task<Poetry> GetPoetryAsync(string id)
     {
-        throw new NotImplementedException();
+        //FirstOrDefaultAsync是异步获取数据
+        //返回第一条匹配的数据 或 返回空
+        return Connection.Table<Poetry>().FirstOrDefaultAsync(poer => poer.Id.Equals(id));
     }
 
-    public Task<Poetry> GetPoetryAsync(Func<Poetry, bool> where, int skip, int take)
+    public Task<List<Poetry>> GetPoetryAsync(Func<Poetry, bool> where, int skip, int take)
     {
-        throw new NotImplementedException();
+        return Connection.Table<Poetry>().Where(f => where(f)).Skip(skip).Take(take).ToListAsync();
     }
+
+    /// <summary>
+    /// 关闭数据库
+    /// </summary>
+    /// <returns> 空 </returns>
+    public System.Threading.Tasks.Task CLoseConnection()
+    {
+        return Connection.CloseAsync();
+    }
+    
 }
 
 public static class PoetryStyConfigName

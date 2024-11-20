@@ -126,3 +126,8 @@
 /home/r/桌面/Learning-Notes/codeor/Cshps/Avalonia/DPA/Dpa/Dpa.Test/obj/Debug/net8.0/Dpa.Test.pdb
 /home/r/桌面/Learning-Notes/codeor/Cshps/Avalonia/DPA/Dpa/Dpa.Test/obj/Debug/net8.0/Dpa.Test.genruntimeconfig.cache
 /home/r/桌面/Learning-Notes/codeor/Cshps/Avalonia/DPA/Dpa/Dpa.Test/obj/Debug/net8.0/ref/Dpa.Test.dll
+/home/r/桌面/Learning-Notes/codeor/Cshps/Avalonia/DPA/Dpa/Dpa.Test/bin/Debug/net8.0/Castle.Core.dll
+/home/r/桌面/Learning-Notes/codeor/Cshps/Avalonia/DPA/Dpa/Dpa.Test/bin/Debug/net8.0/Moq.dll
+/home/r/桌面/Learning-Notes/codeor/Cshps/Avalonia/DPA/Dpa/Dpa.Test/bin/Debug/net8.0/System.Diagnostics.EventLog.dll
+/home/r/桌面/Learning-Notes/codeor/Cshps/Avalonia/DPA/Dpa/Dpa.Test/bin/Debug/net8.0/runtimes/win/lib/net6.0/System.Diagnostics.EventLog.Messages.dll
+/home/r/桌面/Learning-Notes/codeor/Cshps/Avalonia/DPA/Dpa/Dpa.Test/bin/Debug/net8.0/runtimes/win/lib/net6.0/System.Diagnostics.EventLog.dll

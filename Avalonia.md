@@ -1,5 +1,14 @@
 ### Avalonia
 
+# ViewModel
+
+| PropertyChanged | 每次属性改变 都会调用这个事件 |
+| --------------- | --------------- |
+
+
+
+
+
 # App.axaml / axaml
 
 > - xmlns:名字="using:dpa" => 这个名字直接代表这个命名空间
@@ -725,8 +734,6 @@ public class Poetry
 
 4. 流对流拷贝 `await 资源流.CopyToAsync(目标流)`
 
-
-
 > 这个IsInitialized是后面的东西 前面忘记粘贴代码了
 
 ```cs
@@ -1404,11 +1411,11 @@ public class ServiceLocator
     //依赖注入容器
     private ServiceCollection _serviceCollection = new ServiceCollection();
     private IServiceProvider _serviceProvider;
-    
+
     //对外暴露ContentViewModel
     public ContentViewModel ContentViewModel => _serviceProvider.GetService<ContentViewModel>();
 
-    
+
     /// <summary>
     /// 不知道 抄的
     /// </summary>
@@ -1425,7 +1432,7 @@ public class ServiceLocator
             throw new Exception("?????理论上不应该发生这种情况");
         }
     }
-    
+
     //注入依赖
     public ServiceLocator()
     {
@@ -1433,10 +1440,10 @@ public class ServiceLocator
         _serviceCollection.AddScoped<IPoetrySty, PoetrySty>();
         //后面加的 忘记PoetrySty需要Config作为参数了
         _serviceCollection.AddScoped<IConfig, Config>();
-        
+
         _serviceProvider = _serviceCollection.BuildServiceProvider();
     }
-    
+
 }
 ```
 
@@ -1450,8 +1457,6 @@ public class ServiceLocator
     </ResourceDictionary>
 </Application.Resources>
 ```
-
-
 
 > #### ViewModel
 
@@ -1473,3 +1478,67 @@ DataContext="{Binding ContentViewModel ,Source={StaticResource ServiceLocator}}"
     </ItemsControl.ItemTemplate>
 </ItemsControl>
 ```
+
+# 3.5 无限滚动
+
+1. 为项目添加包 nuget **AvaloniaInfiniteScrolling.Collection** 两个项目都要
+
+2. 在`App.axaml`的`Application.Styles`中添加`<StyleInclude Source="avares://AvaloniaInfiniteScrolling.Control/AvaloniaInfiniteScrollControlStyle.axaml" />`。
+
+3. 修改 ViewModel
+   
+   - 将其恢复到只有构造函数 IPoetrySty
+
+4. 创建`AvaloniaInfiniteScrollCollection<T> Name {get;}` 不给初始值
+
+5. 在构造函数内进行初始化 new() 此时构造函数内只有两条语句
+
+| OnCanLoadMore | 判断能不能被继续加载 | 需要为 对象提供一个函数用来执行判断 |
+| ------------- | ---------- | ------------------ |
+| OnLoadMore    | 能被继续加载加载数据 | 需要为 对象提供数据，数据会被加载  |
+
+- Onxxxx代表 可以被 `.`之前的对象调用
+7. 跳过条数为 当前集所有的数量 并指定返回的数量
+
+8. 种告诉它数据(为了测试)
+
+9. 更改Veiw层
+   
+   - 删除 Interaction.Behaviors 因为已经不需要通过事件去加载了
+   
+   - 引入名称空间 `xmlns:ais="using:AvaloniaInfiniteScrolling"`
+   
+   - 替换ItemsControl 控件
+     
+     - 使用新增命名空间下的`AvaloniaInfiniteScrollControl` 指定数据来源 `ItemsSource="{Binding xxx}"`
+     
+     - <xxx:AvaloniaInfiniteScrollControl.ItemTemplate>
+     
+     - <DataTemplate>
+     
+     - <TextBlock Text="{Binding xxx">
+
+
+
+## 3.5.1 单元测试
+
+1. 测试项目新建 ViewModels 项目文件夹
+
+2. 创建ViewModelTest测试类
+
+3. 在测试目录下创建文件 xunit.runner.json
+
+> 使用单线程跑测试
+
+```json
+{
+    "parallelizeAssembly": false,
+    "parallelizeTestCollections": false
+}
+```
+
+> 项目属性 Copy to output directory : Copy if newer
+
+4. VeiwModel内有一个事件PropertyChanged => 用于判断属性改变
+
+5. 测试 变化次数 状态的正确性 数据数的正确性

@@ -9,7 +9,7 @@ namespace Dpa.Library.ViewModel;
 
 public class ContentViewModel : ViewModelBase
 {
-    public ICommand GetPoetryAllICommand;
+    public ICommand GetPoetryAllICommand { get; }
 
     private readonly IPoetrySty _poetrySty;
     
@@ -26,6 +26,7 @@ public class ContentViewModel : ViewModelBase
     /// </summary>
     private async System.Threading.Tasks.Task GetPoetryAsyncAll()
     {
+        await _poetrySty.InitializeAsync();
         //每次调用
         PoetryList.Clear();
         

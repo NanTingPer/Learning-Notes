@@ -725,6 +725,37 @@ public class Poetry
 
 4. 流对流拷贝 `await 资源流.CopyToAsync(目标流)`
 
+
+
+> 这个IsInitialized是后面的东西 前面忘记粘贴代码了
+
+```cs
+/// <summary>
+/// 初始化 迁移数据库文件
+/// </summary>
+public async System.Threading.Tasks.Task InitializeAsync()
+{
+    if (!IsInitialized)
+    {
+        //目标文件流，模式为 存在打开 不存在 创建
+        await using FileStream FromStream = new FileStream(DbPath, FileMode.OpenOrCreate);
+        //资源文件流
+        await using Stream DbStream = typeof(PoetrySty).Assembly.GetManifestResourceStream(DbName);
+        //复制流
+        await DbStream.CopyToAsync(FromStream);
+        //版本迁移
+        _config.Set(PoetryStyConfigName.VersionKey, PoetryStyConfigName.Version);
+    }
+}
+```
+
+```cs
+ /// <summary>
+ /// 判断版本号
+ /// </summary>
+ public bool IsInitialized => _config.Get(PoetryStyConfigName.VersionKey, default(int)) == PoetryStyConfigName.Version;
+```
+
 > ## 事务接口
 
 ```cs
@@ -1019,7 +1050,11 @@ public interface IConfig
 > #### Config
 
 ```cs
+using System.Runtime.Serialization;
+using Dpa.Library.Task;
+
 namespace Dpa.Library.ConfigFile;
+
 public class Config : IConfig
 {
     /// <summary>
@@ -1032,37 +1067,52 @@ public class Config : IConfig
         string filePath = PathFile.GetFileOrCreate(key);
         File.WriteAllText(filePath,value);
     }
+
     /// <summary>
     /// 读取配置数据
     /// </summary>
     /// <param name="key"> 键 </param>
     /// <returns></returns>
     private String Get(string key) => File.ReadAllText(PathFile.GetFileOrCreate(key));
+
     public void Set(string key, string value)
     {
         SetData(key,value);
     }
+
     public string Get(string key, string value)
     {
         if(Get(key) == null) return value;
         return Get(key);
     }
+
     public void Set(string key, int value)
     {
         SetData(key,value.ToString());
     }
+
     public int Get(string key, int value)
     {
-        if(Get(key) == null) return value;
+        if (Get(key).Equals(""))
+        {
+            SetData(key, value.ToString());
+            return value;
+        }
         return int.Parse(Get(key));
     }
+
     public void Set(string key, DateTime value)
     {
         SetData(key,value.ToString());
     }
+
     public DateTime Get(string key, DateTime value)
     {
-        if(Get(key) == null) return value;
+        if (Get(key).Equals(""))
+        {
+            SetData(key, value.ToString());
+            return value;
+        }
         return Convert.ToDateTime(Get(key));
     }
 }
@@ -1274,7 +1324,7 @@ DataContext="{Binding xxxxViewModel,Source={StaticResource ServiceLocator} }"
    
    只是现在显示用 后面还得删
 
-8. 在View模块安装 Avalonia.Xaml.Behaviors nuget包
+8. 在View模块安装 **Avalonia.Xaml.Behaviors nuget包**
 
 9. 引入两个名称空间
 
@@ -1293,7 +1343,7 @@ xmlns:ia="using:Avalonia.Xaml.Interactions.Core"
             <ia:InvokeCommandAction Command="{Binding ICommand名}">
     ```
 
-
+11. 由于App.axaml.cs内已经绑定了 DataContext = new MainWindowViewModel(), 所以该行要删除
 
 > #### 创建ViewModel类，继承ViewModelBase
 
@@ -1322,7 +1372,7 @@ private async System.Threading.Tasks.Task GetPoetryAsyncAll()
 {
     //每次调用
     PoetryList.Clear();
-    
+
     List<Poetry> Poetrys = await _poetrySty.GetPoetryAsync(
         //方法传参数 要求Expression<Func<Poetry,bool>>
         //设置始终返回 true  Expression.Constant(true)
@@ -1338,5 +1388,86 @@ private async System.Threading.Tasks.Task GetPoetryAsyncAll()
 > #### 依赖注入ServiceLocator
 
 ```cs
+using System;
+using Avalonia;
+using Dpa.Library.ConfigFile;
+using Dpa.Library.Services;
+using Dpa.Library.ViewModel;
+using Microsoft.Extensions.DependencyInjection;
 
+namespace Dpa;
+
+public class ServiceLocator
+{
+    //依赖注入容器
+    private ServiceCollection _serviceCollection = new ServiceCollection();
+    private IServiceProvider _serviceProvider;
+    
+    //对外暴露ContentViewModel
+    public ContentViewModel ContentViewModel => _serviceProvider.GetService<ContentViewModel>();
+
+    
+    /// <summary>
+    /// 不知道 抄的
+    /// </summary>
+    private static ServiceLocator _current;
+    public static ServiceLocator Current
+    {
+        get
+        {
+            if (_current is not null) return _current;
+            if (Application.Current.TryGetResource(nameof(ServiceLocator),
+                    null,
+                    out var value) &&
+                value is ServiceLocator serviceLocator) return _current = serviceLocator;
+            throw new Exception("?????理论上不应该发生这种情况");
+        }
+    }
+    
+    //注入依赖
+    public ServiceLocator()
+    {
+        _serviceCollection.AddScoped<ContentViewModel>();
+        _serviceCollection.AddScoped<IPoetrySty, PoetrySty>();
+        //后面加的 忘记PoetrySty需要Config作为参数了
+        _serviceCollection.AddScoped<IConfig, Config>();
+        
+        _serviceProvider = _serviceCollection.BuildServiceProvider();
+    }
+    
+}
+```
+
+> #### 在App.axaml内 注册资源
+
+```xml
+<!-- 注册资源 -->
+<Application.Resources>
+    <ResourceDictionary>
+        <local:ServiceLocator x:Key="ServiceLocator"></local:ServiceLocator>
+    </ResourceDictionary>
+</Application.Resources>
+```
+
+
+
+> #### ViewModel
+
+```xml
+DataContext="{Binding ContentViewModel ,Source={StaticResource ServiceLocator}}"
+
+<!-- 事件绑定 -->
+<i:Interaction.Behaviors>
+    <ia:EventTriggerBehavior EventName="Initialized">
+        <ia:InvokeCommandAction Command="{Binding GetPoetryAllICommand}"></ia:InvokeCommandAction>
+    </ia:EventTriggerBehavior>
+</i:Interaction.Behaviors>
+<!-- 数据显示的绑定 -->
+<ItemsControl ItemsSource="{Binding PoetryList}">
+    <ItemsControl.ItemTemplate>
+        <DataTemplate>
+            <TextBlock Text="{Binding Name}"></TextBlock>
+        </DataTemplate>
+    </ItemsControl.ItemTemplate>
+</ItemsControl>
 ```

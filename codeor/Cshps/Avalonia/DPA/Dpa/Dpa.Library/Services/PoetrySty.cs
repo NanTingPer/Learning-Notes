@@ -18,6 +18,7 @@ public class PoetrySty : IPoetrySty
     public PoetrySty(IConfig config)
     {
         _config = config;
+        
     }
     
     /// <summary>
@@ -43,7 +44,7 @@ public class PoetrySty : IPoetrySty
     }
     
     /// <summary>
-    /// 迁移数据库文件
+    /// 初始化 迁移数据库文件
     /// </summary>
     public async System.Threading.Tasks.Task InitializeAsync()
     {
@@ -84,6 +85,7 @@ public class PoetrySty : IPoetrySty
     /// <returns></returns>
     public Task<List<Poetry>> GetPoetryAsync(Expression<Func<Poetry, bool>> where, int skip, int take)
     {
+        
         //Func<Poetry,bool> where
         //Connection.Table<Poetry>().where(f => where(f))
          return Connection.Table<Poetry>().Where(where).Skip(skip).Take(take).ToListAsync();

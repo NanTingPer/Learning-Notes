@@ -13,8 +13,8 @@ public class PathFile
     /// <returns> 目录 </returns>
     public static string getPath()
     {
-        string url = Path.Combine(System.Environment.CurrentDirectory, "Dpa");
-        if (!Directory.Exists(url))
+        string url = Path.Combine(System.Environment.GetFolderPath(System.Environment.SpecialFolder.ApplicationData), "Dpa");
+        if (Directory.Exists(url) == false)
         {
             Directory.CreateDirectory(url);
         }

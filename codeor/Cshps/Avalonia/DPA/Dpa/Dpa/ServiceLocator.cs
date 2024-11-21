@@ -1,5 +1,6 @@
 using System;
 using Avalonia;
+using Dpa.Library.ConfigFile;
 using Dpa.Library.Services;
 using Dpa.Library.ViewModel;
 using Microsoft.Extensions.DependencyInjection;
@@ -11,10 +12,14 @@ public class ServiceLocator
     //依赖注入容器
     private ServiceCollection _serviceCollection = new ServiceCollection();
     private IServiceProvider _serviceProvider;
-
+    
     //对外暴露ContentViewModel
     public ContentViewModel ContentViewModel => _serviceProvider.GetService<ContentViewModel>();
 
+    
+    /// <summary>
+    /// 不知道 抄的
+    /// </summary>
     private static ServiceLocator _current;
     public static ServiceLocator Current
     {
@@ -30,11 +35,12 @@ public class ServiceLocator
     }
     
     //注入依赖
-    public  ServiceLocator()
+    public ServiceLocator()
     {
         _serviceCollection.AddScoped<ContentViewModel>();
         _serviceCollection.AddScoped<IPoetrySty, PoetrySty>();
-
+        _serviceCollection.AddScoped<IConfig, Config>();
+        
         _serviceProvider = _serviceCollection.BuildServiceProvider();
     }
     

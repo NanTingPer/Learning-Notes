@@ -41,7 +41,11 @@ public class Config : IConfig
 
     public int Get(string key, int value)
     {
-        if(Get(key) == null) return value;
+        if (Get(key).Equals(""))
+        {
+            SetData(key, value.ToString());
+            return value;
+        }
         return int.Parse(Get(key));
     }
 
@@ -52,7 +56,11 @@ public class Config : IConfig
 
     public DateTime Get(string key, DateTime value)
     {
-        if(Get(key) == null) return value;
+        if (Get(key).Equals(""))
+        {
+            SetData(key, value.ToString());
+            return value;
+        }
         return Convert.ToDateTime(Get(key));
     }
 }

@@ -7,6 +7,14 @@
              xmlns:avalonia="https://irihi.tech/semi">
              <!-- "Default" ThemeVariant follows system theme variant. "Dark" or "Light" are other available options. -->
 
+     <!-- 注册资源 -->
+     <Application.Resources>
+         <ResourceDictionary>
+             <local:ServiceLocator x:Key="ServiceLocator"></local:ServiceLocator>
+         </ResourceDictionary>
+     </Application.Resources>
+             
+             
     <Application.DataTemplates>
         <local:ViewLocator/>
     </Application.DataTemplates>

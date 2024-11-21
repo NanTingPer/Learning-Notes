@@ -3,12 +3,22 @@ namespace Dpa.Library.Task;
 public class PathFile
 {
     /// <summary>
-    /// 返回应用的文件存放的目录
+    /// 删除全部文件
+    /// </summary>
+    public static void Del() => Directory.Delete(PathFile.getPath());
+    
+    /// <summary>
+    /// 返回应用的文件存放的目录 会创建文件夹
     /// </summary>
     /// <returns> 目录 </returns>
     public static string getPath()
     {
-        return Path.Combine(System.Environment.CurrentDirectory,"Dpa");
+        string url = Path.Combine(System.Environment.CurrentDirectory, "Dpa");
+        if (!Directory.Exists(url))
+        {
+            Directory.CreateDirectory(url);
+        }
+        return url;
     }
 
     /// <summary>

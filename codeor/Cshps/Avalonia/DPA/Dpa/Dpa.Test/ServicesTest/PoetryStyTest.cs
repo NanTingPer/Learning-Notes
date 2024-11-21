@@ -1,4 +1,6 @@
+using System.Linq.Expressions;
 using Dpa.Library.ConfigFile;
+using Dpa.Library.Models;
 using Dpa.Library.Services;
 using Dpa.Test.DeleteDatabases;
 using Moq;
@@ -10,7 +12,40 @@ public class PoetryStyTest : IDisposable
 {
     public PoetryStyTest()
     {
-        Delete.Del();
+        PublicMethod.Del();
+    }
+
+    /// <summary>
+    /// 获取一陀诗
+    /// </summary>
+    [Fact]
+    public async Task GetPoetryAsync_AllDefault()
+    {
+        PoetrySty poetrySty = await PublicMethod.GetPoetryStyAndInitia();
+        List<Poetry> Poetrys = await poetrySty.GetPoetryAsync(
+            //方法传参数 要求Expression<Func<Poetry,bool>>
+            //设置始终返回 true  Expression.Constant(true)
+            Expression.Lambda<Func<Poetry,bool>>(Expression.Constant(true),
+                Expression.Parameter(typeof(Poetry),"p")),0,int.MaxValue);
+        
+        //断言 数组长度 等于 给定长度
+        Assert.Equal(poetrySty.NumberPoetry,Poetrys.Count());
+        await poetrySty.CloseConnection();
+    }
+    
+    
+    
+    /// <summary>
+    /// GetPoetryAsync 测试单条内容的获取
+    /// </summary>
+    /// <returns></returns>
+    [Fact]
+    public async Task GetPoetryAsync_Default()
+    {
+        PoetrySty poetrySty = await PublicMethod.GetPoetryStyAndInitia();
+        Poetry poetryAsync = await poetrySty.GetPoetryAsync("10001"); 
+        Assert.Contains("临江仙",poetryAsync.Name);
+        await poetrySty.CloseConnection();
     }
     
     private IPoetrySty poetrySty_IsInitialized;
@@ -55,6 +90,6 @@ public class PoetryStyTest : IDisposable
 
     public void Dispose()
     {
-        Delete.Del();
+        PublicMethod.Del();
     }
 }

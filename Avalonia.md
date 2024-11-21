@@ -1,14 +1,10 @@
 ### Avalonia
 
-
-
 # App.axaml / axaml
 
 > - xmlns:名字="using:dpa" => 这个名字直接代表这个命名空间
 > 
 > - local:ServiceLocator => 表示dpa.ServiceLocator
-
-
 
 - ??=
   
@@ -662,6 +658,40 @@ private async Task DeleteData()
 >   
 >   - 属性 -> 构建操作 -> EmbeddedResource
 
+> ## 模型类
+
+```cs
+namespace Dpa.Library.Models;
+
+[SQLite.Table("Works")]
+public class Poetry
+{
+    [SQLite.Column("id")]
+    public int Id { get; set; }
+
+    [SQLite.Column("name")]
+    public string Name { get; set; } = string.Empty;
+
+    [SQLite.Column("author_name")]
+    public string Author { get; set; } = string.Empty;
+
+    [SQLite.Column("dynasty")]
+    public string Dynasty { get; set; } = string.Empty;
+
+    [SQLite.Column("content")] 
+    public string Content { get; set; } = string.Empty;
+
+    private string _snippet;
+
+    [SQLite.Ignore]
+    public string Snippet
+    {
+        get => _snippet;
+        set => _snippet ??= Content.Split("。")[0].Replace("\r\n", "");
+    }
+}
+```
+
 ## 1.0 拷贝数据库到用户文件
 
 > #### 事务实现类
@@ -694,6 +724,158 @@ private async Task DeleteData()
 3. 获取资源文件流`typeof(PoetrySty).Assembly.GetManifestResourceStream(DbName)` DbName是 文件在项目内的名称 一样要加 `await using` 
 
 4. 流对流拷贝 `await 资源流.CopyToAsync(目标流)`
+
+> ## 事务接口
+
+```cs
+using System.Linq.Expressions;
+using Dpa.Library.Models;
+
+namespace Dpa.Library.Services;
+
+public interface IPoetrySty
+{
+    /// <summary>
+    /// 判断数据库是否迁移到用户应用目录
+    /// </summary>
+    bool IsInitialized { get; }
+
+    /// <summary>
+    /// 用来初始化数据库
+    /// </summary>
+    System.Threading.Tasks.Task InitializeAsync();
+
+    /// <summary>
+    /// 获取数据
+    /// </summary>
+    /// <param name="poetryName"> 该条数据在数据库中的ID </param>
+    /// <returns></returns>
+    Task<Poetry> GetPoetryAsync(string id);
+
+    /// <summary>
+    /// 通过过滤匹配
+    /// </summary>
+    /// <param name="where"></param>
+    /// <param name="skip">跳过多少行</param>
+    /// <param name="take">返回多少行</param>
+    /// <returns></returns>
+    Task<List<Poetry>> GetPoetryAsync(Expression<Func<Poetry,bool>>  where,int skip,int take);
+}
+```
+
+> ## 事务实现
+> 
+> 后面才发现没贴上来 部分方法已经实现
+
+```cs
+using System.Linq.Expressions;
+using Dpa.Library.ConfigFile;
+using Dpa.Library.Models;
+using Dpa.Library.Task;
+using SQLite;
+
+namespace Dpa.Library.Services;
+
+public class PoetrySty : IPoetrySty
+{
+    /// <summary>
+    /// 判断版本号
+    /// </summary>
+    public bool IsInitialized => _config.Get(PoetryStyConfigName.VersionKey, default(int)) == PoetryStyConfigName.Version;
+
+    private IConfig _config;
+
+    public PoetrySty(IConfig config)
+    {
+        _config = config;
+    }
+
+    /// <summary>
+    /// 有多少首诗
+    /// </summary>
+    public readonly int NumberPoetry = 30;
+
+    public const string DbName = "poetrydb.sqlite3";
+
+    /// <summary>
+    /// 数据库路径
+    /// </summary>
+    public static readonly  string DbPath = PathFile.GetFilePath(DbName);
+
+    private SQLiteAsyncConnection _connection;
+
+    /// <summary>
+    /// 获取数据库连接
+    /// </summary>
+    private SQLiteAsyncConnection Connection
+    {
+        get => _connection ??= new SQLiteAsyncConnection(DbPath);
+    }
+
+    /// <summary>
+    /// 迁移数据库文件
+    /// </summary>
+    public async System.Threading.Tasks.Task InitializeAsync()
+    {
+        if (!IsInitialized)
+        {
+            //目标文件流，模式为 存在打开 不存在 创建
+            await using FileStream FromStream = new FileStream(DbPath, FileMode.OpenOrCreate);
+
+            //资源文件流
+            await using Stream DbStream = typeof(PoetrySty).Assembly.GetManifestResourceStream(DbName);
+
+            //复制流
+            await DbStream.CopyToAsync(FromStream);
+
+            //版本迁移
+            _config.Set(PoetryStyConfigName.VersionKey, PoetryStyConfigName.Version);
+        }
+    }
+
+    /// <summary>
+    /// 获取给定ID的数据
+    /// </summary>
+    /// <param name="id"> 要获取的id </param>
+    /// <returns> 返回对应的数据 </returns>
+    public Task<Poetry> GetPoetryAsync(string id)
+    {
+        //FirstOrDefaultAsync是异步获取数据
+        //返回第一条匹配的数据 或 返回空
+        return Connection.Table<Poetry>().FirstOrDefaultAsync(poer => poer.Id.Equals(id));
+    }
+
+    /// <summary>
+    /// 获取给定条件的诗歌
+    /// </summary>
+    /// <param name="where"> Func委托 </param>
+    /// <param name="skip"></param>
+    /// <param name="take"></param>
+    /// <returns></returns>
+    public Task<List<Poetry>> GetPoetryAsync(Expression<Func<Poetry, bool>> where, int skip, int take)
+    {
+        //Func<Poetry,bool> where
+        //Connection.Table<Poetry>().where(f => where(f))
+         return Connection.Table<Poetry>().Where(where).Skip(skip).Take(take).ToListAsync();
+    }
+
+    /// <summary>
+    /// 关闭数据库
+    /// </summary>
+    /// <returns> 空 </returns>
+    public System.Threading.Tasks.Task CloseConnection()
+    {
+        return Connection.CloseAsync();
+    }
+
+}
+
+public static class PoetryStyConfigName
+{
+    public static readonly int Version = 1;
+    public static readonly string VersionKey = nameof(PoetryStyConfigName) + "." + nameof(Version);
+}
+```
 
 ## 2.0 单元测试
 
@@ -774,6 +956,28 @@ public class Delete
 3. 在测试函数运行之前也应该清理一次
    
    在构造函数内清理一次
+   
+   使用内置方法 进行清理
+   
+   - Dispose => 结束后
+   
+   - PoetryStyTest => 构造函数内
+
+```cs
+public PoetryStyTest()
+{
+    PublicMethod.Del();
+}
+
+public void Dispose()
+{
+    PublicMethod.Del();
+}
+/// <summary>
+/// 删除全部文件
+/// </summary>
+public static void Del() => Directory.Delete(PathFile.getPath(),true);
+```
 
 ## 3.0 键值存储
 
@@ -950,15 +1154,101 @@ public void IsInitialized_Default()
 }
 ```
 
-# 3.1 诗歌全加载
+# 3.1 单首获取 单元测试
 
-# 3.2  ViewModel
+1. 获取PoetrySty 由于需要反复获取，所以创建一个公共方法
+
+```cs
+/// <summary>
+/// 获取一个PoetrySty 每次都必须迁移数据库的
+/// </summary>
+/// <returns> 返回最终的PoetrySty </returns>
+public static async Task<PoetrySty> GetPoetryStyAndInitia()
+{
+    Mock<IConfig> Iconfig = new Mock<IConfig>();
+
+    //伪造返回值
+    Iconfig.Setup(p => p.Get(PoetryStyConfigName.VersionKey, -1)).Returns(-1);
+    IConfig config = Iconfig.Object;
+    //构建对象
+    PoetrySty poetrySty = new PoetrySty(config);
+    await poetrySty.InitializeAsync();
+    return poetrySty;
+}
+```
+
+2. 创建单元指定方法的单元测试并测试
+
+```cs
+/// <summary>
+/// GetPoetryAsync 测试单条内容的获取
+/// </summary>
+/// <returns></returns>
+[Fact]
+public async Task GetPoetryAsync_Default()
+{
+    PoetrySty poetrySty = await PublicMethod.GetPoetryStyAndInitia();
+    Poetry poetryAsync = await poetrySty.GetPoetryAsync("10001"); 
+    Assert.Contains("临江仙",poetryAsync.Name);
+}
+```
+
+3. 由于前面失误操作，需要更改PoetrySty的一些代码
+
+```cs
+/// <summary>
+/// 获取数据库连接
+/// </summary>
+private SQLiteAsyncConnection Connection
+{
+    get => _connection ??= new SQLiteAsyncConnection(DbPath);
+}
+```
+
+# 3.3 诗歌全加载
+
+```cs
+public Task<List<Poetry>> GetPoetryAsync(Expression<Func<Poetry, bool>> where, int skip, int take)
+{
+    //Func<Poetry,bool> where
+    //Connection.Table<Poetry>().where(f => where(f))
+     return Connection.Table<Poetry>().Where(where).Skip(skip).Take(take).ToListAsync();
+}
+```
+
+> 单元测试
+
+```cs
+/// <summary>
+/// 获取一陀诗
+/// </summary>
+[Fact]
+public async Task GetPoetryAsync_AllDefault()
+{
+    PoetrySty poetrySty = await PublicMethod.GetPoetryStyAndInitia();
+    List<Poetry> Poetrys = await poetrySty.GetPoetryAsync(
+        //方法传参数 要求Expression<Func<Poetry,bool>>
+        //设置始终返回 true  Expression.Constant(true)
+        Expression.Lambda<Func<Poetry,bool>>(Expression.Constant(true),
+            Expression.Parameter(typeof(Poetry),"p")),0,int.MaxValue);
+
+    //断言 数组长度 等于 给定长度
+    Assert.Equal(poetrySty.NumberPoetry,Poetrys.Count());
+    await poetrySty.CloseConnection();
+}
+```
+
+# 3.4  ViewModel
 
 > ViewModel只为View层准备数据，不与View层发生关系，应该独立
 > 
 > 因此ViewModel也方在Library
 > 
 > **前提 CommunityToolkit.Mvvm (nuget包)**
+> 
+> View **Microsoft.Extensions.DependencyInjection (nuget包)**
+> 
+> - **如果提示版本不对 更改即可**
 > 
 > 项目之间不能相互依赖，所以还需要创建一个ViewModelBase继承ObservableObject
 
@@ -1002,3 +1292,51 @@ xmlns:ia="using:Avalonia.Xaml.Interactions.Core"
         <ia:EventTriggerBehavior EventName="事件名">
             <ia:InvokeCommandAction Command="{Binding ICommand名}">
     ```
+
+
+
+> #### 创建ViewModel类，继承ViewModelBase
+
+```cs
+public class ContentViewModel : ViewModelBase{}
+```
+
+> #### ViewModel内使用ICommxxx包装 业务
+
+```cs
+public ICommand GetPoetryAllICommand;
+
+private readonly IPoetrySty _poetrySty;
+
+public ContentViewModel(IPoetrySty poetrySty)
+{
+    _poetrySty = poetrySty;
+    GetPoetryAllICommand = new AsyncRelayCommand(GetPoetryAsyncAll);
+}
+public ObservableCollection<Poetry> PoetryList { get; } = new();
+
+/// <summary>
+/// 获取全部数据
+/// </summary>
+private async System.Threading.Tasks.Task GetPoetryAsyncAll()
+{
+    //每次调用
+    PoetryList.Clear();
+    
+    List<Poetry> Poetrys = await _poetrySty.GetPoetryAsync(
+        //方法传参数 要求Expression<Func<Poetry,bool>>
+        //设置始终返回 true  Expression.Constant(true)
+        Expression.Lambda<Func<Poetry,bool>>(Expression.Constant(true),
+            Expression.Parameter(typeof(Poetry),"p")),0,int.MaxValue);
+    foreach (Poetry poetry in Poetrys)
+    {
+        PoetryList.Add(poetry);
+    }
+}
+```
+
+> #### 依赖注入ServiceLocator
+
+```cs
+
+```

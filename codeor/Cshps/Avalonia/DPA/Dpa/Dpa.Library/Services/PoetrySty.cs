@@ -23,7 +23,7 @@ public class PoetrySty : IPoetrySty
     /// <summary>
     /// 有多少首诗
     /// </summary>
-    public const int NumberPoetry = 30;
+    public readonly int NumberPoetry = 30;
 
     public const string DbName = "poetrydb.sqlite3";
     
@@ -39,8 +39,7 @@ public class PoetrySty : IPoetrySty
     /// </summary>
     private SQLiteAsyncConnection Connection
     {
-        get => _connection;
-        set => _connection ??= new SQLiteAsyncConnection(DbPath);
+        get => _connection ??= new SQLiteAsyncConnection(DbPath);
     }
     
     /// <summary>
@@ -76,16 +75,25 @@ public class PoetrySty : IPoetrySty
         return Connection.Table<Poetry>().FirstOrDefaultAsync(poer => poer.Id.Equals(id));
     }
 
-    public Task<List<Poetry>> GetPoetryAsync(Func<Poetry, bool> where, int skip, int take)
+    /// <summary>
+    /// 获取给定条件的诗歌
+    /// </summary>
+    /// <param name="where"> Func委托 </param>
+    /// <param name="skip"></param>
+    /// <param name="take"></param>
+    /// <returns></returns>
+    public Task<List<Poetry>> GetPoetryAsync(Expression<Func<Poetry, bool>> where, int skip, int take)
     {
-        return Connection.Table<Poetry>().Where(f => where(f)).Skip(skip).Take(take).ToListAsync();
+        //Func<Poetry,bool> where
+        //Connection.Table<Poetry>().where(f => where(f))
+         return Connection.Table<Poetry>().Where(where).Skip(skip).Take(take).ToListAsync();
     }
 
     /// <summary>
     /// 关闭数据库
     /// </summary>
     /// <returns> 空 </returns>
-    public System.Threading.Tasks.Task CLoseConnection()
+    public System.Threading.Tasks.Task CloseConnection()
     {
         return Connection.CloseAsync();
     }

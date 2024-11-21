@@ -1,3 +1,4 @@
+using System.Linq.Expressions;
 using Dpa.Library.Models;
 
 namespace Dpa.Library.Services;
@@ -28,5 +29,5 @@ public interface IPoetrySty
     /// <param name="skip">跳过多少行</param>
     /// <param name="take">返回多少行</param>
     /// <returns></returns>
-    Task<Poetry> GetPoetryAsync(Func<Poetry,bool> where,int skip,int take);
+    Task<List<Poetry>> GetPoetryAsync(Expression<Func<Poetry,bool>>  where,int skip,int take);
 }

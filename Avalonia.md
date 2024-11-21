@@ -1290,6 +1290,8 @@ public async Task GetPoetryAsync_AllDefault()
 
 # 3.4  ViewModel
 
+- ### ViewModel 标记 Github提交
+
 > ViewModel只为View层准备数据，不与View层发生关系，应该独立
 > 
 > 因此ViewModel也方在Library

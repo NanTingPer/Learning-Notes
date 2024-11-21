@@ -52,3 +52,7 @@ codeor/AcortDome/
 /codeor/Cshps/Avalonia/DPA/Dpa/Dpa.Library/bin
 /codeor/Cshps/Avalonia/DPA/Dpa/Dpa/obj
 /codeor/Cshps/Avalonia/DPA/Dpa/Dpa.Library/bin
+/codeor/Cshps/Avalonia/DPA/Dpa/Dpa/obj
+*.dll
+*.json
+/codeor/Cshps/Avalonia/DPA/Dpa/Dpa/obj

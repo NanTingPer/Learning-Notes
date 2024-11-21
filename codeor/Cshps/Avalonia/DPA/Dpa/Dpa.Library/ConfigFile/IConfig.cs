@@ -1,3 +1,5 @@
+using System;
+
 namespace Dpa.Library.ConfigFile;
 
 public interface IConfig

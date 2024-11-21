@@ -1,3 +1,5 @@
+using System;
+using System.IO;
 using System.Runtime.Serialization;
 using Dpa.Library.Task;
 

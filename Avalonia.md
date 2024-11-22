@@ -35,6 +35,8 @@
 
 - ViewModel的东西最终会被View显示出来
 
+- #### 前端会订阅后端的事件，因此后端数据的改变前端能够实时变化 前后端分离开的逻辑也避免了后端线程导致UI线程卡死
+
 # 1.1
 
 > Avalonia自带依赖注入容器
@@ -1509,10 +1511,86 @@ DataContext="{Binding ContentViewModel ,Source={StaticResource ServiceLocator}}"
      - 使用新增命名空间下的`AvaloniaInfiniteScrollControl` 指定数据来源 `ItemsSource="{Binding xxx}"`
      
      - xxx:AvaloniaInfiniteScrollControl.ItemTemplate
-     
-      <DataTemplate>
-     
-      <TextBlock Text="{Binding xxx">
+       
+       DataTemplate
+       
+       TextBlock Text="{Binding xxx}"
+       
+       
+       
+       
+       <DataTemplate>
+       
+       <TextBlock Text="{Binding xxx">
+
+## 
+
+> #### 简单实现
+
+> #### View Model
+
+```cs
+public AvaloniaInfiniteScrollCollection<Poetry> AvaloniaInfiniteScrolling { get; }
+public ContentViewModel(IPoetrySty poetrySty)
+{
+    _poetrySty = poetrySty;
+    // GetPoetryAllICommand = new AsyncRelayCommand(GetPoetryAsyncAll);
+    AvaloniaInfiniteScrolling = new AvaloniaInfiniteScrollCollection<Poetry>()
+    {
+        //条件永远为True
+        OnCanLoadMore = () => true,
+        //载入数据
+        OnLoadMore = () =>
+        {
+            //需求IEnumerable
+            Task<List<Poetry>> tlp = _poetrySty.GetPoetryAsync(f => true, 0, 10);
+            return tlp.ContinueWith(t => t.Result.AsEnumerable());
+        }
+    };
+}
+```
+
+> ### App.axaml
+
+```xml
+<Application.Styles>
+    <avalonia:SemiTheme Locale="zh-CN" />
+    <StyleInclude Source="avares://AvaloniaInfiniteScrolling.Control/AvaloniaInfiniteScrollControlStyle.axaml" />
+</Application.Styles>
+```
+
+> ### View
+
+```cs
+xmlns:ais="using:AvaloniaInfiniteScrolling"
+
+<!-- DataContext 绑定  -->
+<!-- 事件绑定 -->
+<!-- <i:Interaction.Behaviors> -->
+<!--     <ia:EventTriggerBehavior EventName="Initialized"> -->
+<!--         <ia:InvokeCommandAction Command="{Binding GetPoetryAllICommand}"></ia:InvokeCommandAction> -->
+<!--     </ia:EventTriggerBehavior> -->
+<!-- </i:Interaction.Behaviors> -->
+ 
+<ais:AvaloniaInfiniteScrollControl ItemsSource="{Binding AvaloniaInfiniteScrolling}">
+    <ItemsControl.ItemTemplate>
+        <DataTemplate>
+            <TextBlock Text="{Binding Name}"></TextBlock>
+        </DataTemplate>
+    </ItemsControl.ItemTemplate>
+</ais:AvaloniaInfiniteScrollControl>
+
+<!--     ~1~ 数据显示的绑定 @1@ -->
+<!-- <ItemsControl ItemsSource="{Binding PoetryList}"> -->
+<!--     <ItemsControl.ItemTemplate> -->
+<!--         <DataTemplate> -->
+<!--             <TextBlock Text="{Binding Name}"></TextBlock> -->
+<!--         </DataTemplate> -->
+<!--     </ItemsControl.ItemTemplate> -->
+<!-- </ItemsControl> -->
+```
+
+
 
 ## 3.5.1 单元测试
 
@@ -1536,3 +1614,41 @@ DataContext="{Binding ContentViewModel ,Source={StaticResource ServiceLocator}}"
 4. VeiwModel内有一个事件PropertyChanged => 用于判断属性改变
 
 5. 测试 变化次数 状态的正确性 数据数的正确性
+
+> ### 简单测试
+
+```cs
+public class ContentViewModel_Test
+{
+    [Fact]
+    public async void AvaloniaInfiniteScrolling_Default()
+    {
+       PoetrySty poSty = await PublicMethod.GetPoetryStyAndInitia();
+       ContentViewModel Cv = new ContentViewModel(poSty);
+       AvaloniaInfiniteScrollCollection<Poetry> count = Cv.AvaloniaInfiniteScrolling;
+       
+       //翻阅源码得知，调用这个方法会对数据进行Load
+       //OnLoadMore只是对加载方法的定义
+       await Cv.AvaloniaInfiniteScrolling.LoadMoreAsync();
+       Assert.Equal(10,getCount(count));
+       Cv.PropertyChanged += (sender, args) =>
+       {
+           Assert.True("ScrollingState".Equals(args.PropertyName));
+       };
+       int getCount<T>(IEnumerable<T> ie)
+       {
+           return ie.Count();
+       }
+    }
+}
+```
+
+
+
+# 3.6 访问Json Web服务
+
+1. 创建服务接口 规范命名 : `ITodayPoetryService` 每日诗词服务
+2. 创建接口实现类 用于取出数据 
+
+
+

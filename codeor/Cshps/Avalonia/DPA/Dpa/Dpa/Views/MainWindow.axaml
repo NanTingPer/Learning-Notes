@@ -5,6 +5,7 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:i="using:Avalonia.Xaml.Interactivity"
         xmlns:ia="using:Avalonia.Xaml.Interactions.Core"
+        xmlns:ais="using:AvaloniaInfiniteScrolling"
         mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
         x:Class="Dpa.Views.MainWindow"
         DataContext="{Binding ContentViewModel ,Source={StaticResource ServiceLocator}}"
@@ -13,20 +14,29 @@
     <!-- DataContext 绑定  -->
     
     <!-- 事件绑定 -->
-    <i:Interaction.Behaviors>
-        <ia:EventTriggerBehavior EventName="Initialized">
-            <ia:InvokeCommandAction Command="{Binding GetPoetryAllICommand}"></ia:InvokeCommandAction>
-        </ia:EventTriggerBehavior>
-    </i:Interaction.Behaviors>
+    <!-- <i:Interaction.Behaviors> -->
+    <!--     <ia:EventTriggerBehavior EventName="Initialized"> -->
+    <!--         <ia:InvokeCommandAction Command="{Binding GetPoetryAllICommand}"></ia:InvokeCommandAction> -->
+    <!--     </ia:EventTriggerBehavior> -->
+    <!-- </i:Interaction.Behaviors> -->
     
-    
-    <!-- 数据显示的绑定 -->
-    <ItemsControl ItemsSource="{Binding PoetryList}">
+     
+    <ais:AvaloniaInfiniteScrollControl ItemsSource="{Binding AvaloniaInfiniteScrolling}">
         <ItemsControl.ItemTemplate>
             <DataTemplate>
                 <TextBlock Text="{Binding Name}"></TextBlock>
             </DataTemplate>
         </ItemsControl.ItemTemplate>
-    </ItemsControl>
+    </ais:AvaloniaInfiniteScrollControl>
+    
+    
+    <!--     ~1~ 数据显示的绑定 @1@ -->
+    <!-- <ItemsControl ItemsSource="{Binding PoetryList}"> -->
+    <!--     <ItemsControl.ItemTemplate> -->
+    <!--         <DataTemplate> -->
+    <!--             <TextBlock Text="{Binding Name}"></TextBlock> -->
+    <!--         </DataTemplate> -->
+    <!--     </ItemsControl.ItemTemplate> -->
+    <!-- </ItemsControl> -->
     
 </Window>

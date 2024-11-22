@@ -5,10 +5,6 @@
 | PropertyChanged | 每次属性改变 都会调用这个事件 |
 | --------------- | --------------- |
 
-
-
-
-
 # App.axaml / axaml
 
 > - xmlns:名字="using:dpa" => 这个名字直接代表这个命名空间
@@ -1512,13 +1508,13 @@ DataContext="{Binding ContentViewModel ,Source={StaticResource ServiceLocator}}"
      
      - 使用新增命名空间下的`AvaloniaInfiniteScrollControl` 指定数据来源 `ItemsSource="{Binding xxx}"`
      
-     - <xxx:AvaloniaInfiniteScrollControl.ItemTemplate>
+     - xxx:AvaloniaInfiniteScrollControl.ItemTemplate
+     
+     - 
      
      - <DataTemplate>
      
      - <TextBlock Text="{Binding xxx">
-
-
 
 ## 3.5.1 单元测试
 

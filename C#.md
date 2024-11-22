@@ -345,6 +345,37 @@ namespace AppLeng
 }
 ```
 
+## 2.4.1 反射创建泛型对象
+
+- GetType获取泛型类，需要``泛型数量`
+
+```cs
+Type[] types = new Type[]
+{
+    typeof(int),
+    typeof(int)
+}
+Type makeType = type.MakeGenericType(types);
+object Generic = Activator.CreateInstance(makeType);
+```
+
+
+
+# 6.0  表达式树与Func
+
+- 表达式树`Expression`可以使用`.Compile`转换为Func
+
+- 表达式树`Expression`有一个静态方法`.Add`可以将多个表达式树拼接在一起
+
+| Parameter                    | 该表达式要处理的参数       | `typeof(Student),"stu"`        |
+| ---------------------------- | ---------------- | ------------------------------ |
+| **Property**                 | **该表达式要处理的参数属性** | **`pExp,nameof(Student.Age)`** |
+| **Constant***                | **双目运算符右边的值**    | **`10`可以是变量**                  |
+| GreaterThan                  | 双目运算符中间的表达 >     | **`levelExp,rightExp`**        |
+| Lambda`<Func<Student,bool>>` | 变换为表达式           | `bodyExp,pExp`                 |
+
+
+
 # 2.5 杨中科 .NET
 
 # 1.0 .NET Standard

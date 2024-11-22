@@ -1510,11 +1510,9 @@ DataContext="{Binding ContentViewModel ,Source={StaticResource ServiceLocator}}"
      
      - xxx:AvaloniaInfiniteScrollControl.ItemTemplate
      
-     - 
+      <DataTemplate>
      
-     - <DataTemplate>
-     
-     - <TextBlock Text="{Binding xxx">
+      <TextBlock Text="{Binding xxx">
 
 ## 3.5.1 单元测试
 

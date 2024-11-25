@@ -1537,6 +1537,7 @@ DataContext="{Binding ContentViewModel ,Source={StaticResource ServiceLocator}}"
 
 5. 测试 变化次数 状态的正确性 数据数的正确性
 <<<<<<< HEAD
+<<<<<<< HEAD
 
 > ### 简单测试
 
@@ -1943,5 +1944,7 @@ Application>
 
 1. 创建根导航接口`IRootNavigationService` 定义一个方法 `NavigateTo(string view)` 用于切换页面
 2. 在`IRootNavigationService`接口同文件内 定义一个静态类，内部定义两个`const`常量，值就是要导航到的view的名
+=======
+>>>>>>> parent of c4993f8 (单元测试 无限滚动)
 =======
 >>>>>>> parent of c4993f8 (单元测试 无限滚动)

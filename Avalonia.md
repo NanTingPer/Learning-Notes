@@ -1614,11 +1614,6 @@ xmlns:ais="using:AvaloniaInfiniteScrolling"
 4. VeiwModel内有一个事件PropertyChanged => 用于判断属性改变
 
 5. 测试 变化次数 状态的正确性 数据数的正确性
-<<<<<<< HEAD
-<<<<<<< HEAD
-<<<<<<< HEAD
-=======
->>>>>>> parent of 5aea18d (0)
 
 > ### 简单测试
 
@@ -1652,11 +1647,6 @@ public class ContentViewModel_Test
 
 # 3.6 访问Json Web服务
 
-<<<<<<< HEAD
-1. 创建服务接口 规范命名 : `ITodayPoetryService` 每日诗词服务
-2. 创建接口实现类 用于取出数据 
-<<<<<<< HEAD
-=======
 1. 创建服务接口 规范命名 : `ITodayPoetryService` 每日诗词服务,业务角度思考
 
 ```csharp
@@ -1667,7 +1657,6 @@ public interface IToDayPoetrySty
     Task<ToDayPoetry> GetToDayPoetry();
 }
 ```
->>>>>>> parent of 244de13 (0)
 
 
 
@@ -2031,20 +2020,3 @@ Application>
 
 1. 创建根导航接口`IRootNavigationService` 定义一个方法 `NavigateTo(string view)` 用于切换页面
 2. 在`IRootNavigationService`接口同文件内 定义一个静态类，内部定义两个`const`常量，值就是要导航到的view的名
-<<<<<<< HEAD
-=======
->>>>>>> parent of c4993f8 (单元测试 无限滚动)
-=======
->>>>>>> parent of c4993f8 (单元测试 无限滚动)
-<<<<<<< HEAD
-=======
->>>>>>> parent of 4cdcc45 (从Web服务获取数据 完成 但有新的问题)
-=======
-
-
-
->>>>>>> parent of 4cdcc45 (从Web服务获取数据 完成 但有新的问题)
-=======
->>>>>>> parent of 5aea18d (0)
-=======
->>>>>>> parent of 244de13 (0)

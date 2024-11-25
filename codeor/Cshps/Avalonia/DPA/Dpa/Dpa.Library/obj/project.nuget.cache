@@ -1,8 +1,8 @@
 {
   "version": 2,
-  "dgSpecHash": "nSa7FhETMH0=",
+  "dgSpecHash": "37A4A5kwGVM=",
   "success": true,
-  "projectFilePath": "/home/r/桌面/Learning-Notes/codeor/Cshps/Avalonia/DPA/Dpa/Dpa.Library/Dpa.Library.csproj",
+  "projectFilePath": "/home/r/桌面/BACK/Learning-Notes/codeor/Cshps/Avalonia/DPA/Dpa/Dpa.Library/Dpa.Library.csproj",
   "expectedPackageFiles": [
     "/home/r/.nuget/packages/avaloniainfinitescrolling.collection/1.0.1/avaloniainfinitescrolling.collection.1.0.1.nupkg.sha512",
     "/home/r/.nuget/packages/communitytoolkit.mvvm/8.2.1/communitytoolkit.mvvm.8.2.1.nupkg.sha512",

@@ -1573,6 +1573,7 @@ public class ContentViewModel_Test
 
 1. 创建服务接口 规范命名 : `ITodayPoetryService` 每日诗词服务
 2. 创建接口实现类 用于取出数据 
+<<<<<<< HEAD
 
 
 
@@ -1943,4 +1944,9 @@ Application>
 =======
 >>>>>>> parent of c4993f8 (单元测试 无限滚动)
 =======
+>>>>>>> parent of 4cdcc45 (从Web服务获取数据 完成 但有新的问题)
+=======
+
+
+
 >>>>>>> parent of 4cdcc45 (从Web服务获取数据 完成 但有新的问题)

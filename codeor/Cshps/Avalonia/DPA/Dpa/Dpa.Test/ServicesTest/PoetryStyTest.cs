@@ -53,7 +53,7 @@ public class PoetryStyTest : IDisposable
         await poetrySty.CloseConnection();
     }
     
-    private IPoetrySty poetrySty_IsInitialized;
+    private IPoetryStyService poetrySty_IsInitialized;
     [Fact]
     public void IsInitialized_Default()
     {
@@ -67,7 +67,7 @@ public class PoetryStyTest : IDisposable
             .Returns(PoetryStyConfigName.Version);
         IConfig Config = IConfig.Object;
         
-        poetrySty_IsInitialized = new PoetrySty(Config);
+        poetrySty_IsInitialized = new PoetryStyService(Config);
         
         //测试是否为True
         Assert.True(poetrySty_IsInitialized.IsInitialized); 
@@ -77,20 +77,20 @@ public class PoetryStyTest : IDisposable
     }
     
     
-    private IPoetrySty poetrySty;
+    private IPoetryStyService poetrySty;
     [Fact]
     public async Task InitializeAsync_Def()
     {
         Mock<IConfig> IConfig = new Mock<IConfig>();
         IConfig MockIConfig = IConfig.Object;
 
-        poetrySty = new PoetrySty(MockIConfig);
+        poetrySty = new PoetryStyService(MockIConfig);
         //如果文件不存在测试通过
         // Assert.False(File.Exists(PoetrySty.DbPath));
         //调用
         await poetrySty.InitializeAsync();
         //如果文件存在 测试通过
-        Assert.True(File.Exists(PoetrySty.DbPath));
+        Assert.True(File.Exists(PoetryStyService.DbPath));
     }
 
     public void Dispose()

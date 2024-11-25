@@ -14,13 +14,13 @@
     <!-- DataContext 绑定  -->
     
     <!-- 事件绑定 -->
-    <!-- <i:Interaction.Behaviors> -->
-    <!--     <ia:EventTriggerBehavior EventName="Initialized"> -->
-    <!--         <ia:InvokeCommandAction Command="{Binding InitiailzationCommand}"></ia:InvokeCommandAction> -->
-    <!--     </ia:EventTriggerBehavior> -->
-    <!-- </i:Interaction.Behaviors> -->
+    <i:Interaction.Behaviors>
+        <ia:EventTriggerBehavior EventName="Initialized">
+            <ia:InvokeCommandAction Command="{Binding InitiailzationCommand}"></ia:InvokeCommandAction>
+        </ia:EventTriggerBehavior>
+    </i:Interaction.Behaviors>
     
-    <Grid Background="Aqua">
+    <Grid Background="Bisque">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>
         </Grid.RowDefinitions>
@@ -29,7 +29,10 @@
             <ColumnDefinition Width="Auto"/>
         </Grid.ColumnDefinitions>
         
-        <TextBlock Text="6666"></TextBlock>
+        <TextBlock Text="666666666666666"></TextBlock>
+        <TextBlock Text="{Binding ToDayPoetry.Content}"></TextBlock>
+        <TextBlock Text="{Binding ToDayPoetry.Author}"></TextBlock>
+        <TextBlock Text="{Binding ToDayPoetry.Snippet}"></TextBlock>
         
     </Grid>
     

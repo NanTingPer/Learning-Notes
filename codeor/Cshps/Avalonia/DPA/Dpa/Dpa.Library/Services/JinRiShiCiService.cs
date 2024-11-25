@@ -17,25 +17,35 @@ public class JinRiShiCiService : IToDayPoetryStyService
     public string Source_Web = "网络服务器";
     public string Source_DBSQL = "本地数据库";
     private string _ToKen;
+    private Func<Task<string>> _loadToKen;
     public JinRiShiCiService(IConfig config,IAlertService alertService,IPoetryStyService poetryStyService)
     {
+        _loadToKen = () => GetTokenAsync(JinRiShiCi_Config.GetToKenUrl);
         _alertService = alertService;
         _config = config;
         _poetryStyService = poetryStyService;
-        ToKen = GetTokenAsync();
-        //初始化
-        if (string.IsNullOrEmpty(ToKen))
-        {
-            ToKen = GetTokenAsync(JinRiShiCi_Config.GetToKenUrl).Result;
-        }
+        ToKen = GetToken();
     }
-    public string ToKen { get => _ToKen; private set => _ToKen = value; }
+
+    public string ToKen
+    {
+        get
+        {
+            if (string.IsNullOrEmpty(_ToKen))
+            {
+                _ToKen = _loadToKen.Invoke().GetAwaiter().GetResult();
+            }
+
+            return _ToKen;
+        }
+        private set => _ToKen = value;
+    }
 
     /// <summary>
     /// 从本地获取ToKen
     /// </summary>
     /// <returns> 如果没有 返回null </returns>
-    public string GetTokenAsync()
+    public string GetToken()
     {
         string e = _config.Get(JinRiShiCi_Config.ToKenConfgKey);
         if (string.IsNullOrEmpty(e))
@@ -179,4 +189,15 @@ public class JinRiShiCiService : IToDayPoetryStyService
         }
     }
     
+}
+public class JinRiShiCi_Config
+{
+    public static readonly string GetToKenUrl = "https://v2.jinrishici.com/token";
+    public static readonly string GetToDayPoetryUrl = "https://v2.jinrishici.com/sentence";
+    public const string ToKenConfgKey = "JinRiToKen";
+}
+public class TokenJson
+{
+    [JsonPropertyName("data")]
+    public string data{get; set; }
 }

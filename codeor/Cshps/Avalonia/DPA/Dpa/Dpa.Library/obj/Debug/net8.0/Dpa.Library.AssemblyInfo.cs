@@ -13,7 +13,11 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("Dpa.Library")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
+<<<<<<< HEAD
 [assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+f22dbc8c06a3a13951da158f8b0b878a93a8f78f")]
+=======
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+a9bf05322b15582d1190f53d2774ebaf0f26c48c")]
+>>>>>>> parent of 244de13 (0)
 [assembly: System.Reflection.AssemblyProductAttribute("Dpa.Library")]
 [assembly: System.Reflection.AssemblyTitleAttribute("Dpa.Library")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]

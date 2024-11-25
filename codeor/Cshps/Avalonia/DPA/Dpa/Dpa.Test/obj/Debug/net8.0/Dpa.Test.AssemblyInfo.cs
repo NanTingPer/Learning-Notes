@@ -14,6 +14,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
 <<<<<<< HEAD
+<<<<<<< HEAD
 <<<<<<< Updated upstream
 [assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+f22dbc8c06a3a13951da158f8b0b878a93a8f78f")]
 =======
@@ -22,6 +23,9 @@ using System.Reflection;
 =======
 [assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+c4993f8b1cd70ef5e86714479ef4329bbb5e3eec")]
 >>>>>>> parent of 5aea18d (0)
+=======
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+a9bf05322b15582d1190f53d2774ebaf0f26c48c")]
+>>>>>>> parent of 244de13 (0)
 [assembly: System.Reflection.AssemblyProductAttribute("Dpa.Test")]
 [assembly: System.Reflection.AssemblyTitleAttribute("Dpa.Test")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]

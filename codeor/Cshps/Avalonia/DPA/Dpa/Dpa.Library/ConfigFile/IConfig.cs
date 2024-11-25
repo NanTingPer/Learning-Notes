@@ -7,6 +7,7 @@ public interface IConfig
     void Set(string key,string value);
 
     string Get(string key, string value);
+    string Get(string key);
     
     void Set(string key,int value);
 

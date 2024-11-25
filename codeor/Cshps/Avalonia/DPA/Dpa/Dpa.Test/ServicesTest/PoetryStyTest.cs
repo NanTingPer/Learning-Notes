@@ -26,7 +26,7 @@ public class PoetryStyTest : IDisposable
     [Fact]
     public async Task GetPoetryAsync_AllDefault()
     {
-        PoetrySty poetrySty = await PublicMethod.GetPoetryStyAndInitia();
+        PoetryStyService poetrySty = await PublicMethod.GetPoetryStyAndInitia();
         List<Poetry> Poetrys = await poetrySty.GetPoetryAsync(
             //方法传参数 要求Expression<Func<Poetry,bool>>
             //设置始终返回 true  Expression.Constant(true)
@@ -47,7 +47,7 @@ public class PoetryStyTest : IDisposable
     [Fact]
     public async Task GetPoetryAsync_Default()
     {
-        PoetrySty poetrySty = await PublicMethod.GetPoetryStyAndInitia();
+        PoetryStyService poetrySty = await PublicMethod.GetPoetryStyAndInitia();
         Poetry poetryAsync = await poetrySty.GetPoetryAsync("10001"); 
         Assert.Contains("临江仙",poetryAsync.Name);
         await poetrySty.CloseConnection();

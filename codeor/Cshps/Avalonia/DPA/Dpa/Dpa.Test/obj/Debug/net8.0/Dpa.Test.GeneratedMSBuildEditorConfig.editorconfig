@@ -8,6 +8,6 @@ build_property.PlatformNeutralAssembly =
 build_property.EnforceExtendedAnalyzerRules = 
 build_property._SupportedPlatformList = Linux,macOS,Windows
 build_property.RootNamespace = Dpa.Test
-build_property.ProjectDir = /home/r/桌面/BACK/Learning-Notes/codeor/Cshps/Avalonia/DPA/Dpa/Dpa.Test/
+build_property.ProjectDir = /home/r/桌面/Learning-Notes/codeor/Cshps/Avalonia/DPA/Dpa/Dpa.Test/
 build_property.EnableComHosting = 
 build_property.EnableGeneratedComInterfaceComImportInterop = 

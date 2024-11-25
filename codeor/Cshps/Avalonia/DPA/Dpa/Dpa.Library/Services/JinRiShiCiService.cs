@@ -180,16 +180,3 @@ public class JinRiShiCiService : IToDayPoetryStyService
     }
     
 }
-
-public class TokenJson
-{
-    [JsonPropertyName("data")]
-    public string data{get; set; }
-}
-
-public class JinRiShiCi_Config
-{
-    public static readonly string GetToKenUrl = "https://v2.jinrishici.com/token";
-    public static readonly string GetToDayPoetryUrl = "https://v2.jinrishici.com/sentence";
-    public const string ToKenConfgKey = "JinRiToKen";
-}

@@ -104,9 +104,3 @@ public class PoetryStyService : IPoetryStyService
     }
     
 }
-
-public static class PoetryStyConfigName
-{
-    public static readonly int Version = 1;
-    public static readonly string VersionKey = nameof(PoetryStyConfigName) + "." + nameof(Version);
-}

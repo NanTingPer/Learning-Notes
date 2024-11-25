@@ -13,7 +13,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("Dpa.Library")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+26af961c69bb884bd679475437b182825f480aff")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+f22dbc8c06a3a13951da158f8b0b878a93a8f78f")]
 [assembly: System.Reflection.AssemblyProductAttribute("Dpa.Library")]
 [assembly: System.Reflection.AssemblyTitleAttribute("Dpa.Library")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]

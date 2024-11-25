@@ -22,7 +22,7 @@ public class PoetrySty : IPoetrySty
     public PoetrySty(IConfig config)
     {
         _config = config;
-        
+        InitializeAsync().Wait();
     }
     
     /// <summary>
@@ -73,11 +73,11 @@ public class PoetrySty : IPoetrySty
     /// </summary>
     /// <param name="id"> 要获取的id </param>
     /// <returns> 返回对应的数据 </returns>
-    public Task<Poetry> GetPoetryAsync(string id)
+    public async Task<Poetry> GetPoetryAsync(string id)
     {
         //FirstOrDefaultAsync是异步获取数据
         //返回第一条匹配的数据 或 返回空
-        return Connection.Table<Poetry>().FirstOrDefaultAsync(poer => poer.Id.Equals(id));
+        return await Connection.Table<Poetry>().FirstOrDefaultAsync(poer => poer.Id.Equals(id));
     }
 
     /// <summary>
@@ -87,12 +87,11 @@ public class PoetrySty : IPoetrySty
     /// <param name="skip"></param>
     /// <param name="take"></param>
     /// <returns></returns>
-    public Task<List<Poetry>> GetPoetryAsync(Expression<Func<Poetry, bool>> where, int skip, int take)
+    public async Task<List<Poetry>> GetPoetryAsync(Expression<Func<Poetry, bool>> where, int skip, int take)
     {
-        
         //Func<Poetry,bool> where
         //Connection.Table<Poetry>().where(f => where(f))
-         return Connection.Table<Poetry>().Where(where).Skip(skip).Take(take).ToListAsync();
+         return await Connection.Table<Poetry>().Where(where).Skip(skip).Take(take).ToListAsync();
     }
 
     /// <summary>

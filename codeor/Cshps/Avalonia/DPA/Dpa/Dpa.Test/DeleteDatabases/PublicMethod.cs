@@ -11,7 +11,13 @@ public class PublicMethod
     /// <summary>
     /// 删除全部文件
     /// </summary>
-    public static void Del() => Directory.Delete(PathFile.getPath(),true);
+    public static void Del()
+    {
+        if (Directory.Exists(PathFile.getPath()))
+        {
+            Directory.Delete(PathFile.getPath(), true);
+        }
+    }
 
     
     /// <summary>

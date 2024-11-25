@@ -1647,8 +1647,376 @@ public class ContentViewModel_Test
 
 # 3.6 访问Json Web服务
 
-1. 创建服务接口 规范命名 : `ITodayPoetryService` 每日诗词服务
-2. 创建接口实现类 用于取出数据 
+1. 创建服务接口 规范命名 : `ITodayPoetryService` 每日诗词服务,业务角度思考
+
+```csharp
+using Dpa.Library.Models;
+namespace Dpa.Library.Services;
+public interface IToDayPoetrySty
+{
+    Task<ToDayPoetry> GetToDayPoetry();
+}
+```
 
 
 
+1. 创建接口实现类 用于取出数据 `JinrishiciService`实现角度思考的名字
+
+```csharp
+namespace Dpa.Library.Services;
+public class JinRiShiCiGet : IToDayPoetrySty
+{
+}
+```
+
+
+
+1. 创建方法 用于返回 ToKen  目标网站标注 Get方法请求,创建HttpClient对象，使用GetAsync方法请求链接
+
+```csharp
+private string _ToKen;
+/// <summary>
+/// 获取今日诗词的Token 会访问网站
+/// </summary>
+/// <param name="url"> 从url获取Token </param>
+public async Task<String> GetTokenAsync(string url)
+{
+    using HttpClient httpClient = new HttpClient() ;
+    try
+    {
+        //使用Get请求url
+        HttpResponseMessage Message = await httpClient.GetAsync(url);
+        //404等抛出异常
+        Message.EnsureSuccessStatusCode();
+        
+        //获取数据返回的原始Json
+        string ToKenJson = await Message.Content.ReadAsStringAsync();
+        
+        //将Json对象反序列化为ToKenJson对象
+        TokenJson ToKen = JsonSerializer.Deserialize<TokenJson>(ToKenJson);
+        
+        //将ToKen保存到本地
+        _config.Set(JinRiShiCi_Config.ToKenConfgKey,ToKen.data);
+        
+        //将Token保存到内存
+        this.ToKen = ToKen.data;
+        
+        //如果ToKen是空的 报错
+        if (string.IsNullOrEmpty(this.ToKen)) throw new Exception(ErrorMessage.HttpRequestFileError);
+        return ToKen.data;
+    }
+    catch (Exception e)
+    {
+        await _alertService.AlertAsync("今日诗词服务器", e.Message);
+        return null;
+    }
+}
+
+public class TokenJson
+{
+    [JsonPropertyName("data")]
+    public string data{get; set; }
+}
+```
+
+
+
+1. 使用获取的对象的 `Content.ReadAsStringAsync()` 可以返回原始Json
+
+```csharp
+string ToKenJson = await Message.Content.ReadAsStringAsync();
+```
+
+
+
+1. 高级粘贴可以直接将JSON文件粘贴为一个一个新类
+
+   1. JsonSerializer.Deserialize<>() 对Json进行反序列化 变为指定类型的实例 第二个参数传递一个 JsonSerializerOptions对象 设置 `PropertyNameCaseInsensitive = true`大小写不敏感
+
+   - 这里已经使用了[JsonPropertyName("Name")] 标记 不使用 `PropertyNameCaseInsensitive = true`了
+
+- ##### 错误处理
+
+5. try catch
+   1. `_alertservice.alertasync("",e.Message)`
+6. 创建新接口 用于弹出错误信息
+7. IAlertService AlertAsync方法 要求传入一个  `(string title, string message)` 消息标题和消息内容 ， 错误信息单独配备一个类
+
+```csharp
+public interface IAlertService
+{
+    /// <summary>
+    /// 报错
+    /// </summary>
+    /// <param name="title"> 标题 </param>
+    /// <param name="mseeage"> 消息 </param>
+    /// <returns></returns>
+    System.Threading.Tasks.Task AlertAsync(string title, string mseeage);
+}
+```
+
+5. JinrishiciService构造方法要求 IAlertService
+
+```csharp
+public JinRiShiCiGet(IConfig config,IAlertService alertService)
+{
+    _alertService = alertService;
+    _config = config;
+    ToKen = GetTokenAsync();
+    //初始化
+    if (string.IsNullOrEmpty(ToKen))
+    {
+        ToKen = GetTokenAsync(JinRiShiCi_Config.GetToKenUrl).Result;
+    }
+}
+```
+
+
+
+- 单元测试
+- 使用键值存储Token 
+- 单元测试 断言Token
+- 每次测试都需要链接他人的服务器，这不是非常好的
+  - 可以为测试特性更换为 `[Fact(Skip = "标注")]`
+
+```csharp
+/// <summary>
+/// 获取 JinRiShiCiGet类所需的全部接口Mock
+/// </summary>
+/// <returns></returns>
+public async static Task<Tuple<JinRiShiCiGet, Mock<IAlertService>>> GetJinRi()
+{
+    Mock<IConfig> iconfigMock = new Mock<IConfig>();
+    IConfig config = iconfigMock.Object;
+    
+    Mock<IAlertService> ialertserviceMock = new Mock<IAlertService>();
+    IAlertService alertService = ialertserviceMock.Object;
+    
+    IPoetrySty petrysty = await PublicMethod.GetPoetryStyAndInitia();//ipetrysty.Object;
+    
+    JinRiShiCiGet jinri = new JinRiShiCiGet(config, alertService, petrysty);
+    
+    return new Tuple<JinRiShiCiGet, Mock<IAlertService>>(jinri, ialertserviceMock);
+}
+
+[Fact(Skip = "需要请求")]
+public async Task GetTokenAsync_Default()
+{
+    Tuple<JinRiShiCiGet, Mock<IAlertService>> tup2 = await GetJinRi();
+    JinRiShiCiGet jinri = tup2.Item1;
+    string tokenAsync = await jinri.GetTokenAsync("https://v2.jinrishici.com/token");
+    //返回结果不为空就是正确
+    Assert.True(!string.IsNullOrEmpty(tokenAsync));
+}
+
+[Fact(Skip = "需要请求")]
+public async Task GetTokenAsync_ErrorURL()
+{
+    Tuple<JinRiShiCiGet, Mock<IAlertService>> tup2 = await GetJinRi();
+    JinRiShiCiGet jinri = tup2.Item1;
+    Mock<IAlertService> ialertserviceMock = tup2.Item2;
+    string tokenAsync = await jinri.GetTokenAsync("https://v2.6666.com/token");
+    //使用错误的URL 如果报错信息被执行过一次就是通过
+    ialertserviceMock.Verify(p => p.AlertAsync("今日诗词服务器", ""), Times.Once);
+}
+```
+
+
+
+9. 调用诗歌获取接口 复制JSON数据，粘贴为类，进行裁减 只保留需要的部分
+
+```csharp
+using System.Text.Json.Serialization;
+
+namespace Dpa.Library.Models;
+
+public class FinalJsonData
+{
+    /// <summary>
+    /// 下面的Data
+    /// </summary>
+    [JsonPropertyName("data")]
+    public Data Data { get; set; }
+}
+
+public class Data
+{
+    /// <summary>
+    /// 第一句
+    /// </summary>
+    [JsonPropertyName("content")]
+    public string Content { get; set; }
+    
+    public Origin origin { get; set; }
+}
+
+public class Origin
+{
+    /// <summary>
+    /// 标题
+    /// </summary>
+    [JsonPropertyName("title")]
+    public string Title { get; set; }
+    
+    /// <summary>
+    /// 朝代
+    /// </summary>
+    [JsonPropertyName("dynasty")]
+    public string Dynasty { get; set; }
+    
+    /// <summary>
+    /// 作者
+    /// </summary>
+    [JsonPropertyName("author")]
+    public string Author { get; set; }
+    
+    /// <summary>
+    /// 正文
+    /// </summary>
+    [JsonPropertyName("content")]
+    public string[] Content { get; set; }
+}
+```
+
+
+
+9. 创建ToDayPoetry 模型类 ，用来承载今日诗词的数据
+
+```csharp
+using System.Text.Json.Serialization;
+
+namespace Dpa.Library.Models;
+
+public class ToDayPoetry
+{
+    /// <summary>
+    /// 名字
+    /// </summary>
+    public string Name { get; set; } = string.Empty;
+    
+    /// <summary>
+    /// 作者
+    /// </summary>
+    public string Author { get; set; } = string.Empty;
+    
+    /// <summary>
+    /// 来源
+    /// </summary>
+    public string Source { get; set; } = string.Empty;
+    
+    /// <summary>
+    /// 朝代
+    /// </summary>
+    public string Dynasty { get; set; } = string.Empty;
+
+    /// <summary>
+    /// 正文
+    /// </summary>
+    public string Content { get; set; } = string.Empty;
+    
+    /// <summary>
+    /// 第一句
+    /// </summary>
+    public string Snippet { get; set; } = string.Empty;
+}
+```
+
+
+
+- 往Http请求头添加内容
+
+```csharp
+httpClient.DefaultRequestHeaders.Add("头名称",头内容);
+```
+
+- Http异常抛出
+
+> 返回404 405 403等 当作异常抛出
+
+```csharp
+httpClient.GetAsync().EnsureSuccessStatusCode();
+```
+
+
+
+11. 随机获取一条 定义方法`RandomGetPortryAsync ` 
+
+```cs
+/// <summary>
+/// 随机从数据库获取一首 
+/// </summary>
+/// <returns></returns>
+public async Task<ToDayPoetry> RandomGetPortryAsync()
+{
+    Random rom = new Random();
+    int next = rom.Next(30);
+    var list = await _poetrySty.GetPoetryAsync(f => true, next, 1);
+    Poetry po = list[0];
+    // Poetry po = await _poetrySty.GetPoetryAsync("10001");
+    return new ToDayPoetry()
+    {
+        Author = po.Author,
+        Content = po.Content,
+        Dynasty = po.Dynasty,
+        Name = po.Name,
+        Snippet = po.Content.Split("。")[0],
+        Source = Source_DBSQL
+    };
+}
+```
+
+
+
+11. 在精妙的接口设计下，`AlterService` 类操作View层，设计层面并不会造成有向有环图，`IAlterService`置于ViewModel
+
+接口隔离
+
+![image-20241124103322619](/home/r/桌面/image-20241124103322619.png)
+
+## 3.6.1 错误弹窗
+
+1. 安装nuget包`Irihi.Ursa` UI组件包 `Irihi.Ursa.Themes.Semi`
+2. App.axaml
+
+```xml
+Application>
+	xmlns:u-semi="https://irihi.tech/ursa/themes/semi"
+```
+
+3. `AlterService`类实现方法，使用MessageBox.ShowAsync();弹出消息
+4. 对ToDayService进行依赖注入 并暴露 TodayViewModel
+5. 使用事件绑定 在界面初始化的时候绑定`Command`对数据库进行初始化
+
+
+
+## 3.6.2 内容显示
+
+3. 使用Grid进行页面布局 先使用一行一列
+
+```xml
+<Grid>
+	<Grid.RowDefinitions>
+    	<RowDefinition Height="*" />
+    </Grid.RowDefinitions>
+    
+    <Grid.ColumnDefinitions>
+    	<ColumnDefinition Width="*" />
+    </Grid.ColumnDefinitions>
+</Grid>
+```
+
+7. 使用`StackPanel`对诗句进行显示， 其显示方式是栈样式，从上往下 `VerticalAlignment="Bottom"` 对其样式 底端对齐。
+
+   - `Background="#66000000"` 66表示透明度 标记于 <StackPanel xxxx="66xxxxxx">
+
+   - `StackPanel`内再嵌入一个`StackPanel`并设定 `Background`时，其透明度基于上层颜色
+
+8. 使用`StackPanel`内嵌 `StackPanel`不设置`Background` 设置`Margin` (边距) 单写 '8' 代表上下左右都为 8 ，在该内嵌的`StackPanel`内定义一个`Label` `Content`绑定 `今日诗词.第一句`
+9. 再上面显示 标题的 `StackPanel`(StP2) 内再嵌入多个 `StackPanel` 并加入Label控件 分别显示 作者 等
+
+
+
+# 3.7 导航
+
+1. 创建根导航接口`IRootNavigationService` 定义一个方法 `NavigateTo(string view)` 用于切换页面
+2. 在`IRootNavigationService`接口同文件内 定义一个静态类，内部定义两个`const`常量，值就是要导航到的view的名

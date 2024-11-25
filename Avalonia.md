@@ -35,8 +35,6 @@
 
 - ViewModel的东西最终会被View显示出来
 
-- #### 前端会订阅后端的事件，因此后端数据的改变前端能够实时变化 前后端分离开的逻辑也避免了后端线程导致UI线程卡死
-
 # 1.1
 
 > Avalonia自带依赖注入容器
@@ -1511,86 +1509,10 @@ DataContext="{Binding ContentViewModel ,Source={StaticResource ServiceLocator}}"
      - 使用新增命名空间下的`AvaloniaInfiniteScrollControl` 指定数据来源 `ItemsSource="{Binding xxx}"`
      
      - xxx:AvaloniaInfiniteScrollControl.ItemTemplate
-       
-       DataTemplate
-       
-       TextBlock Text="{Binding xxx}"
-       
-       
-       
-       
-       <DataTemplate>
-       
-       <TextBlock Text="{Binding xxx">
-
-## 
-
-> #### 简单实现
-
-> #### View Model
-
-```cs
-public AvaloniaInfiniteScrollCollection<Poetry> AvaloniaInfiniteScrolling { get; }
-public ContentViewModel(IPoetrySty poetrySty)
-{
-    _poetrySty = poetrySty;
-    // GetPoetryAllICommand = new AsyncRelayCommand(GetPoetryAsyncAll);
-    AvaloniaInfiniteScrolling = new AvaloniaInfiniteScrollCollection<Poetry>()
-    {
-        //条件永远为True
-        OnCanLoadMore = () => true,
-        //载入数据
-        OnLoadMore = () =>
-        {
-            //需求IEnumerable
-            Task<List<Poetry>> tlp = _poetrySty.GetPoetryAsync(f => true, 0, 10);
-            return tlp.ContinueWith(t => t.Result.AsEnumerable());
-        }
-    };
-}
-```
-
-> ### App.axaml
-
-```xml
-<Application.Styles>
-    <avalonia:SemiTheme Locale="zh-CN" />
-    <StyleInclude Source="avares://AvaloniaInfiniteScrolling.Control/AvaloniaInfiniteScrollControlStyle.axaml" />
-</Application.Styles>
-```
-
-> ### View
-
-```cs
-xmlns:ais="using:AvaloniaInfiniteScrolling"
-
-<!-- DataContext 绑定  -->
-<!-- 事件绑定 -->
-<!-- <i:Interaction.Behaviors> -->
-<!--     <ia:EventTriggerBehavior EventName="Initialized"> -->
-<!--         <ia:InvokeCommandAction Command="{Binding GetPoetryAllICommand}"></ia:InvokeCommandAction> -->
-<!--     </ia:EventTriggerBehavior> -->
-<!-- </i:Interaction.Behaviors> -->
- 
-<ais:AvaloniaInfiniteScrollControl ItemsSource="{Binding AvaloniaInfiniteScrolling}">
-    <ItemsControl.ItemTemplate>
-        <DataTemplate>
-            <TextBlock Text="{Binding Name}"></TextBlock>
-        </DataTemplate>
-    </ItemsControl.ItemTemplate>
-</ais:AvaloniaInfiniteScrollControl>
-
-<!--     ~1~ 数据显示的绑定 @1@ -->
-<!-- <ItemsControl ItemsSource="{Binding PoetryList}"> -->
-<!--     <ItemsControl.ItemTemplate> -->
-<!--         <DataTemplate> -->
-<!--             <TextBlock Text="{Binding Name}"></TextBlock> -->
-<!--         </DataTemplate> -->
-<!--     </ItemsControl.ItemTemplate> -->
-<!-- </ItemsControl> -->
-```
-
-
+     
+      <DataTemplate>
+     
+      <TextBlock Text="{Binding xxx">
 
 ## 3.5.1 单元测试
 
@@ -1614,6 +1536,7 @@ xmlns:ais="using:AvaloniaInfiniteScrolling"
 4. VeiwModel内有一个事件PropertyChanged => 用于判断属性改变
 
 5. 测试 变化次数 状态的正确性 数据数的正确性
+<<<<<<< HEAD
 
 > ### 简单测试
 
@@ -2020,3 +1943,5 @@ Application>
 
 1. 创建根导航接口`IRootNavigationService` 定义一个方法 `NavigateTo(string view)` 用于切换页面
 2. 在`IRootNavigationService`接口同文件内 定义一个静态类，内部定义两个`const`常量，值就是要导航到的view的名
+=======
+>>>>>>> parent of c4993f8 (单元测试 无限滚动)

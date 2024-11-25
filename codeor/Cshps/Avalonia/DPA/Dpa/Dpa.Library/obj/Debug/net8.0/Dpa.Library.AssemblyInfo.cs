@@ -10,12 +10,12 @@
 using System;
 using System.Reflection;
 
-[assembly: System.Reflection.AssemblyCompanyAttribute("Dpa.Test")]
+[assembly: System.Reflection.AssemblyCompanyAttribute("Dpa.Library")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
 [assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+4cdcc4596e16df9555f8fb9b46c3ec356e4c298e")]
-[assembly: System.Reflection.AssemblyProductAttribute("Dpa.Test")]
-[assembly: System.Reflection.AssemblyTitleAttribute("Dpa.Test")]
+[assembly: System.Reflection.AssemblyProductAttribute("Dpa.Library")]
+[assembly: System.Reflection.AssemblyTitleAttribute("Dpa.Library")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]
 
 // 由 MSBuild WriteCodeFragment 类生成。

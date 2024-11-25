@@ -29,15 +29,7 @@ public class JinRiShiCiService : IToDayPoetryStyService
 
     public string ToKen
     {
-        get
-        {
-            if (string.IsNullOrEmpty(_ToKen))
-            {
-                _ToKen = _loadToKen.Invoke().GetAwaiter().GetResult();
-            }
-
-            return _ToKen;
-        }
+        get => _ToKen;
         private set => _ToKen = value;
     }
 
@@ -62,6 +54,7 @@ public class JinRiShiCiService : IToDayPoetryStyService
     /// <returns> 得到的诗 </returns>
     public async Task<ToDayPoetry> GetToDayPoetryAsync()
     {
+        if (string.IsNullOrEmpty(ToKen)) ToKen = await _loadToKen();
         if (string.IsNullOrEmpty(ToKen)) return await RandomGetPortryAsync();
         using HttpClient httpClient = new HttpClient();
         HttpResponseMessage Message;

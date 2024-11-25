@@ -20,20 +20,9 @@
         </ia:EventTriggerBehavior>
     </i:Interaction.Behaviors>
     
-    <Grid Background="Bisque">
-        <Grid.RowDefinitions>
-            <RowDefinition Height="Auto"/>
-        </Grid.RowDefinitions>
-        
-        <Grid.ColumnDefinitions>
-            <ColumnDefinition Width="Auto"/>
-        </Grid.ColumnDefinitions>
-        
-        <TextBlock Text="666666666666666"></TextBlock>
+    <StackPanel Background="Azure">
+        <TextBlock Text="{Binding ToDayPoetry.Name}"></TextBlock>
         <TextBlock Text="{Binding ToDayPoetry.Content}"></TextBlock>
-        <TextBlock Text="{Binding ToDayPoetry.Author}"></TextBlock>
-        <TextBlock Text="{Binding ToDayPoetry.Snippet}"></TextBlock>
-        
-    </Grid>
+    </StackPanel>
     
 </Window>

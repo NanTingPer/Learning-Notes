@@ -23,7 +23,7 @@ public class Config : IConfig
     /// </summary>
     /// <param name="key"> 键 </param>
     /// <returns></returns>
-    public string Get(string key) => File.ReadAllText(PathFile.GetFileOrCreate(key));
+    private String Get(string key) => File.ReadAllText(PathFile.GetFileOrCreate(key));
 
     public void Set(string key, string value)
     {
@@ -32,7 +32,7 @@ public class Config : IConfig
 
     public string Get(string key, string value)
     {
-        if(!String.IsNullOrEmpty(Get(key))) return value;
+        if(Get(key) == null) return value;
         return Get(key);
     }
 

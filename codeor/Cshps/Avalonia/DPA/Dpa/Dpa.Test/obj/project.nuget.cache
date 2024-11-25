@@ -1,10 +1,9 @@
 {
   "version": 2,
-  "dgSpecHash": "dFhM2aOeiX8=",
+  "dgSpecHash": "47TVyKmh46w=",
   "success": true,
   "projectFilePath": "/home/r/桌面/Learning-Notes/codeor/Cshps/Avalonia/DPA/Dpa/Dpa.Test/Dpa.Test.csproj",
   "expectedPackageFiles": [
-    "/home/r/.nuget/packages/avaloniainfinitescrolling.collection/1.0.1/avaloniainfinitescrolling.collection.1.0.1.nupkg.sha512",
     "/home/r/.nuget/packages/castle.core/5.1.1/castle.core.5.1.1.nupkg.sha512",
     "/home/r/.nuget/packages/communitytoolkit.mvvm/8.2.1/communitytoolkit.mvvm.8.2.1.nupkg.sha512",
     "/home/r/.nuget/packages/coverlet.collector/6.0.0/coverlet.collector.6.0.0.nupkg.sha512",

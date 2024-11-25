@@ -34,7 +34,6 @@ object 实时清洗2TwoOwer {
             .filter(f => f.contains("product_browse"))
             .map(f =>{
                 val ran = new Random()
-                val string : String= "0";
                 var i = ran.nextInt(10)
                 val format = new SimpleDateFormat("MMddHHmmssSSS")
                 var time = i + format.format(new Date(System.currentTimeMillis))

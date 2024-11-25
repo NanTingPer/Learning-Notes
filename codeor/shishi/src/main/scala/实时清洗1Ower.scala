@@ -10,7 +10,7 @@ object 实时清洗1Ower {
         System.setProperty("HADOOP_USER_NAME","root");
         val env = StreamExecutionEnvironment.getExecutionEnvironment
 
-        val Kafkas = KafkaSource.builder()
+        val kafkas = KafkaSource.builder()
             .setTopics("ods_mall_data")
             .setGroupId("Kafka6666")
             .setBootstrapServers("192.168.45.13:9092")
@@ -36,7 +36,7 @@ object 实时清洗1Ower {
                 .build()
             );
 
-        val kafkaData = env.fromSource(Kafkas, WatermarkStrategy.noWatermarks(), "kafka")
+        val kafkaData = env.fromSource(kafkas, WatermarkStrategy.noWatermarks(), "kafka")
         .map(f =>{
             f.split("\"data\":")(1)
         }).map(f => f.substring(0,f.length-1))

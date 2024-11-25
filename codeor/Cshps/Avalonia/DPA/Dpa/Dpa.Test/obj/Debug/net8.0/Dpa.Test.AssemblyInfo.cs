@@ -13,11 +13,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("Dpa.Test")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-<<<<<<< HEAD
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+a9bf05322b15582d1190f53d2774ebaf0f26c48c")]
-=======
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+26af961c69bb884bd679475437b182825f480aff")]
->>>>>>> parent of 4cdcc45 (从Web服务获取数据 完成 但有新的问题)
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+244de134c134fedfea59effb1337e664a5d58304")]
 [assembly: System.Reflection.AssemblyProductAttribute("Dpa.Test")]
 [assembly: System.Reflection.AssemblyTitleAttribute("Dpa.Test")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]

@@ -1975,6 +1975,47 @@ public async Task<ToDayPoetry> RandomGetPortryAsync()
 
 ## 3.6.1 错误弹窗
 
+> #### ToDayViewModel
+
+```csharp
+namespace Dpa.Library.ViewModel;
+public class ToDayVIewModel : ViewModelBase
+{
+    private IToDayPoetrySty _jinRiShiCiGet;
+    private ToDayPoetry _toDayPoetry;
+    public ICommand InitiailzationCommand;
+    public ToDayPoetry ToDayPoetry
+    {
+        get => _toDayPoetry;
+        set => SetProperty(ref _toDayPoetry, value);
+    }
+    
+    public ToDayVIewModel(IToDayPoetrySty jinRiShiCiGet)
+    {
+        _jinRiShiCiGet = jinRiShiCiGet;
+        InitiailzationCommand = new AsyncRelayCommand(Initiailzation);
+    }
+    
+    
+    /// <summary>
+    /// 用于表示加载是否完成
+    /// </summary>
+    private bool isLoad = false;
+    
+    /// <summary>
+    /// 用于初始化诗歌
+    /// </summary>
+    /// <returns> 诗歌 </returns>
+    private async System.Threading.Tasks.Task Initiailzation()
+    {
+        _toDayPoetry = await _jinRiShiCiGet.GetToDayPoetryAsync();
+        isLoad = true;
+    }
+}
+```
+
+
+
 1. 安装nuget包`Irihi.Ursa` UI组件包 `Irihi.Ursa.Themes.Semi`
 2. App.axaml
 
@@ -1984,8 +2025,48 @@ Application>
 ```
 
 3. `AlterService`类实现方法，使用MessageBox.ShowAsync();弹出消息
-4. 对ToDayService进行依赖注入 并暴露 TodayViewModel
-5. 使用事件绑定 在界面初始化的时候绑定`Command`对数据库进行初始化
+
+```csharp
+public class AlertService : IAlertService
+{
+    public async Task AlertAsync(string title, string mseeage)
+    {
+        await MessageBox.ShowAsync(mseeage, title);
+    }
+}
+```
+
+
+
+3. 对ToDayService进行依赖注入 并暴露 TodayViewModel
+4. 使用事件绑定 在界面初始化的时候绑定`Command`对数据库进行初始化
+
+> 依赖注入
+
+```csharp
+_serviceCollection.AddScoped<ToDayViewModel>();
+_serviceCollection.AddScoped<IToDayPoetryStyService, JinRiShiCiService>();
+_serviceCollection.AddScoped<IAlertService, AlertService>();
+
+//对外暴露ToDayViewModel
+public ToDayViewModel ToDayViewModel => _serviceProvider.GetService<ToDayViewModel>();
+```
+
+
+
+> ## 依赖关系
+
+1. ##### IAlertService的实现类依赖于View与IAlertService无关
+
+2. ##### JinRiShiCiGet 只知道自己依赖了一个 IAlertService , 并不清楚其实现类到底如何
+
+3. ##### 这就MVVM + IService ，IService的实现是排除在架构之外的，他们多混乱 与这层关系无关
+
+4. ##### Service依赖的接口与View层无关，那么就认为其不依赖View层
+
+5. ##### JinRiShiCiGet依赖于IAlertService接口，而AlertService实现了IAlertService接口，但是JinRiShiCiGet是不知道AlertService的具体实现的，就好比你调用传入的IAlertService实现对象的时候，你只能看到IAlertService定义的玩意儿一样。
+
+   ##### 这就是接口实现隔离
 
 
 

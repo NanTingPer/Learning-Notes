@@ -13,7 +13,7 @@ public class JinRiShiCiGet_Test
     /// 获取 JinRiShiCiGet类所需的全部接口Mock
     /// </summary>
     /// <returns></returns>
-    public async static Task<Tuple<JinRiShiCiGet, Mock<IAlertService>>> GetJinRi()
+    public async static Task<Tuple<JinRiShiCiService, Mock<IAlertService>>> GetJinRi()
     {
         Mock<IConfig> iconfigMock = new Mock<IConfig>();
         IConfig config = iconfigMock.Object;
@@ -21,11 +21,11 @@ public class JinRiShiCiGet_Test
         Mock<IAlertService> ialertserviceMock = new Mock<IAlertService>();
         IAlertService alertService = ialertserviceMock.Object;
         
-        IPoetrySty petrysty = await PublicMethod.GetPoetryStyAndInitia();//ipetrysty.Object;
+        IPoetryStyService petrysty = await PublicMethod.GetPoetryStyAndInitia();//ipetrysty.Object;
         
-        JinRiShiCiGet jinri = new JinRiShiCiGet(config, alertService, petrysty);
+        JinRiShiCiService jinri = new JinRiShiCiService(config, alertService, petrysty);
         
-        return new Tuple<JinRiShiCiGet, Mock<IAlertService>>(jinri, ialertserviceMock);
+        return new Tuple<JinRiShiCiService, Mock<IAlertService>>(jinri, ialertserviceMock);
     }
 
     public JinRiShiCiGet_Test()
@@ -36,8 +36,8 @@ public class JinRiShiCiGet_Test
     [Fact(Skip = "需要请求")]
     public async Task GetTokenAsync_Default()
     {
-        Tuple<JinRiShiCiGet, Mock<IAlertService>> tup2 = await GetJinRi();
-        JinRiShiCiGet jinri = tup2.Item1;
+        Tuple<JinRiShiCiService, Mock<IAlertService>> tup2 = await GetJinRi();
+        JinRiShiCiService jinri = tup2.Item1;
         string tokenAsync = await jinri.GetTokenAsync("https://v2.jinrishici.com/token");
         //返回结果不为空就是正确
         Assert.True(!string.IsNullOrEmpty(tokenAsync));
@@ -46,8 +46,8 @@ public class JinRiShiCiGet_Test
     [Fact(Skip = "需要请求")]
     public async Task GetTokenAsync_ErrorURL()
     {
-        Tuple<JinRiShiCiGet, Mock<IAlertService>> tup2 = await GetJinRi();
-        JinRiShiCiGet jinri = tup2.Item1;
+        Tuple<JinRiShiCiService, Mock<IAlertService>> tup2 = await GetJinRi();
+        JinRiShiCiService jinri = tup2.Item1;
         Mock<IAlertService> ialertserviceMock = tup2.Item2;
         string tokenAsync = await jinri.GetTokenAsync("https://v2.6666.com/token");
         //使用错误的URL 如果报错信息被执行过一次就是通过
@@ -57,8 +57,8 @@ public class JinRiShiCiGet_Test
     [Fact]
     public async Task GetToDayPoetry_Random()
     {
-        Tuple<JinRiShiCiGet, Mock<IAlertService>> tup2 = await GetJinRi();
-        JinRiShiCiGet jinri = tup2.Item1;
+        Tuple<JinRiShiCiService, Mock<IAlertService>> tup2 = await GetJinRi();
+        JinRiShiCiService jinri = tup2.Item1;
         ToDayPoetry toDayPoetry = await jinri.RandomGetPortryAsync();
         //因为是随机获取 所以数据源是本地 就是正确
         Assert.Equal(jinri.Source_DBSQL, toDayPoetry.Source);

@@ -17,7 +17,7 @@ public class ContentViewModel : ViewModelBase
     //Fact
     public ICommand GetPoetryAllICommand { get; }
 
-    private readonly IPoetrySty _poetrySty;
+    private readonly IPoetryStyService _poetryStyService;
 
     //状态值
     private string _state;
@@ -30,10 +30,10 @@ public class ContentViewModel : ViewModelBase
     
     public AvaloniaInfiniteScrollCollection<Poetry> AvaloniaInfiniteScrolling { get; }
     
-    public ContentViewModel(IPoetrySty poetrySty)
+    public ContentViewModel(IPoetryStyService poetryStyService)
     {
-        _poetrySty = poetrySty;
-        _poetrySty.InitializeAsync();
+        _poetryStyService = poetryStyService;
+        _poetryStyService.InitializeAsync();
         //Fact
         GetPoetryAllICommand = new AsyncRelayCommand(GetPoetryAsyncAll);
         AvaloniaInfiniteScrolling = new AvaloniaInfiniteScrollCollection<Poetry>()
@@ -45,7 +45,7 @@ public class ContentViewModel : ViewModelBase
             {
                 int count = AvaloniaInfiniteScrolling.Count;
                 //需求IEnumerable
-                Task<List<Poetry>> tlp = _poetrySty.GetPoetryAsync(
+                Task<List<Poetry>> tlp = _poetryStyService.GetPoetryAsync(
                     f => true, 
                     0,
                     10);
@@ -78,11 +78,11 @@ public class ContentViewModel : ViewModelBase
     /// </summary>
     private async System.Threading.Tasks.Task GetPoetryAsyncAll()
     {
-        await _poetrySty.InitializeAsync();
+        await _poetryStyService.InitializeAsync();
         //每次调用
         PoetryList.Clear();
         
-        List<Poetry> Poetrys = await _poetrySty.GetPoetryAsync(
+        List<Poetry> Poetrys = await _poetryStyService.GetPoetryAsync(
             //方法传参数 要求Expression<Func<Poetry,bool>>
             //设置始终返回 true  Expression.Constant(true)
             Expression.Lambda<Func<Poetry,bool>>(Expression.Constant(true),

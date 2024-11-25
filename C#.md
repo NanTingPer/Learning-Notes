@@ -361,6 +361,26 @@ object Generic = Activator.CreateInstance(makeType);
 
 
 
+# 5.0 接口实现隔离
+
+> ## 依赖关系
+
+1. ##### IAlertService的实现类依赖于View与IAlertService无关
+
+2. ##### JinRiShiCiGet 只知道自己依赖了一个 IAlertService , 并不清楚其实现类到底如何
+
+3. ##### 这就MVVM + IService ，IService的实现是排除在架构之外的，他们多混乱 与这层关系无关
+
+4. ##### Service依赖的接口与View层无关，那么就认为其不依赖View层
+
+5. ##### JinRiShiCiGet依赖于IAlertService接口，而AlertService实现了IAlertService接口，但是JinRiShiCiGet是不知道AlertService的具体实现的，就好比你调用传入的IAlertService实现对象的时候，你只能看到IAlertService定义的玩意儿一样。
+
+   ##### 这就是接口实现隔离
+
+
+
+
+
 # 6.0  表达式树与Func
 
 - 表达式树`Expression`可以使用`.Compile`转换为Func

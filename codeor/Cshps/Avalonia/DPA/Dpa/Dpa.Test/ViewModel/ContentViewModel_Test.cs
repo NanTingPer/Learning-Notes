@@ -12,8 +12,8 @@ public class ContentViewModel_Test
     [Fact]
     public async void AvaloniaInfiniteScrolling_Default()
     {
-       PoetrySty poSty = await PublicMethod.GetPoetryStyAndInitia();
-       ContentViewModel Cv = new ContentViewModel(poSty);
+       PoetryStyService poStyService = await PublicMethod.GetPoetryStyAndInitia();
+       ContentViewModel Cv = new ContentViewModel(poStyService);
        AvaloniaInfiniteScrollCollection<Poetry> count = Cv.AvaloniaInfiniteScrolling;
        
        //翻阅源码得知，调用这个方法会对数据进行Load

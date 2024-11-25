@@ -8,7 +8,7 @@
         xmlns:ais="using:AvaloniaInfiniteScrolling"
         mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
         x:Class="Dpa.Views.MainWindow"
-        DataContext="{Binding ContentViewModel ,Source={StaticResource ServiceLocator}}"
+        DataContext="{Binding ToDayViewModel ,Source={StaticResource ServiceLocator}}"
         Icon="/Assets/avalonia-logo.ico"
         Title="Dpa">
     <!-- DataContext 绑定  -->
@@ -16,27 +16,21 @@
     <!-- 事件绑定 -->
     <!-- <i:Interaction.Behaviors> -->
     <!--     <ia:EventTriggerBehavior EventName="Initialized"> -->
-    <!--         <ia:InvokeCommandAction Command="{Binding GetPoetryAllICommand}"></ia:InvokeCommandAction> -->
+    <!--         <ia:InvokeCommandAction Command="{Binding InitiailzationCommand}"></ia:InvokeCommandAction> -->
     <!--     </ia:EventTriggerBehavior> -->
     <!-- </i:Interaction.Behaviors> -->
     
-     
-    <ais:AvaloniaInfiniteScrollControl ItemsSource="{Binding AvaloniaInfiniteScrolling}">
-        <ItemsControl.ItemTemplate>
-            <DataTemplate>
-                <TextBlock Text="{Binding Name}"></TextBlock>
-            </DataTemplate>
-        </ItemsControl.ItemTemplate>
-    </ais:AvaloniaInfiniteScrollControl>
-    
-    
-    <!--     ~1~ 数据显示的绑定 @1@ -->
-    <!-- <ItemsControl ItemsSource="{Binding PoetryList}"> -->
-    <!--     <ItemsControl.ItemTemplate> -->
-    <!--         <DataTemplate> -->
-    <!--             <TextBlock Text="{Binding Name}"></TextBlock> -->
-    <!--         </DataTemplate> -->
-    <!--     </ItemsControl.ItemTemplate> -->
-    <!-- </ItemsControl> -->
+    <Grid Background="Aqua">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+        
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="Auto"/>
+        </Grid.ColumnDefinitions>
+        
+        <TextBlock Text="6666"></TextBlock>
+        
+    </Grid>
     
 </Window>

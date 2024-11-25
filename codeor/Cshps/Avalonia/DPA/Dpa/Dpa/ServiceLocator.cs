@@ -3,6 +3,7 @@ using Avalonia;
 using Dpa.Library.ConfigFile;
 using Dpa.Library.Services;
 using Dpa.Library.ViewModel;
+using Dpa.Service;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace Dpa;
@@ -16,6 +17,8 @@ public class ServiceLocator
     //对外暴露ContentViewModel
     public ContentViewModel ContentViewModel => _serviceProvider.GetService<ContentViewModel>();
 
+    //对外暴露ToDayViewModel
+    public ToDayViewModel ToDayViewModel => _serviceProvider.GetService<ToDayViewModel>();
     
     /// <summary>
     /// 不知道 抄的
@@ -39,9 +42,13 @@ public class ServiceLocator
     public ServiceLocator()
     {
         _serviceCollection.AddScoped<ContentViewModel>();
-        _serviceCollection.AddScoped<IPoetrySty, PoetrySty>();
+        _serviceCollection.AddScoped<IPoetryStyService, PoetryStyService>();
         _serviceCollection.AddScoped<IConfig, Config>();
-        
+
+        _serviceCollection.AddScoped<ToDayViewModel>();
+        _serviceCollection.AddScoped<IToDayPoetryStyService, JinRiShiCiService>();
+        _serviceCollection.AddScoped<IAlertService, AlertService>();
+
         _serviceProvider = _serviceCollection.BuildServiceProvider();
     }
     

@@ -24,7 +24,7 @@ public class PublicMethod
     /// 获取一个PoetrySty 每次都必须迁移数据库的
     /// </summary>
     /// <returns> 返回最终的PoetrySty </returns>
-    public static async Task<PoetrySty> GetPoetryStyAndInitia()
+    public static async Task<PoetryStyService> GetPoetryStyAndInitia()
     {
         Mock<IConfig> Iconfig = new Mock<IConfig>();
         
@@ -33,8 +33,8 @@ public class PublicMethod
         IConfig config = Iconfig.Object;
 
         //构建对象
-        PoetrySty poetrySty = new PoetrySty(config);
-        await poetrySty.InitializeAsync();
-        return poetrySty;
+        PoetryStyService poetryStyService = new PoetryStyService(config);
+        await poetryStyService.InitializeAsync();
+        return poetryStyService;
     }
 }

@@ -27,6 +27,8 @@
         <PackageReference Include="AvaloniaInfiniteScrolling.Collection" Version="1.0.1" />
         <PackageReference Include="AvaloniaInfiniteScrolling.Control" Version="1.0.0" />
         <PackageReference Include="CommunityToolkit.Mvvm" Version="8.2.1"/>
+        <PackageReference Include="Irihi.Ursa" Version="1.6.0" />
+        <PackageReference Include="Irihi.Ursa.Themes.Semi" Version="1.6.0.2" />
         <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="9.0.0" />
         <PackageReference Include="Semi.Avalonia" Version="11.2.1" />
     </ItemGroup>

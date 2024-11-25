@@ -13,7 +13,11 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("Dpa.Test")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
+<<<<<<< Updated upstream
 [assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+f22dbc8c06a3a13951da158f8b0b878a93a8f78f")]
+=======
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+4cdcc4596e16df9555f8fb9b46c3ec356e4c298e")]
+>>>>>>> Stashed changes
 [assembly: System.Reflection.AssemblyProductAttribute("Dpa.Test")]
 [assembly: System.Reflection.AssemblyTitleAttribute("Dpa.Test")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]

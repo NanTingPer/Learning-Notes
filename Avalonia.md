@@ -2068,20 +2068,20 @@ public ToDayViewModel ToDayViewModel => _serviceProvider.GetService<ToDayViewMod
 
    ##### 这就是接口实现隔离
 
-
-
 ## 3.6.2 内容显示
 
 3. 使用Grid进行页面布局 先使用一行一列
 
+3. ##### Auto是内容多少就多少/剩下多少就多少
+
 ```xml
 <Grid>
-	<Grid.RowDefinitions>
-    	<RowDefinition Height="*" />
+    <Grid.RowDefinitions>
+        <RowDefinition Height="*"/>
     </Grid.RowDefinitions>
     
     <Grid.ColumnDefinitions>
-    	<ColumnDefinition Width="*" />
+        <ColumnDefinition Width="*"/>
     </Grid.ColumnDefinitions>
 </Grid>
 ```
@@ -2094,6 +2094,16 @@ public ToDayViewModel ToDayViewModel => _serviceProvider.GetService<ToDayViewMod
 
 8. 使用`StackPanel`内嵌 `StackPanel`不设置`Background` 设置`Margin` (边距) 单写 '8' 代表上下左右都为 8 ，在该内嵌的`StackPanel`内定义一个`Label` `Content`绑定 `今日诗词.第一句`
 9. 再上面显示 标题的 `StackPanel`(StP2) 内再嵌入多个 `StackPanel` 并加入Label控件 分别显示 作者 等
+
+
+
+# 3.6 错误总结
+
+1. ##### 构造函数内使用异步方法同步使用 造成线程卡死,界面无法显示
+
+2. ##### UI `StackPanel` 设置颜色会覆盖字体,导致多次调试文字不显示
+
+3. ##### 本该为属性赋值 结果为字段赋值了,导致内容更新 事件没有触发
 
 
 

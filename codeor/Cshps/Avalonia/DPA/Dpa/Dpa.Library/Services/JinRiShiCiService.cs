@@ -111,6 +111,7 @@ public class JinRiShiCiService : IToDayPoetryStyService
                 Content = str.ToString(),
                 Dynasty = Poetry.Data?.origin?.Dynasty ?? throw new Exception(JsonError), 
                 Name = Poetry.Data?.origin?.Title ?? throw new Exception(JsonError),
+                Snippet = Poetry.Data?.origin?.Content[0] ?? throw new Exception(JsonError),
                 Source = Source_Web
             };
         }

@@ -20,9 +20,22 @@
         </ia:EventTriggerBehavior>
     </i:Interaction.Behaviors>
     
-    <StackPanel Background="Azure">
-        <TextBlock Text="{Binding ToDayPoetry.Name}"></TextBlock>
-        <TextBlock Text="{Binding ToDayPoetry.Content}"></TextBlock>
-    </StackPanel>
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="8*"/>
+        </Grid.RowDefinitions>        
+        <Grid.RowDefinitions>
+            <RowDefinition Height="*"/>
+        </Grid.RowDefinitions>        
+        <Grid.RowDefinitions>
+            <RowDefinition Height="*"/>
+        </Grid.RowDefinitions>
+        
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="*"/>
+        </Grid.ColumnDefinitions>
+        
+        
+    </Grid>
     
 </Window>

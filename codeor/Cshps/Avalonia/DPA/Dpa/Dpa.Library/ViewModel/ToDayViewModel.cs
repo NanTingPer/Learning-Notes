@@ -34,7 +34,7 @@ public class ToDayViewModel : ViewModelBase
     /// <returns> 诗歌 </returns>
     private async System.Threading.Tasks.Task Initiailzation()
     {
-        _toDayPoetry = await _jinRiShiCiGet.GetToDayPoetryAsync();
+        ToDayPoetry = await _jinRiShiCiGet.GetToDayPoetryAsync();
         isLoad = true;
     }
 }

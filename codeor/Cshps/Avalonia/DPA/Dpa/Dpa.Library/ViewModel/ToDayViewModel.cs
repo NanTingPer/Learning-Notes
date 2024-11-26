@@ -7,6 +7,13 @@ namespace Dpa.Library.ViewModel;
 
 public class ToDayViewModel : ViewModelBase
 {
+    private int _fontSize = 28;
+    public int FontSize
+    {
+        get => _fontSize;
+        set => SetProperty(ref _fontSize, value);
+    }
+    
     private IToDayPoetryStyService _jinRiShiCiGet;
     private ToDayPoetry _toDayPoetry;
     public ICommand InitiailzationCommand { get; }

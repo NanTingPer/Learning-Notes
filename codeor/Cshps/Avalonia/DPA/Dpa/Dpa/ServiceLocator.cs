@@ -19,7 +19,8 @@ public class ServiceLocator
 
     //对外暴露ToDayViewModel
     public ToDayViewModel ToDayViewModel => _serviceProvider.GetService<ToDayViewModel>();
-    
+
+
     /// <summary>
     /// 不知道 抄的
     /// </summary>

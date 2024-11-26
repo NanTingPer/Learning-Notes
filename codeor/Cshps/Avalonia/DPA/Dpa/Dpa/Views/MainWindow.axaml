@@ -20,22 +20,49 @@
         </ia:EventTriggerBehavior>
     </i:Interaction.Behaviors>
     
-    <Grid>
-        <Grid.RowDefinitions>
-            <RowDefinition Height="8*"/>
-        </Grid.RowDefinitions>        
-        <Grid.RowDefinitions>
-            <RowDefinition Height="*"/>
-        </Grid.RowDefinitions>        
-        <Grid.RowDefinitions>
-            <RowDefinition Height="*"/>
-        </Grid.RowDefinitions>
+    <!-- 低端对齐 -->
+    <StackPanel Background="#66000000" VerticalAlignment="Bottom">
+        <!-- 边距 -->
+        <StackPanel Margin="8">
+            <StackPanel>
+                <Label 
+                    FontSize="{Binding FontSize}" 
+                    Content="{Binding ToDayPoetry.Snippet}"
+                    Foreground="Azure"
+                    Margin = "0,0,0,8"
+                />
+            </StackPanel>
+            
+            <StackPanel x:Name="Author">
+                <Label 
+                    Content="{Binding ToDayPoetry.Author}"
+                    FontSize="18"
+                    Foreground="Azure"
+                    Margin="0,0,0,8"
+                    VerticalAlignment="Center"
+                    />
+            </StackPanel>
+            
+            <StackPanel x:Name="PoetryName">
+                <Label VerticalAlignment="Center"
+                       Content="{Binding ToDayPoetry.Name}"
+                       FontSize="16"
+                       Foreground="Cornsilk"
+                       />
+            </StackPanel>
+        </StackPanel>
         
-        <Grid.ColumnDefinitions>
-            <ColumnDefinition Width="*"/>
-        </Grid.ColumnDefinitions>
+        <StackPanel Margin="8">
+            <Button HorizontalAlignment="Left"></Button>
+        </StackPanel>
         
-        
-    </Grid>
+        <StackPanel x:Name="Down" Background="#30000000">
+            <Label 
+                Content=""
+                FontSize="10"
+                Foreground="Azure"
+                />
+        </StackPanel>
+    </StackPanel>
     
 </Window>

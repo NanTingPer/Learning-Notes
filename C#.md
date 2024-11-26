@@ -396,6 +396,123 @@ object Generic = Activator.CreateInstance(makeType);
 
 
 
+# 7.0 IL
+
+- ### Mono.Cecil库
+
+youtube .NET IL Weaving Demo with Mono.Cecil
+
+- ##### 将第二个dll的代码注入到第一个dll
+
+- `Source`内有一个调用了cw输出内容的方法
+
+1. 定义两个变量 分别存储两个不同DLL的路径
+
+   ```csharp
+   string appDll = "xxxx";
+   string fnDll = "xxx";
+   ```
+
+   
+
+2. 使用`ModuleDefinition.ReadModule(dll路径)`加载dll
+
+   ```csharp
+   var appModule =  ModuleDefinition.ReadModule(appdll);
+   
+   var fnModule =  ModuleDefinition.ReadModule(appdll);
+   ```
+
+   
+
+3. 随后便可以像 `Assembly` 一样,使用他得到类型
+
+   ```csharp
+   var targetType = appModule.Types.FirstOrDefault(where表达式);
+   ```
+
+   
+
+4. 使用 加载后的对象的`Types.FirstOrDefault`可以得到一个满足条件的`Type`对象 但是是第一个满足条件 (根据自己的需求进行过滤)
+
+   - 第一层是Type
+   - 第二层 `Type.Methods`.Any 方法
+   - 第三层`CustomAttributes`.Any 查找属性
+   - 第四层 `AttributeType`.Name == "xxx" 使用属性类型枚举 寻看是否等于指定值
+
+5. 使用得到的Type `Type.Methods.First()` 取出第一个方法
+
+   ```csharp
+   var targetMethod = targetType.Methods.First();
+   ```
+
+   
+
+6. 将同样的逻辑 应用于第二个DLL **(sourceDLL)**
+
+7. 使用`AnyMethod.Body.GetILProcessor()`可以**获取IL处理器(该方法的)** 这是IL代码与该方法的主体进行交互的东西
+
+8. 要往哪个**方法**插入代码 就**获取**谁的**IL处理器**
+
+   ```csharp
+   var processor = 第一个dll方法.Body.GetILProcessor();
+   processor.Clear(); //清除该IL处理器内的全部IL指令
+   ```
+
+   
+
+9. 使用 `AnyMethod.Body.Instructions` 可以得到**该方法的全部指令**
+
+   ```csharp
+   sourceMethod.Body.Instructions;
+   ```
+
+10. 遍历SourceMethod内的IL指令 将其`Append`到要修改的方法内
+
+    ```csharp
+    foreach(var i in sourceMethod.Body.Instructions)
+    {
+        processor.Append(i);
+    }
+    ```
+
+11. 使用要被修改的dll的`Write`方法 , 并传入要输出到的路径
+
+    ```csharp
+    appMoudel.Write("../.output/App.dll");
+    ```
+
+12. 这时候直接编译会报错 `System.Console` 在另一个模块中声明
+
+13. 如果使用DeBug模式打个断点进行观察 , 会发现 , **Source程序集引用中有3个目标** , 而**被注入的目标的程序集只有2个** , 缺少的那个就是 `System.Console` (**using**)
+
+14. 检查 IL是否是简单的对象 , 如果是一个带有全名的实际方法引用 就添加对应的引用
+
+    ```txt
+    https://learn.microsoft.com/zh-cn/dotnet/api/microsoft.visualbasic.activities.visualbasicsettings.importreferences?view=netframework-4.8.1
+    ```
+
+    
+
+    ```csharp
+    //如果他是方法引用
+    if(i.Operand is MethodReference {FullName : "System.Void System.Console::WriteLine(System.String)"} mf)
+    {
+        //添加对象引用
+        //每个对象都表示该程序集的一个程序集引用和导入的命名空间
+        //导入后需要重新分配给 IL指令
+        i.Operand = appModule.ImportReference(mf);
+    }
+    ```
+
+15. 使用`ImportReference()` 所有于mf相关的东西都会被导入到指定模块 , 这样可以避免发生来自不同模块的方法引用错误
+
+16. 再次运行,编译App.dll 可以看到成功运行
+
+
+
+
+
 # 2.5 杨中科 .NET
 
 # 1.0 .NET Standard

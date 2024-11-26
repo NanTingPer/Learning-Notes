@@ -6,8 +6,10 @@ namespace Dpa.Service;
 
 public class AlertService : IAlertService
 {
-    public async Task AlertAsync(string title, string mseeage)
+    public async Task AlertAsync(string title, string message)
     {
-        await MessageBox.ShowAsync(mseeage, title);
+        // MessageBox.ShowAsync(message, title,button:MessageBoxButton.OK);
+        // MessageBox.ShowAsync(message: message, title: title, button: MessageBoxButton.OK);
+        MessageBox.ShowAsync(message, title, MessageBoxIcon.Error, button: MessageBoxButton.OK);
     }
 }

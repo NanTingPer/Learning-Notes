@@ -19,6 +19,9 @@ public class ServiceLocator
 
     //对外暴露ToDayViewModel
     public ToDayViewModel ToDayViewModel => _serviceProvider.GetService<ToDayViewModel>();
+    
+    //对外暴露MainViewModel
+    public MainViewModel MainViewModel => _serviceProvider.GetService<MainViewModel>();
 
 
     /// <summary>
@@ -50,6 +53,10 @@ public class ServiceLocator
         _serviceCollection.AddScoped<IToDayPoetryStyService, JinRiShiCiService>();
         _serviceCollection.AddScoped<IAlertService, AlertService>();
 
+        _serviceCollection.AddScoped<MainViewModel>();
+        _serviceCollection.AddScoped<IRootNavigationService, RootNavigationService>();
+        
+        
         _serviceProvider = _serviceCollection.BuildServiceProvider();
     }
     

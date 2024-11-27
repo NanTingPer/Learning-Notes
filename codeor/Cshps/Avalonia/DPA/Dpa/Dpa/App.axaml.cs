@@ -4,7 +4,7 @@ using Avalonia.Data.Core;
 using Avalonia.Data.Core.Plugins;
 using System.Linq;
 using Avalonia.Markup.Xaml;
-using Dpa.ViewModels;
+using Dpa.Library.ViewModel;
 using Dpa.Views;
 
 namespace Dpa;

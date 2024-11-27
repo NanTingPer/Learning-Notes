@@ -2110,4 +2110,171 @@ public ToDayViewModel ToDayViewModel => _serviceProvider.GetService<ToDayViewMod
 # 3.7 导航
 
 1. 创建根导航接口`IRootNavigationService` 定义一个方法 `NavigateTo(string view)` 用于切换页面
+
 2. 在`IRootNavigationService`接口同文件内 定义一个静态类，内部定义两个`const`常量，值就是要导航到的view的名
+
+   ```csharp
+   namespace Dpa.Library.Services;
+   
+   public interface IRootNavigationService
+   {
+       void NavigateTo(string view);
+   }
+   
+   public static class ViewInfo
+   {
+       public const string InitializationView = nameof(InitializationView);
+       public const string MainView = nameof(MainView);
+       
+   }
+   ```
+
+3. `InitializationView`就是开头加载转圈的页面
+
+4. `MainView`就是加载完成后 每日的页面
+
+5. #### 想要完成导航,View的属性必须发生变化. Service需要修改ViewModel
+
+   > ### 依赖关系
+
+   - 页面导航`RootNavigationService`需要找到`ServiceLocator`(依赖注入) 才能找到ViewModel,而 `ServiceLocator` 属于View层
+   - View ->  ViewModel -> IRootNavigationService
+   - RootNavigationService -> ServiceLocator -> ViewModel
+   - IRootNavigationService 的**实现类 一定在View层**
+
+```csharp
+using Dpa.Library.Services;
+
+namespace Dpa.Service;
+
+public class RootNavigationService : IRootNavigationService
+{
+    public void NavigateTo(string view)
+    {
+        throw new System.NotImplementedException();
+    }
+}
+```
+
+6. MainView需要自己的ViewModel , 才能操作他 完成导航的效果
+
+
+
+## 3.7.1 实现根导航
+
+1. 创建`MainWindowViewModel`类 
+
+2. `ViewModel`会被 `ViewModelLocator`变为一个 `Control` (控件) 从而渲染到`Content`(控件显示的内容)
+
+3. 诗词从ViewModel来 所以ViewModel要提供诗词 , 控件要绑定到ViewModel上 , 那ViewModel要从ViewModel来
+
+4. MainWindowViewModel内需要提供ViewModel 他才能导航
+
+   ```csharp
+   private ViewModelBase _viewModel;
+   public ViewModelBase ViewModel
+   {
+       get => _viewModel;
+       set => SetProperty(ref _viewModel, value);
+   }
+   ```
+
+   ```csharp
+   using Dpa.Library.Services;
+   using Dpa.Service;
+   
+   namespace Dpa.Library.ViewModel;
+   
+   public class MainViewModel : ViewModelBase
+   {
+       private ViewModelBase _view;
+   
+       private IRootNavigationService _RootNavigationService;
+       public ViewModelBase View
+       {
+           get => _view;
+           set => SetProperty(ref _view, value);
+       }
+   
+       public MainViewModel(IRootNavigationService IR)
+       {
+           _RootNavigationService = IR;
+           View = ServiceLocator.Current.ToDayViewModel;
+       }
+       
+   }
+   ```
+
+   
+
+5. 将`MainWindowViewModel`添加到依赖注入 并暴露
+
+   ```csharp
+   _serviceCollection.AddScoped<MainViewModel>();
+   _serviceCollection.AddScoped<IRootNavigationService, RootNavigationService>();
+   
+   //对外暴露MainViewModel
+   public MainViewModel MainViewModel => _serviceProvider.GetService<MainViewModel>();
+   ```
+
+   
+
+6. `MainWindow`的DataContext绑定到 `MainWindowViewModel`
+
+   ```csharp
+   DataContext="{Binding MainViewModel,Source={StaticResource ServiceLocator}}"
+   Icon="/Assets/avalonia-logo.ico"
+   Title="Dpa"
+   Content="{Binding View}"
+   >
+   ```
+
+   
+
+7. 将`MainWindowModel`内的 `ViewModel`绑定到 一个`Control`上
+
+8. `ContentControl` 绑定 `MainWindowModel`的 `ViewModel` , 但是这个控件有点多余 , 能不能直接显示 ? 能 !
+
+   直接修改MainWindow的`Content` 绑定到 ViewModel
+
+   ##### MainWindow的Content绑定玩意儿了,你里面就不能放控件了 会报错了
+
+9. ##### RootNavigationService只需要为ServiceLocator的MainWindowViewModel.ViewModel 赋值就可以了
+
+> ### 获取到ServiceLocator 该方法为静态方法 置于 ServiceLocator
+
+```csharp
+//试图获取当前应用程序中的资源
+//该资源是通过App.axaml注册的
+Application.Current.TryGetResource(nameof(ServiceLocator,null,out value));
+
+public static ServiceLocator Current()
+{
+    if(Application.Current.TryGetResource(nameof(ServiceLocator,null,out value)) && value is ServiceLocator)
+    {
+        _current = value;
+        return _current;
+    }
+}
+```
+
+10. ##### 取出赋值就可以进行导航 (还早)
+
+```csharp
+ServiceLocator.Current.MainWindowViewModel.Content = ??
+```
+
+
+
+> ##### 在Rider 想要创建View文件需要安装 AvaloniaRider插件
+
+
+
+11. 创建**Avalonia User Control**文件 名为 `ResultView` 进行测试(名字随意)
+12. 将原来ToDayViewModel的那个界面直接搬过来 47:00 +- 2 
+
+```xml
+DataContext="{Binding TodayViewModel, Source={Statixxxx}}"
+```
+
+13. 可以将原来的 ViewModelBase 和 ViewModels删掉了

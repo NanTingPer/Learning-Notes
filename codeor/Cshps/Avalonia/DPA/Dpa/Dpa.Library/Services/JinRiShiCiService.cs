@@ -187,7 +187,8 @@ public class JinRiShiCiService : IToDayPoetryStyService
 public class JinRiShiCi_Config
 {
     public static readonly string GetToKenUrl = "https://v2.jinrishici.com/token";
-    public static readonly string GetToDayPoetryUrl = "https://v2.jinrishici.com/sentence";
+    // public static readonly string GetToDayPoetryUrl = "https://v2.jinrishici.com/sentence";
+    public static readonly string GetToDayPoetryUrl = "https://v2.rawf/sentence";
     public const string ToKenConfgKey = "JinRiToKen";
 }
 public class TokenJson

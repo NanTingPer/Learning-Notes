@@ -1,0 +1,62 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
+             x:Class="Dpa.Views.ToDayView"
+             DataContext="{Binding ToDayViewModel, Source={StaticResource ServiceLocator}}">
+            
+    <!-- 事件绑定 -->
+    <Interaction.Behaviors>
+        <EventTriggerBehavior EventName="Initialized">
+            <InvokeCommandAction Command="{Binding InitiailzationCommand}"></InvokeCommandAction>
+        </EventTriggerBehavior>
+    </Interaction.Behaviors>
+
+    <!-- 低端对齐 -->
+    <StackPanel Background="#66000000" VerticalAlignment="Bottom">
+        <!-- 边距 -->
+        <StackPanel Margin="8">
+            <StackPanel>
+                <Label 
+                    FontSize="{Binding FontSize}" 
+                    Content="{Binding ToDayPoetry.Snippet}"
+                    Foreground="Azure"
+                    Margin = "0,0,0,8"
+                />
+            </StackPanel>
+            
+            <StackPanel x:Name="Author">
+                <Label 
+                    Content="{Binding ToDayPoetry.Author}"
+                    FontSize="18"
+                    Foreground="Azure"
+                    Margin="0,0,0,8"
+                    VerticalAlignment="Center"
+                />
+            </StackPanel>
+            
+            <StackPanel x:Name="PoetryName">
+                <Label VerticalAlignment="Center"
+                       Content="{Binding ToDayPoetry.Name}"
+                       FontSize="16"
+                       Foreground="Cornsilk"
+                />
+            </StackPanel>
+        </StackPanel>
+
+        <StackPanel Margin="8">
+            <Button HorizontalAlignment="Left"></Button>
+        </StackPanel>
+
+        <StackPanel x:Name="Down" Background="#30000000">
+            <Label 
+                Content=""
+                FontSize="10"
+                Foreground="Azure"
+            />
+        </StackPanel>
+    </StackPanel>
+    
+    
+</UserControl>

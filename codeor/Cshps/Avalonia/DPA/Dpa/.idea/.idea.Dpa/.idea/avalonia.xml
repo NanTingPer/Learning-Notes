@@ -5,6 +5,7 @@
       <map>
         <entry key="Dpa/App.axaml" value="Dpa/Dpa.csproj" />
         <entry key="Dpa/Views/MainWindow.axaml" value="Dpa/Dpa.csproj" />
+        <entry key="Dpa/Views/ToDayView.axaml" value="Dpa/Dpa.csproj" />
       </map>
     </option>
   </component>

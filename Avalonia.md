@@ -2278,3 +2278,50 @@ DataContext="{Binding TodayViewModel, Source={Statixxxx}}"
 ```
 
 13. 可以将原来的 ViewModelBase 和 ViewModels删掉了
+
+
+
+
+
+## 3.7.2 真 · 实现根导航
+
+1. 创建`MainView` User Control , 用来承载整个导航
+
+2. 使用`SplitView` 进行页面布局
+
+   - SplitView.Pane 折叠的部分
+   - Split.Content 主体内容部分
+
+3. 安装控件显示图片NuGet包，`Projektanker.Icons.Avalonia.FontAwesome`
+
+   ```xml
+   Add xml namespace
+   Add xmlns:i="https://github.com/projektanker/icons.avalonia" to your view.
+   ```
+
+   
+
+4. 在`Program.cs`的`BuildAvaloniaApp()`方法 增加一个调用
+
+   - `IconProvider.Current.Register<FontAwesomeIconProvider>();`
+
+5. 创建Button , 定义 `<icon:Icon Foreground="Corld"> Value="fa-bars"/>` 
+
+
+
+
+
+# 99 直角按钮
+
+```xml
+设置直角Button，可以设置属性CornerRadius="0"，
+也可以设置CornerRadius="0, 10, 20, 30"
+来为左上、右上、右下、左下设置不同半径值的圆角（如0，10，20，30）。
+
+水平拉伸 
+HorizontalAlignment="Stretch"
+
+垂直拉伸
+VerrucakAkufbnebr="Stretch"
+```
+

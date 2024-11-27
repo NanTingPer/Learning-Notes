@@ -2,7 +2,7 @@ using Dpa.Library.Services;
 
 namespace Dpa.Library.ViewModel;
 
-public class MainViewModel : ViewModelBase
+public class MainWindowModel : ViewModelBase
 {
     private ViewModelBase _view;
     public ViewModelBase View

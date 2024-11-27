@@ -10,7 +10,7 @@ public class RootNavigationService : IRootNavigationService
     {
         if (view.Equals(nameof(ToDayViewModel)))
         {
-            ServiceLocator.Current.MainViewModel.View = ServiceLocator.Current.ToDayViewModel;
+            ServiceLocator.Current.MainWindowModel.View = ServiceLocator.Current.ToDayViewModel;
         }
     }
 }

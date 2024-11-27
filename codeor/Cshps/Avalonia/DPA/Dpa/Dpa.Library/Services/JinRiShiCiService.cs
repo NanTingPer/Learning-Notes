@@ -18,6 +18,7 @@ public class JinRiShiCiService : IToDayPoetryStyService
     public string Source_DBSQL = "本地数据库";
     private string _ToKen;
     private Func<Task<string>> _loadToKen;
+    
     public JinRiShiCiService(IConfig config,IAlertService alertService,IPoetryStyService poetryStyService)
     {
         _loadToKen = () => GetTokenAsync(JinRiShiCi_Config.GetToKenUrl);

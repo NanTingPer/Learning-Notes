@@ -23,6 +23,8 @@ public class ServiceLocator
     //对外暴露MainViewModel
     public MainViewModel MainViewModel => _serviceProvider.GetService<MainViewModel>();
 
+    //TODO 测试
+    public IRootNavigationService RootNavigationService => _serviceProvider.GetService<IRootNavigationService>();
 
     /// <summary>
     /// 不知道 抄的

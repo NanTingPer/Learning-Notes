@@ -4,7 +4,7 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
              x:Class="Dpa.Views.MainView">
-    
+
     <SplitView x:Name="SplitView">
         <SplitView.Pane>
             <Grid>
@@ -38,19 +38,18 @@
                         </Label>
                     </Grid>
                 </Grid>
-                
-                <ListBox Grid.Row="1" 
-                         ItemsSource="{Binding Source={x:Static}"
-                         SelectedItem="{Binding ,Mode=TwoWay}">
-                    <ListBox.ItemTemplate>
-                        <DataTemplate>
-                            <Label Content="{Binding Name}"
-                                   FontSize="20">
-                                
-                            </Label>
-                        </DataTemplate>
-                    </ListBox.ItemTemplate>
-                </ListBox>
+              <!--               <ListBox Grid.Row="1"
+                       ItemsSource="{Binding Source={x:Static}"
+                       SelectedItem="{Binding ,Mode=TwoWay}">
+                <ListBox.ItemTemplate>
+                  <DataTemplate>
+                    <Label Content="{Binding Name}"
+                           FontSize="20">
+
+                    </Label>
+                  </DataTemplate>
+                </ListBox.ItemTemplate>
+              </ListBox>  -->
                 
             </Grid>
         </SplitView.Pane>
@@ -94,8 +93,6 @@
             </Grid>
         </SplitView.Content>
     </SplitView>
-    
-    
     
     
     <!-- <Grid> -->

@@ -1,0 +1,5 @@
+package ClassAS
+
+class Person {
+
+}

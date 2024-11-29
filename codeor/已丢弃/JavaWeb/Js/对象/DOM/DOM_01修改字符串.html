@@ -1,0 +1,36 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DOM</title>
+    <style>
+        
+    </style>
+</head>
+<body>
+    <!-- div 段落 -->
+    <div>Hello Java</div>
+    <div>Hello World</div>
+    <img src="01.jpg" alt="">
+</body>
+<script>
+    //通过 标签获取
+    var davs = document.getElementsByTagName("div");
+    var dav1 = davs[0];
+    dav1.innerHTML = "Hello JavaScript";
+
+    var img = document.getElementsByTagName("img");
+    var img01 = img[0];
+    img01.src = "02.jpg";
+
+    //遍历div标签元素 添加文字
+    var davs_02 = document.getElementsByTagName("div");
+    for(let i = 0;i<davs_02.length;i++)
+    {
+        const dive = davs_02[i];
+        dive.innerHTML += "e";
+    }
+
+</script>
+</html>

@@ -1,0 +1,37 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BOM对象</title>
+</head>
+<body>
+    <script> 
+        // BOM - 浏览器对象模型
+        /* 
+            window - 窗口对象
+            navigator - 浏览器对象          
+            screen - 屏幕对象
+            history - 历史记录对象
+            Location - 地址栏对象
+        */
+       
+       var e = 0;
+       alert("警告框");
+       //该框框带返回值 bool
+       var be = confirm("确认框");
+
+       setInterval(function()
+        {
+            e++;
+            console.log("循环触发" + e);
+        },200);
+
+        var locat = window.location;
+        window.alert(locat.href);
+        // href - 获取当前页面的url地址
+        // 直接赋值 - 跳转到指定url地址
+        locat.href = "https://www.baidu.com";
+    </script>
+</body>
+</html>

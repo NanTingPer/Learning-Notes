@@ -1,0 +1,31 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>事件绑定</title>
+</head>
+<!-- 
+    Onclick -> 单机事件
+    onfocus -> text 聚焦
+    onblur -> text 离焦
+-->
+<body>
+    <!-- 通过元素绑定 -->
+    <input type="button" id="01" onclick="on()" value="按钮1">
+    <!-- 通过DOM绑定 -->
+    <input type="button" id="02" value="按钮2">
+</body>
+</html>
+<script>
+    function on()
+    {
+        alert("按钮被按下了 on() id=01")
+    }
+    document.getElementById("02").onclick = 
+    function()
+    {
+        alert("按钮被按下了 id =02")
+    }
+    
+</script>

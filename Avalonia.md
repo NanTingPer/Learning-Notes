@@ -2765,3 +2765,27 @@ public object Convert(object value,Type type,object Max)
 # 96 Grid行列定义
 
 - 使用 RowDefinitions="auto,auto" 可以直接定义两行 ColumnDefinitions同理
+
+
+
+# 95 ListBox加载程序集合
+
+- 先定义一个ListBox 然后使用 `ItemsSource`属性绑定静态数据源
+- 然后使用`<ListBox.ItemTemolate>`批量加载数据 如果数据源是高级(对象)数据 可以使用 `Binding 属性名称` 进行单独显示指定属性
+
+```xaml
+<ListBox
+    Grid.Row="1"
+    ItemsSource="{Binding Source={x:Static lvm:MenuItem.Items}}"
+    SelectedItem="{Binding ,Mode=TwoWay}">
+    <ListBox.ItemTemplate>
+        <DataTemplate>
+            <Label
+                Margin="50,5,0,5"
+                Content="{Binding Name}"
+                FontSize="20" />
+        </DataTemplate>
+    </ListBox.ItemTemplate>
+</ListBox>
+```
+

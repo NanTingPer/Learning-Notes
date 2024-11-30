@@ -16,9 +16,12 @@ public class ContentViewModel : ViewModelBase
 {
     //Fact
     public ICommand GetPoetryAllICommand { get; }
+    //Fact
+    public ObservableCollection<Poetry> PoetryList { get; } = new();
 
+    private string _Load = "加载中";
+    private string _Run = "没有数据了";
     private readonly IPoetryStyService _poetryStyService;
-
     //状态值
     private string _state;
     //状态更新
@@ -64,13 +67,6 @@ public class ContentViewModel : ViewModelBase
             }
         };
     }
-
-    private string _Load = "加载中";
-    private string _Run = "没有数据了";
-    
-
-    //Fact
-    public ObservableCollection<Poetry> PoetryList { get; } = new();
 
     /// <summary>
     /// 获取全部数据

@@ -26,6 +26,8 @@ public class ServiceLocator
     //TODO 测试
     public IRootNavigationService RootNavigationService => _serviceProvider.GetService<IRootNavigationService>();
 
+    public MainViewModel MainViewModel => _serviceProvider.GetService<MainViewModel>();
+
     /// <summary>
     /// 不知道 抄的
     /// </summary>
@@ -57,7 +59,8 @@ public class ServiceLocator
 
         _serviceCollection.AddScoped<MainWindowModel>();
         _serviceCollection.AddScoped<IRootNavigationService, RootNavigationService>();
-        
+
+        _serviceCollection.AddScoped<MainViewModel>();
         
         _serviceProvider = _serviceCollection.BuildServiceProvider();
     }

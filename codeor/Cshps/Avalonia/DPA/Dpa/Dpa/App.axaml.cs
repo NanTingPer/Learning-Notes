@@ -24,7 +24,7 @@ public partial class App : Application
             // More info: https://docs.avaloniaui.net/docs/guides/development-guides/data-validation#manage-validationplugins
             DisableAvaloniaDataAnnotationValidation();
             desktop.MainWindow = new MainWindow();
-            ServiceLocator.Current.RootNavigationService.NavigateTo(nameof(ToDayViewModel));
+            //ServiceLocator.Current.RootNavigationService.NavigateTo(nameof(MainView));
         }
 
         base.OnFrameworkInitializationCompleted();

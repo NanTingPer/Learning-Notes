@@ -8,15 +8,20 @@ namespace Dpa.Library.ViewModel;
 public class ToDayViewModel : ViewModelBase
 {
     private int _fontSize = 28;
+    private IToDayPoetryStyService _jinRiShiCiGet;
+    private ToDayPoetry _toDayPoetry;
+    /// <summary>
+    /// 用于表示加载是否完成
+    /// </summary>
+    private bool isLoad = false;
+    public ICommand InitiailzationCommand { get; }
+
     public int FontSize
     {
         get => _fontSize;
         set => SetProperty(ref _fontSize, value);
     }
     
-    private IToDayPoetryStyService _jinRiShiCiGet;
-    private ToDayPoetry _toDayPoetry;
-    public ICommand InitiailzationCommand { get; }
     public ToDayPoetry ToDayPoetry
     {
         get => _toDayPoetry;
@@ -28,12 +33,6 @@ public class ToDayViewModel : ViewModelBase
         _jinRiShiCiGet = jinRiShiCiGet;
         InitiailzationCommand = new AsyncRelayCommand(Initiailzation);
     }
-    
-    
-    /// <summary>
-    /// 用于表示加载是否完成
-    /// </summary>
-    private bool isLoad = false;
     
     /// <summary>
     /// 用于初始化诗歌

@@ -1,129 +1,142 @@
-<UserControl xmlns="https://github.com/avaloniaui"
-             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
-             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-             mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
-             x:Class="Dpa.Views.MainView">
+<UserControl
+    x:Class="Dpa.Views.MainView"
+    xmlns="https://github.com/avaloniaui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:lvm="using:Dpa.Library.ViewModel"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    d:DesignHeight="450"
+    d:DesignWidth="800"
+    DataContext="{Binding MainViewModel, Source={StaticResource ServiceLocator}}"
+    mc:Ignorable="d">
 
     <SplitView x:Name="SplitView">
         <SplitView.Pane>
             <Grid>
                 <Grid.RowDefinitions>
-                    <RowDefinition Height="50"></RowDefinition>
-                    <RowDefinition Height="*"></RowDefinition>
+                    <RowDefinition Height="50" />
+                    <RowDefinition Height="*" />
                 </Grid.RowDefinitions>
-                
+
                 <Grid Grid.Row="0">
                     <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="50"></ColumnDefinition>
-                        <ColumnDefinition Width="*"></ColumnDefinition>
+                        <ColumnDefinition Width="50" />
+                        <ColumnDefinition Width="*" />
                     </Grid.ColumnDefinitions>
-                    
-                    <Button x:Name="Exit" 
-                            Grid.Column="0" 
-                            Background="Azure"
-                            HorizontalAlignment="Stretch"
-                            VerticalAlignment="Stretch"
-                            CornerRadius="0">
-                            <!-- Command="{Binding }"> -->
-                    </Button>
-                    
-                    <Grid Grid.Column="1">
-                        <Label Foreground="Beige"
-                               VerticalAlignment="Center"
-                               FontSize="20"
-                               Margin="10,0,0,0"
-                               Content="每日诗词">
-                            
-                        </Label>
-                    </Grid>
-                </Grid>
-              <!--               <ListBox Grid.Row="1"
-                       ItemsSource="{Binding Source={x:Static}"
-                       SelectedItem="{Binding ,Mode=TwoWay}">
-                <ListBox.ItemTemplate>
-                  <DataTemplate>
-                    <Label Content="{Binding Name}"
-                           FontSize="20">
 
-                    </Label>
-                  </DataTemplate>
-                </ListBox.ItemTemplate>
-              </ListBox>  -->
-                
-            </Grid>
-        </SplitView.Pane>
-        
-        <SplitView.Content>
-            <Grid>
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="Auto"></ColumnDefinition>
-                    <ColumnDefinition Width="Auto"></ColumnDefinition>
-                    <ColumnDefinition Width="*"></ColumnDefinition>
-                </Grid.ColumnDefinitions>
-                
-                <Grid.RowDefinitions>
-                    <RowDefinition Height="50"></RowDefinition>
-                    <RowDefinition Height="*"></RowDefinition>
-                </Grid.RowDefinitions>
-                
-                <Button x:Name="CaiDan"
-                        Grid.Row="0"
+                    <Button
+                        x:Name="Exit"
                         Grid.Column="0"
                         HorizontalAlignment="Stretch"
                         VerticalAlignment="Stretch"
-                        CornerRadius="0"
-                        Content="三"/>        
-                
-                <Button x:Name="BackSpace"
-                        Grid.Row="0"
-                        Grid.Column="1"
-                        HorizontalAlignment="Stretch"
-                        VerticalAlignment="Stretch"
-                        CornerRadius="0"
-                        Content="X"/>
-                
-                <Label Grid.Row="0" Grid.Column="2" Background="Bisque"></Label>
-                <ContentControl Grid.Column="0" 
-                                Grid.ColumnSpan="3"
-                                Grid.Row="1"  
-                                Background="Azure"
-                                Content="{Binding View}">
-                </ContentControl>
+                        Background="AliceBlue"
+                        CornerRadius="0">
+                        <!--  Command="{Binding }">  -->
+                    </Button>
+
+                    <Grid Grid.Column="1">
+                        <Label
+                            Margin="10,0,0,0"
+                            VerticalAlignment="Center"
+                            Content="每日诗词"
+                            FontSize="20"
+                            Foreground="Beige" />
+                    </Grid>
+                </Grid>
+
+                <ListBox
+                    Grid.Row="1"
+                    ItemsSource="{Binding Source={x:Static lvm:MenuItem.Items}}"
+                    SelectedItem="{Binding ,Mode=TwoWay}">
+                    <ListBox.ItemTemplate>
+                        <DataTemplate>
+                            <Label
+                                Margin="50,5,0,5"
+                                Content="12"
+                                FontSize="20" />
+                        </DataTemplate>
+                    </ListBox.ItemTemplate>
+                </ListBox>
+
+            </Grid>
+
+        </SplitView.Pane>
+
+
+        <SplitView.Content>
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="*" />
+                </Grid.ColumnDefinitions>
+
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="50" />
+                    <RowDefinition Height="*" />
+                </Grid.RowDefinitions>
+
+                <Button
+                    x:Name="CaiDan"
+                    Grid.Row="0"
+                    Grid.Column="0"
+                    HorizontalAlignment="Stretch"
+                    VerticalAlignment="Stretch"
+                    Content="三"
+                    CornerRadius="0" />
+
+                <Button
+                    x:Name="BackSpace"
+                    Grid.Row="0"
+                    Grid.Column="1"
+                    HorizontalAlignment="Stretch"
+                    VerticalAlignment="Stretch"
+                    Content="X"
+                    CornerRadius="0" />
+
+                <Label
+                    Grid.Row="0"
+                    Grid.Column="2"
+                    Background="Bisque" />
+                <ContentControl
+                    Grid.Row="1"
+                    Grid.Column="0"
+                    Grid.ColumnSpan="3"
+                    Background="Azure"
+                    Content="{Binding View}" />
             </Grid>
         </SplitView.Content>
     </SplitView>
-    
-    
+
     <!-- <Grid> -->
     <!--     <Grid.ColumnDefinitions> -->
     <!--         <ColumnDefinition Width="Auto"/> -->
     <!--         <ColumnDefinition Width="Auto"/> -->
     <!--         <ColumnDefinition Width="*"/> -->
     <!--     </Grid.ColumnDefinitions> -->
-    <!--      -->
+    <!--    -->
     <!--     <Grid.RowDefinitions> -->
     <!--         <RowDefinition Height="Auto"/> -->
     <!--         <RowDefinition Height="*"/> -->
     <!--     </Grid.RowDefinitions> -->
-    <!--      -->
-    <!--     <Button Grid.Row="0"  -->
-    <!--             Grid.Column="0"  -->
-    <!--             Content="6"  -->
-    <!--             CornerRadius="0" -->
-    <!--             HorizontalAlignment="Stretch" -->
-    <!--             VerticalAlignment="Stretch"> -->
+    <!--    -->
+    <!--  <Button Grid.Row="0"  -->
+    <!--  Grid.Column="0"  -->
+    <!--  Content="6"  -->
+    <!--  CornerRadius="0"  -->
+    <!--  HorizontalAlignment="Stretch"  -->
+    <!--  VerticalAlignment="Stretch">  -->
     <!--     </Button> -->
-    <!--      -->
-    <!--     <Button Grid.Row="0"  -->
-    <!--             Grid.Column="1"  -->
-    <!--             Content="左"  -->
-    <!--             CornerRadius="0" -->
-    <!--             HorizontalAlignment="Stretch" -->
-    <!--             VerticalAlignment="Stretch"> -->
+    <!--    -->
+    <!--  <Button Grid.Row="0"  -->
+    <!--  Grid.Column="1"  -->
+    <!--  Content="左"  -->
+    <!--  CornerRadius="0"  -->
+    <!--  HorizontalAlignment="Stretch"  -->
+    <!--  VerticalAlignment="Stretch">  -->
     <!--     </Button> -->
-    <!--      -->
-    <!--     <Label Grid.Row="0" Grid.Column="2" Background="Bisque" -->
+    <!--    -->
+    <!--  <Label Grid.Row="0" Grid.Column="2" Background="Bisque"  -->
     <!--            HorizontalAlignment="0" VerticalContentAlignment="0"></Label> -->
     <!--     <ListBox Grid.Row="1" Grid.Column="0"> -->
     <!--         <ListBoxItem>1</ListBoxItem> -->

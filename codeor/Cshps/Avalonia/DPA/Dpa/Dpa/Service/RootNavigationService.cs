@@ -8,9 +8,9 @@ public class RootNavigationService : IRootNavigationService
 {
     public void NavigateTo(string view)
     {
-        if (view.Equals(nameof(ToDayViewModel)))
+        if (view.Equals(ViewInfo.MainView))
         {
-            ServiceLocator.Current.MainWindowModel.View = ServiceLocator.Current.ToDayViewModel;
+            ServiceLocator.Current.MainWindowModel.View = ServiceLocator.Current.MainViewModel;
         }
     }
 }

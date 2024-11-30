@@ -2264,6 +2264,17 @@ public static ServiceLocator Current()
 ServiceLocator.Current.MainWindowViewModel.Content = ??
 ```
 
+```csharp
+public void NavigateTo(string view)
+{
+    if (view.Equals(nameof(ToDayViewModel)))
+    {
+        ServiceLocator.Current.MainWindowModel.View = ServiceLocator.Current.ToDayViewModel;
+    }
+}
+
+```
+
 
 
 > ##### 在Rider 想要创建View文件需要安装 AvaloniaRider插件
@@ -2309,7 +2320,175 @@ DataContext="{Binding TodayViewModel, Source={Statixxxx}}"
 
 
 
+6. 设计界面
 
+7. 创建`MainViewModel.cs `内部创建第二个类 `MenuItem` 用来承载ListBox的数据
+
+   ```csharp
+   using System;
+   using System.Collections.Generic;
+   using System.Linq;
+   using System.Text;
+   using System.Threading.Tasks;
+   
+   namespace Dpa.Library.ViewModel
+   {
+       public class MainViewModel
+       {
+       }
+   
+       public class MenuItem 
+       {
+           private MenuItem() { }
+   
+           public string Name { get; private init; }
+           public string View { get; private init; }
+           private static MenuItem TodayView => new() { Name = "今日推荐", View = "ToDayView" };
+           private static MenuItem QueryView => new() { Name = "诗词搜索", View = "Qiery" };
+           private static MenuItem FavoriteView => new() { Name = "诗词收藏", View = "Favorite" };
+           public static IEnumerable<MenuItem> Items { get; } = 
+           [
+               TodayView,
+               QueryView, 
+               FavoriteView
+           ];
+       }
+   }
+   ```
+
+8. 在`MainView`引入名称空间`xmlns:lvm="using:Dpa.Library.ViewModel"`
+
+9. 将`ListBox`的物品来源绑定`Items`
+
+   `ItemsSource="{Binding Source={x:Static lvm:MenuItem.Items}}"`
+
+10. 在 `Dpa.Library.Services`名称空间下 创建 `IMenuNavigationService`接口 同文件下 创建静态类,
+
+    `MenNavigationConstant` 
+
+    ```csharp
+    namespace Dpa.Library.Services
+    {
+        public interface IMenuNavigationService
+        {
+        }
+    
+        public static class MenuNavigationConstant
+        {
+            public const string ToDayView = nameof(ToDayView);
+            public const string QueryView = nameof(QueryView);
+            public const string FavoriteView = nameof(FavoriteView);
+        }
+    }
+    ```
+
+11. 更改`MenuItem`中View的赋值
+
+12. MainViewModel继承ViewModelBase
+
+    ```csharp
+    public class MainViewModel : ViewModelBase
+    {
+        /// <summary>
+        /// 主页面
+        /// </summary>
+        private ViewModelBase _view;
+        public ViewModelBase View
+        {
+            get => _view;
+            set => SetProperty(ref _view, value);
+        }
+    }
+    ```
+
+13. 将MainViewModel进行依赖注入 并暴露
+
+    ```csharp
+    public MainViewModel MainViewModel => _serviceProvider.GetService<MainViewModel>();
+    _serviceCollection.AddScoped<MainViewModel>();
+    ```
+
+14. 设置MainView的绑定
+
+    ```xml
+    DataContext="{Binding MainViewModel, Source={StaticResource ServiceLocator}}"
+    
+    <!-- 在Content -->
+    <ContentControl
+    Grid.Row="1"
+    Grid.Column="0"
+    Grid.ColumnSpan="3"
+    Background="Azure"
+    Content="{Binding View}" />
+    
+    ```
+
+15. 将MainView套入MainWindow
+
+    ```csharp
+    public class RootNavigationService : IRootNavigationService
+    {
+        public void NavigateTo(string view)
+        {
+            if (view.Equals(ViewInfo.MainView))
+            {
+                ServiceLocator.Current.MainWindowModel.View = ServiceLocator.Current.MainViewModel;
+            }
+        }
+    }
+    ```
+
+16. `MainWindowModel`设置初始化
+
+    ```csharp
+    using CommunityToolkit.Mvvm.Input;
+    using Dpa.Library.Services;
+    using System.Windows.Input;
+    
+    namespace Dpa.Library.ViewModel;
+    
+    public class MainWindowModel : ViewModelBase
+    {
+        private ViewModelBase _view;
+        private IRootNavigationService _rootNavigationService;
+        public ICommand OnInitializedCommand { get; }
+    
+        public MainWindowModel(IRootNavigationService rootNavigationService)
+        {
+            _rootNavigationService = rootNavigationService;
+            OnInitializedCommand = new RelayCommand(OnInitialized);
+        }
+        public ViewModelBase View
+        {
+            get => _view;
+            set => SetProperty(ref _view, value);
+        }
+        private void OnInitialized()
+        {
+            _rootNavigationService.NavigateTo(ViewInfo.MainView);
+        }
+    
+    }
+    ```
+
+17. MainWindow.axaml 事件绑定
+
+    ```xml
+    <Interaction.Behaviors>
+        <EventTriggerBehavior EventName="Initialized">
+            <InvokeCommandAction Command="{Binding OnInitializedCommand}" />
+        </EventTriggerBehavior>
+    </Interaction.Behaviors>
+    ```
+
+
+
+## 3.7.3  思维梳理
+
+1. 应用程序启动 从App.axaml.cs运行 , 其运行时new MainWindow()
+2. MainWindow绑定了 MainWindowViewModel 并且事件绑定 OnInitializedCommand
+3. OnInitializedCommand 绑定了 OnInitialized方法 改方法内调用了 `_rootNavigationService.NavigateTo`方法
+4. _rootNavigationService 的实现 会更改 MainWindowViewModel内的属性 达到更改页面的目的
 
 # 99 直角按钮
 
@@ -2323,5 +2502,16 @@ HorizontalAlignment="Stretch"
 
 垂直拉伸
 VerrucakAkufbnebr="Stretch"
+```
+
+# 98 静态成员如何做绑定
+
+```csharp
+//假设在 Dpa.Library.ViewModel 下 有一个类 MenuItem 内有一个静态的 IEnumerable
+//在View内 使用xmlns:引用名称="using:Dpa.Library.ViewModel"
+xmlns:vls="using:Dpa.Library.ViewModel"
+
+//使用 直接使用 Binding不指示具体属性就是直接指定整个静态成员
+ItemsSource="{Binding Source={x:Static lvm:MenuItem.Items}}"
 ```
 

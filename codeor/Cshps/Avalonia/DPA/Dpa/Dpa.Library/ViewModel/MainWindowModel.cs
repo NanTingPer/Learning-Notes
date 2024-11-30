@@ -22,10 +22,10 @@ public class MainWindowModel : ViewModelBase
     }
 
     /// <summary>
-    /// ÕâÀïÊÇÖ÷´°¿Ú
-    /// Æô¶¯¶¼»áÏÈÖ´ĞĞ MainWindowµÄĞ¡ÍæÒâ
-    /// Ö»ĞèÒªÔÚMainWindowµÄView(axaml)ÎÄ¼ş ÖĞ Ê¹ÓÃÊÂ¼ş°ó¶¨µÄ·½Ê½ ½«Initia°ó¶¨µ½¸Ã·½·¨µÄICommandÖĞ\n
-    /// ¾Í¿ÉÒÔ½«Ö÷½çÃæÏÔÊ¾ÎªMainView
+    /// è¿™é‡Œæ˜¯ä¸»çª—å£
+    /// å¯åŠ¨éƒ½ä¼šå…ˆæ‰§è¡Œ MainWindowçš„å°ç©æ„
+    /// åªéœ€è¦åœ¨MainWindowçš„View(axaml)æ–‡ä»¶ ä¸­ ä½¿ç”¨äº‹ä»¶ç»‘å®šçš„æ–¹å¼ å°†Initiaç»‘å®šåˆ°è¯¥æ–¹æ³•çš„ICommandä¸­\n
+    /// å°±å¯ä»¥å°†ä¸»ç•Œé¢æ˜¾ç¤ºä¸ºMainView
     /// </summary>
     private void OnInitialized()
     {

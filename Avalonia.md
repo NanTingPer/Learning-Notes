@@ -2490,6 +2490,218 @@ DataContext="{Binding TodayViewModel, Source={Statixxxx}}"
 3. OnInitializedCommand 绑定了 OnInitialized方法 改方法内调用了 `_rootNavigationService.NavigateTo`方法
 4. _rootNavigationService 的实现 会更改 MainWindowViewModel内的属性 达到更改页面的目的
 
+
+
+## 3.7.4 栈导航
+
+1. 在MainViewModel内创建一个`ObservableCollection`集合(定义为属性) 类型为 `ViewModelBase` 并模拟栈
+
+2. 创建 `PushContent` 方法 用于添加 `ViewModeBase`
+
+   - 栈添加只能从顶部添加 使用 `Insert`从索引0插入数据
+
+3. 创建 `GoBack` 方法 用于从伪栈取出数据
+
+   ```csharp
+   public class MainViewModel : ViewModelBase
+   {
+       public ObservableCollection<ViewModelBase> ViewModeStack { get; private set; } = new ();
+   
+   
+       /// <summary>
+       /// 主页面
+       /// </summary>
+       private ViewModelBase _view;
+       public ViewModelBase View
+       {
+           get => _view;
+           private set => SetProperty(ref _view, value);
+       }
+   
+       /// <summary>
+       /// 进
+       /// </summary>
+       /// <param name="viewModelBase"> 要进入的视图 </param>
+       public void PutStack(ViewModelBase viewModelBase)
+       {
+           ViewModeStack.Insert(0, viewModelBase);
+       }
+   
+       /// <summary>
+       /// 出
+       /// </summary>
+       public void PopStack()
+       {
+           if (ViewModeStack.Count <= 1)
+               return;
+           ViewModeStack.RemoveAt(0);
+           View =  ViewModeStack[0];
+       }
+   }
+   ```
+
+   
+
+4. 创建转换器 在 View中
+
+   ```csharp
+   public class CountToBool : IValueConverter
+   {
+       /// <summary>
+       /// 将数字转换为bool
+       /// </summary>
+       /// <param name="value"> 用来比较的值 </param>
+       /// <param name="targetType"> 无 </param>
+       /// <param name="parameter"> 被比较的值 </param>
+       /// <returns>如果value比Max大 返回true</returns>
+       public object? Convert(object? value, Type targetType, object? parameter, CultureInfo culture)
+       {
+           int? values;
+           if ((values = (value as int?)) != null &&
+               (parameter is string str) &&
+               int.TryParse(str,out int max))
+           {
+               return values > max;
+           }
+   
+           //value is int count && parameter is string str &&
+           //int.TryParse(str, out int eeee) ? count > eeee : null;
+   
+           return null;
+       }
+   
+       public object? ConvertBack(object? value, Type targetType, object? parameter, CultureInfo culture)
+       {
+           throw new NotImplementedException();
+       }
+   }
+   ```
+
+   
+
+5. 在MainView引入转换器的名称空间
+
+   ```xml
+   xmlns:lc="using:Dpa.Converters"
+   ```
+
+6. 声明
+
+   ```xaml
+   <UserControl.Resources>
+       <lc:xxx x:key="XXXX">
+   ```
+
+
+
+```xaml
+xmlns:lvm="using:Dpa.Library.ViewModel"
+<UserControl.Resources>
+    <cv:CountToBool x:Key="Convert" />
+</UserControl.Resources>
+```
+
+7. 按钮IsVisible
+
+   - IsVisible绑定到 视图列表长度
+   - 对视图列表长度使用转换器进行转换 ConverterParameter 是给定比较值
+   - 其与方法定义时的参数传入顺序一致
+   - ViewModelStack.Count是value
+   - Converter 是 Type
+   - 1 是 Max
+
+   ```xaml
+   <Button
+       x:Name="BackSpace"
+       Grid.Row="0"
+       Grid.Column="1"
+       HorizontalAlignment="Stretch"
+       VerticalAlignment="Stretch"
+       Content="X"
+       CornerRadius="0"
+       IsVisible="{Binding ViewModeStack.Count, Converter={StaticResource Convert}, ConverterParameter=1}" />
+   ```
+
+8. 为出栈按钮绑定Command
+
+   `Command="{Binding PopStackCommand}"`
+
+   ```xaml
+   <Button
+       x:Name="BackSpace"
+       Grid.Row="0"
+       Grid.Column="1"
+       HorizontalAlignment="Stretch"
+       VerticalAlignment="Stretch"
+       Command="{Binding PopStackCommand}"
+       Content="X"
+       CornerRadius="0"
+       IsVisible="{Binding ViewModeStack.Count, Converter={StaticResource CountToBool}, ConverterParameter=1}" />
+   ```
+
+9. 在MainViewModel创建一个PopStackCommand
+
+   ```csharp
+   public ICommand PopStackCommand { get; }
+   
+   public MainViewModel()
+   {
+       PopStackCommand = new RelayCommand(PopStack);
+   }
+
+10. 方便测试手动往栈内添加
+
+    ```csharp
+    ServiceLocator SL = ServiceLocator.Current;
+    if (view.Equals(ViewInfo.MainView))
+    {
+        SL.MainWindowModel.View = SL.MainViewModel;
+        SL.MainViewModel.PutStack(SL.ToDayViewModel);
+        SL.MainViewModel.PutStack(SL.ContentViewModel);
+    }
+    ```
+
+11. 展开实现 ， 在ViewModel内定义一个属性 用来表示开启和关闭`bool`
+
+    ```csharp
+    public ICommand ControlIsOpenCommand { get; }
+    private bool _isOpen = false;
+    public bool IsOpen { get => _isOpen; set => SetProperty(ref _isOpen, value); }
+    
+    //构造函数内将ICommand绑定
+    public MainViewModel()
+    {
+        PopStackCommand = new RelayCommand(PopStack);
+        ControlIsOpenCommand = new RelayCommand(ControlIsOpen);
+    }
+    
+    //控制开关
+    private void ControlIsOpen()
+    {
+        if (IsOpen == true)
+        {
+            IsOpen = false;
+        }
+        else
+        {
+            IsOpen = true;
+        }
+    }
+    ```
+
+10. 定义一个方法 使`Command`绑定他 用来决定开关
+
+
+
+## 3.7.5 当前逻辑关系
+
+1. 主窗口 `MainWindow` 显示 自己`Model`下的`View`属性
+2. 这个`View`属性被初始化显示未 `MainView` -> `MainViewModel`
+3. `MainViewModel`下有属于自己的`View`属性 用来显示主界面
+4. 想要更改主界面显示的界面 只需要更改 `MainViewModel`下的`View`属性即可
+
+
+
 # 99 直角按钮
 
 ```xml
@@ -2515,3 +2727,41 @@ xmlns:vls="using:Dpa.Library.ViewModel"
 ItemsSource="{Binding Source={x:Static lvm:MenuItem.Items}}"
 ```
 
+
+
+# 97 转换器
+
+> #### 示例 : 使数字类型转换为bool
+
+```csharp
+/// <summary>
+/// 将数字转换为bool
+/// </summary>
+/// <param name="value"> 用来比较的值 </param>
+/// <param name="type"> 无 </param>
+/// <param name="Max"> 被比较的值 </param>
+/// <returns>如果value比Max大 返回true</returns>
+public object Convert(object value,Type type,object Max)
+{
+    int? values;
+    int? max;
+    if( (values = (value as int?)) != null && 
+        (max = (Max as int?)) != null)
+    {
+        return values > max;
+    }
+
+    return null;
+    
+    //如果可以 建议 也请 这样写
+    //value is int count && Max is string str &&
+    //int.TryParse(str, out int eeee) ? count > eeee : null;
+
+}
+```
+
+
+
+# 96 Grid行列定义
+
+- 使用 RowDefinitions="auto,auto" 可以直接定义两行 ColumnDefinitions同理

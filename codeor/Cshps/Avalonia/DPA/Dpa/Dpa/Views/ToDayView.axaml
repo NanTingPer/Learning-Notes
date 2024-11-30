@@ -1,62 +1,62 @@
-<UserControl xmlns="https://github.com/avaloniaui"
-             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
-             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-             mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
-             x:Class="Dpa.Views.ToDayView"
-             DataContext="{Binding ToDayViewModel, Source={StaticResource ServiceLocator}}">
-            
-    <!-- 事件绑定 -->
+<UserControl
+    x:Class="Dpa.Views.ToDayView"
+    xmlns="https://github.com/avaloniaui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    d:DesignHeight="450"
+    d:DesignWidth="800"
+    DataContext="{Binding ToDayViewModel, Source={StaticResource ServiceLocator}}"
+    mc:Ignorable="d">
+
+    <!--  事件绑定  -->
     <Interaction.Behaviors>
         <EventTriggerBehavior EventName="Initialized">
-            <InvokeCommandAction Command="{Binding InitiailzationCommand}"></InvokeCommandAction>
+            <InvokeCommandAction Command="{Binding InitiailzationCommand}" />
         </EventTriggerBehavior>
     </Interaction.Behaviors>
 
-    <!-- 低端对齐 -->
-    <StackPanel Background="#66000000" VerticalAlignment="Bottom">
-        <!-- 边距 -->
+    <!--  低端对齐  -->
+    <StackPanel VerticalAlignment="Bottom" Background="#66000000">
+        <!--  边距  -->
         <StackPanel Margin="8">
             <StackPanel>
-                <Label 
-                    FontSize="{Binding FontSize}" 
+                <Label
+                    Margin="0,0,0,8"
                     Content="{Binding ToDayPoetry.Snippet}"
-                    Foreground="Azure"
-                    Margin = "0,0,0,8"
-                />
+                    FontSize="{Binding FontSize}"
+                    Foreground="Azure" />
             </StackPanel>
-            
+
             <StackPanel x:Name="Author">
-                <Label 
-                    Content="{Binding ToDayPoetry.Author}"
-                    FontSize="18"
-                    Foreground="Azure"
+                <Label
                     Margin="0,0,0,8"
                     VerticalAlignment="Center"
-                />
+                    Content="{Binding ToDayPoetry.Author}"
+                    FontSize="18"
+                    Foreground="Azure" />
             </StackPanel>
-            
+
             <StackPanel x:Name="PoetryName">
-                <Label VerticalAlignment="Center"
-                       Content="{Binding ToDayPoetry.Name}"
-                       FontSize="16"
-                       Foreground="Cornsilk"
-                />
+                <Label
+                    VerticalAlignment="Center"
+                    Content="{Binding ToDayPoetry.Name}"
+                    FontSize="16"
+                    Foreground="Cornsilk" />
             </StackPanel>
         </StackPanel>
 
         <StackPanel Margin="8">
-            <Button HorizontalAlignment="Left"></Button>
+            <Button HorizontalAlignment="Left" />
         </StackPanel>
 
         <StackPanel x:Name="Down" Background="#30000000">
-            <Label 
+            <Label
                 Content=""
                 FontSize="10"
-                Foreground="Azure"
-            />
+                Foreground="Azure" />
         </StackPanel>
     </StackPanel>
-    
-    
+
+
 </UserControl>

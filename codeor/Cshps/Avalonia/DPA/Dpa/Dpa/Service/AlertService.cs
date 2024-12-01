@@ -10,6 +10,6 @@ public class AlertService : IAlertService
     {
         // MessageBox.ShowAsync(message, title,button:MessageBoxButton.OK);
         // MessageBox.ShowAsync(message: message, title: title, button: MessageBoxButton.OK);
-        MessageBox.ShowAsync(message, title, MessageBoxIcon.Error, button: MessageBoxButton.OK);
+        //MessageBox.ShowAsync(message, title, MessageBoxIcon.Error, button: MessageBoxButton.OK);
     }
 }

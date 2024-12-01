@@ -16,11 +16,14 @@ namespace Dpa.Library.ViewModel
         public ICommand PutStackCommand { get; }
         public ICommand ControlIsOpenCommand { get; }
         private bool _isOpen = false;
+        private string _title = "今日推荐";
+        private MenuItem _selectedItem;
 
         public bool IsOpen { get => _isOpen; set => SetProperty(ref _isOpen, value); }
+        public string Title { get => _title; set => SetProperty(ref _title, value); }
+        public MenuItem SelectedItem { get => _selectedItem; set => SetProperty(ref _selectedItem, value); }
         public ObservableCollection<ViewModelBase> ViewModeStack { get; private set; } = new();
-
-
+        
         public MainViewModel()
         {
             PopStackCommand = new RelayCommand(PopStack);
@@ -44,6 +47,7 @@ namespace Dpa.Library.ViewModel
         public void PutStack(ViewModelBase viewModelBase)
         {
             ViewModeStack.Insert(0, viewModelBase);
+            View = ViewModeStack[0];
         }
 
         /// <summary>
@@ -71,6 +75,15 @@ namespace Dpa.Library.ViewModel
                 IsOpen = true;
             }
         }
+
+        public void SetViewAndClearStack(string view,ViewModelBase viewModelBase)
+        {
+            ViewModeStack.Clear();
+            PutStack(viewModelBase);
+            SelectedItem = MenuItem.Items.FirstOrDefault(f => f.View == view);
+            Title = SelectedItem.Name;
+        }
+
     }
 
     public class MenuItem 

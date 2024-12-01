@@ -2525,6 +2525,7 @@ DataContext="{Binding TodayViewModel, Source={Statixxxx}}"
        public void PutStack(ViewModelBase viewModelBase)
        {
            ViewModeStack.Insert(0, viewModelBase);
+           View = ViewModeStack[0];
        }
    
        /// <summary>
@@ -2663,6 +2664,8 @@ xmlns:lvm="using:Dpa.Library.ViewModel"
 
 11. 展开实现 ， 在ViewModel内定义一个属性 用来表示开启和关闭`bool`
 
+12. 定义一个方法 使`Command`绑定他 用来决定开关
+
     ```csharp
     public ICommand ControlIsOpenCommand { get; }
     private bool _isOpen = false;
@@ -2689,8 +2692,6 @@ xmlns:lvm="using:Dpa.Library.ViewModel"
     }
     ```
 
-10. 定义一个方法 使`Command`绑定他 用来决定开关
-
 
 
 ## 3.7.5 当前逻辑关系
@@ -2699,6 +2700,84 @@ xmlns:lvm="using:Dpa.Library.ViewModel"
 2. 这个`View`属性被初始化显示未 `MainView` -> `MainViewModel`
 3. `MainViewModel`下有属于自己的`View`属性 用来显示主界面
 4. 想要更改主界面显示的界面 只需要更改 `MainViewModel`下的`View`属性即可
+
+
+
+
+
+# 3.8  侧边栏导航
+
+1. MainView创建多个属性 
+
+   - `SelectedItem` 用来控制 ListBox 的选中项
+   - `Title` 用来控制ListBox 上面的 那个Lable的文本
+
+   ```csharp
+   private string _title = "今日推荐";
+   private MenuItem _selectedItem;
+   
+   public string Title { get => _title; set => SetProperty(ref _title, value); }
+   public MenuItem SelectedItem { get => _selectedItem; set => SetProperty(ref _selectedItem, value); }
+   ```
+
+   
+
+2. MainView创建创建一个方法 用来设置 `SelectedItem`和 `Title` 清空 Stack和 压入 Stack
+
+   ```csharp
+   public void SetViewAndClearStack(string view,ViewModelBase viewModelBase)
+   {
+       ViewModeStack.Clear();
+       PutStack(viewModelBase);
+       SelectedItem = MenuItem.Items.FirstOrDefault(f => f.View == view);
+   	Title = SelectedItem.Name;
+   }
+   ```
+
+   
+
+3. 为`IMenuNavigationService`添加一个方法 用来实现导航功能  `NavigateTo`
+
+   ```csharp
+   public interface IMenuNavigationService
+   {
+       void NavigateTo(string view);
+   }
+   ```
+
+   
+
+4. 创建 `IMenuNavigationService` 实现类 在View
+
+   ```csharp
+   namespace Dpa.Service
+   {
+       /// <summary>
+       /// 侧边栏导航
+       /// </summary>
+       public class MenuNavigationService : IMenuNavigationService
+       {
+           /// <summary>
+           /// 用于 侧边栏的导航
+           /// </summary>
+           /// <param name="view"> 目标视图 </param>
+           /// <exception cref="Exception"> null </exception>
+           public void NavigateTo(string view)
+           {
+               ViewModelBase View = view switch
+               {
+                   MenuNavigationConstant.ToDayView => ServiceLocator.Current.ToDayViewModel,
+                   _ => throw new Exception("找不到视图")
+               };
+               ServiceLocator.Current.MainViewModel.SetViewAndClearStack(view,View);
+           }
+       }
+   }
+   ```
+
+   
+
+5. 依赖注入 `IMenuNavigationService` 和他的实现类
 
 
 
@@ -2772,6 +2851,8 @@ public object Convert(object value,Type type,object Max)
 
 - 先定义一个ListBox 然后使用 `ItemsSource`属性绑定静态数据源
 - 然后使用`<ListBox.ItemTemolate>`批量加载数据 如果数据源是高级(对象)数据 可以使用 `Binding 属性名称` 进行单独显示指定属性
+- ListBox选项是可选的
+- SelectedItem 是对应被选中项
 
 ```xaml
 <ListBox

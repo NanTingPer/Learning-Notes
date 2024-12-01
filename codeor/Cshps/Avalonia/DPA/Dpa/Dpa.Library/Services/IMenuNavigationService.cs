@@ -8,10 +8,12 @@ namespace Dpa.Library.Services
 {
     public interface IMenuNavigationService
     {
+        void NavigateTo(string view);
     }
 
     /// <summary>
-    /// 主导航的选项列表
+    /// <para>  主导航的选项列表  </para> 
+    /// <para>  侧边栏导航         </para>
     /// </summary>
     public static class MenuNavigationConstant
     {

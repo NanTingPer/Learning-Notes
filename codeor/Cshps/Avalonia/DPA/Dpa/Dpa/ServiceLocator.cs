@@ -28,10 +28,11 @@ public class ServiceLocator
 
     public MainViewModel MainViewModel => _serviceProvider.GetService<MainViewModel>();
 
-    /// <summary>
-    /// 不知道 抄的
-    /// </summary>
     private static ServiceLocator _current;
+    /// <summary> 
+    /// <para> 用来从资源中试图获取ServiceLocator实例 </para> 
+    /// <para> 包含全部ViewModel实例                  </para>
+    /// </summary>
     public static ServiceLocator Current
     {
         get
@@ -61,6 +62,8 @@ public class ServiceLocator
         _serviceCollection.AddScoped<IRootNavigationService, RootNavigationService>();
 
         _serviceCollection.AddScoped<MainViewModel>();
+
+        _serviceCollection.AddScoped<IMenuNavigationService, MenuNavigationService>();
         
         _serviceProvider = _serviceCollection.BuildServiceProvider();
     }

@@ -56,3 +56,4 @@ codeor/AcortDome/
 *.dll
 *.json
 /codeor/Cshps/Avalonia/DPA/Dpa/Dpa/obj
+*.vsidx

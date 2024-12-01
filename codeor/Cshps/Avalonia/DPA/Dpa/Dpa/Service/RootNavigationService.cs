@@ -6,14 +6,17 @@ namespace Dpa.Service;
 
 public class RootNavigationService : IRootNavigationService
 {
+    /// <summary>
+    /// 用于MainView的Content导航
+    /// </summary>
+    /// <param name="view"></param>
     public void NavigateTo(string view)
     {
         ServiceLocator SL = ServiceLocator.Current;
         if (view.Equals(ViewInfo.MainView))
         {
             SL.MainWindowModel.View = SL.MainViewModel;
-            SL.MainViewModel.PutStack(SL.ToDayViewModel);
-            SL.MainViewModel.PutStack(SL.ContentViewModel);
+            SL.MainViewModel.SetViewAndClearStack(MenuNavigationConstant.ToDayView,ServiceLocator.Current.ToDayViewModel);
         }
     }
 }

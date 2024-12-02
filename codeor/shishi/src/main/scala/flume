@@ -80,3 +80,22 @@ $"fee_money",
 $"w_id",
 $"create_time",
 $"modified_time",
+
+
+CREATE EXTERNAL TABLE ads.online_uv_pv(
+    key bigint,
+    product_id BIGINT,
+    product_name STRING,
+    uv BIGINT,
+    pv BIGINT,
+    modified_time string
+) ROW FORMAT SERDE 'org.apache.hadoop.hive.hbase.HBaseSerDe'
+STORED BY 'org.apache.hadoop.hive.hbase.HBaseStorageHandler'
+with serdeproperties(
+'hbase.columns.mapping'=':key,
+    info:product_id,
+    info:product_name,
+    info:uv,
+    info:pv,
+    info:modified_time')
+tblproperties('hbase.table.name'='ods:TempTable','hbase.table.default.storage.type'='binary');

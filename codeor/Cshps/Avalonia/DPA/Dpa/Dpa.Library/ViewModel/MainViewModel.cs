@@ -15,19 +15,23 @@ namespace Dpa.Library.ViewModel
         public ICommand PopStackCommand { get; }
         public ICommand PutStackCommand { get; }
         public ICommand ControlIsOpenCommand { get; }
+        public ICommand ListBoxViewCommand { get; }
         private bool _isOpen = false;
         private string _title = "今日推荐";
         private MenuItem _selectedItem;
+        private IMenuNavigationService _menuNavigationService;
 
         public bool IsOpen { get => _isOpen; set => SetProperty(ref _isOpen, value); }
         public string Title { get => _title; set => SetProperty(ref _title, value); }
         public MenuItem SelectedItem { get => _selectedItem; set => SetProperty(ref _selectedItem, value); }
         public ObservableCollection<ViewModelBase> ViewModeStack { get; private set; } = new();
         
-        public MainViewModel()
+        public MainViewModel(IMenuNavigationService menuNavigationService)
         {
+            _menuNavigationService = menuNavigationService;
             PopStackCommand = new RelayCommand(PopStack);
             ControlIsOpenCommand = new RelayCommand(ControlIsOpen);
+            ListBoxViewCommand = new RelayCommand(ListBoxToView);
         }
 
         /// <summary>
@@ -76,12 +80,31 @@ namespace Dpa.Library.ViewModel
             }
         }
 
+        /// <summary>
+        /// 更改视图并清空导航栈
+        /// </summary>
+        /// <param name="view"> 目标视图名 </param>
+        /// <param name="viewModelBase"> 目标栈 </param>
         public void SetViewAndClearStack(string view,ViewModelBase viewModelBase)
         {
             ViewModeStack.Clear();
             PutStack(viewModelBase);
             SelectedItem = MenuItem.Items.FirstOrDefault(f => f.View == view);
             Title = SelectedItem.Name;
+        }
+
+
+        /// <summary>
+        /// 绑定ListBox的选项点击事件
+        /// </summary>
+        private void ListBoxToView()
+        {
+            if(SelectedItem is null)
+            {
+                return;
+            }
+            _menuNavigationService.NavigateTo(MenuItem.Items.FirstOrDefault(f => f.Equals(SelectedItem)).View);
+            IsOpen = false;
         }
 
     }
@@ -92,7 +115,7 @@ namespace Dpa.Library.ViewModel
 
         public string Name { get; private init; }
         public string View { get; private init; }
-        private static MenuItem TodayView => new() 
+        private static MenuItem ToDayView => new() 
         { 
             Name = "今日推荐", 
             View = MenuNavigationConstant.ToDayView 
@@ -109,7 +132,7 @@ namespace Dpa.Library.ViewModel
         };
         public static IEnumerable<MenuItem> Items { get; } = 
         [
-            TodayView,
+            ToDayView,
             QueryView, 
             FavoriteView
         ];

@@ -23,6 +23,8 @@ namespace Dpa.Service
             ViewModelBase View = view switch
             {
                 MenuNavigationConstant.ToDayView => ServiceLocator.Current.ToDayViewModel,
+                MenuNavigationConstant.QueryView => ServiceLocator.Current.QueryViewModel,
+                MenuNavigationConstant.FavoriteView => ServiceLocator.Current.FavoriteViewModel,
                 _ => throw new Exception("找不到视图")
             };
             ServiceLocator.Current.MainViewModel.SetViewAndClearStack(view,View);

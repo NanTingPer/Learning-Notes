@@ -50,7 +50,7 @@
       "DocumentGroups": [
         {
           "DockedWidth": 200,
-          "SelectedChildIndex": 5,
+          "SelectedChildIndex": 6,
           "Children": [
             {
               "$type": "Bookmark",
@@ -65,6 +65,10 @@
               "Name": "ST:128:0:{116d2292-e37d-41cd-a077-ebacac4c8cc4}"
             },
             {
+              "$type": "Bookmark",
+              "Name": "ST:0:0:{aa2115a1-9712-457b-9047-dbb71ca2cdd2}"
+            },
+            {
               "$type": "Document",
               "DocumentIndex": 3,
               "Title": "ICreateInivte.cs",
@@ -74,8 +78,7 @@
               "RelativeToolTip": "Servicer\\ICreateInivte.cs",
               "ViewState": "AgIAABMAAAAAAAAAAAAowAAAAAAAAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2024-11-17T15:26:46.145Z",
-              "EditorCaption": ""
+              "WhenOpened": "2024-11-17T15:26:46.145Z"
             },
             {
               "$type": "Document",
@@ -87,8 +90,7 @@
               "RelativeToolTip": "Models\\PathReturn.cs",
               "ViewState": "AgIAAAgAAAAAAAAAAAAYwAAAAAAAAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2024-11-17T15:26:43.412Z",
-              "EditorCaption": ""
+              "WhenOpened": "2024-11-17T15:26:43.412Z"
             },
             {
               "$type": "Document",
@@ -113,8 +115,7 @@
               "RelativeToolTip": "App.axaml.cs",
               "ViewState": "AgIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2024-11-17T15:22:55.154Z",
-              "EditorCaption": ""
+              "WhenOpened": "2024-11-17T15:22:55.154Z"
             },
             {
               "$type": "Document",
@@ -126,8 +127,7 @@
               "RelativeToolTip": "ServiceLocator.cs",
               "ViewState": "AgIAABcAAAAAAAAAAAAYwAAAAAAAAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2024-11-17T15:18:18.255Z",
-              "EditorCaption": ""
+              "WhenOpened": "2024-11-17T15:18:18.255Z"
             },
             {
               "$type": "Document",
@@ -139,8 +139,7 @@
               "RelativeToolTip": "Program.cs",
               "ViewState": "AgIAAAMAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2024-11-17T15:18:15.88Z",
-              "EditorCaption": ""
+              "WhenOpened": "2024-11-17T15:18:15.88Z"
             },
             {
               "$type": "Document",
@@ -152,8 +151,7 @@
               "RelativeToolTip": "ViewModels\\ViewModelBase.cs",
               "ViewState": "AgIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2024-11-17T15:14:19.63Z",
-              "EditorCaption": ""
+              "WhenOpened": "2024-11-17T15:14:19.63Z"
             },
             {
               "$type": "Document",
@@ -164,8 +162,7 @@
               "ToolTip": "D:\\CodeRun\\Learning-Notes\\codeor\\Cshps\\Avalonia\\AvaloniaMvvm\\Views\\MainWindow.axaml",
               "RelativeToolTip": "Views\\MainWindow.axaml",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.003549|",
-              "WhenOpened": "2024-11-17T15:13:45.014Z",
-              "EditorCaption": ""
+              "WhenOpened": "2024-11-17T15:13:45.014Z"
             },
             {
               "$type": "Document",
@@ -177,8 +174,7 @@
               "RelativeToolTip": "Views\\MainWindow.axaml.cs",
               "ViewState": "AgIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2024-11-17T15:13:37.491Z",
-              "EditorCaption": ""
+              "WhenOpened": "2024-11-17T15:13:37.491Z"
             },
             {
               "$type": "Document",
@@ -190,8 +186,7 @@
               "RelativeToolTip": "ViewModels\\MainWindowViewModel.cs",
               "ViewState": "AgIAAFgAAAAAAAAAAAAmwGUAAAAjAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2024-11-17T15:10:18.297Z",
-              "EditorCaption": ""
+              "WhenOpened": "2024-11-17T15:10:18.297Z"
             }
           ]
         }

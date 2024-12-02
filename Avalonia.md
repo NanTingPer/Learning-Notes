@@ -2485,9 +2485,9 @@ DataContext="{Binding TodayViewModel, Source={Statixxxx}}"
 
 ## 3.7.3  思维梳理
 
-1. 应用程序启动 从App.axaml.cs运行 , 其运行时new MainWindow()
+1. 应用程序启动 **从App.axaml.cs运行** , 其运行时new MainWindow()
 2. MainWindow绑定了 MainWindowViewModel 并且事件绑定 OnInitializedCommand
-3. OnInitializedCommand 绑定了 OnInitialized方法 改方法内调用了 `_rootNavigationService.NavigateTo`方法
+3. OnInitializedCommand 绑定了 OnInitialized方法 该方法内调用了 `_rootNavigationService.NavigateTo`方法
 4. _rootNavigationService 的实现 会更改 MainWindowViewModel内的属性 达到更改页面的目的
 
 
@@ -2779,7 +2779,201 @@ xmlns:lvm="using:Dpa.Library.ViewModel"
 
 5. 依赖注入 `IMenuNavigationService` 和他的实现类
 
+6. 创建ListBox 点击事件，使用ICommand绑定
 
+   > 1. 判断选中项是否为空
+   >
+   > 2. MainViewModel引入侧边导航类
+   >
+   >    ```csharp
+   >    public ICommand ListBoxViewCommand { get; }
+   >    
+   >    public MainViewModel(IMenuNavigationService menuNavigationService)
+   >    {
+   >        _menuNavigationService = menuNavigationService;
+   >        PopStackCommand = new RelayCommand(PopStack);
+   >        ControlIsOpenCommand = new RelayCommand(ControlIsOpen);
+   >        ListBoxViewCommand = new RelayCommand(ListBoxToView);
+   >    }
+   >    
+   >    /// <summary>
+   >    /// 绑定ListBox的选项点击事件
+   >    /// </summary>
+   >    private void ListBoxToView()
+   >    {
+   >        if(SelectedItem is null)
+   >        {
+   >            return;
+   >        }
+   >        MenuItem item = MenuItem.Items.FirstOrDefault(f => f.Name.Equals(SelectedItem));
+   >        _menuNavigationService.NavigateTo(item.View);
+   >    }
+   >    ```
+   >
+   >    
+   >
+   > 3. 使用事件绑定 绑定Tapped事件 在ListBox内 > 后
+   >
+   >    ```xaml
+   >    <ListBox
+   >        Grid.Row="1"
+   >        ItemsSource="{Binding Source={x:Static lvm:MenuItem.Items}}"
+   >        SelectedItem="{Binding SelectedItem, Mode=TwoWay}">
+   >        <Interaction.Behaviors>
+   >            <EventTriggerBehavior EventName="Tapped">
+   >                <InvokeCommandAction Command="{Binding ListBoxViewCommand}" />
+   >            </EventTriggerBehavior>
+   >        </Interaction.Behaviors>
+   >        <ListBox.ItemTemplate>
+   >            <DataTemplate>
+   >                <Label
+   >                    Margin="50,5,0,5"
+   >                    Content="{Binding Name}"
+   >                    FontSize="20" />
+   >            </DataTemplate>
+   >        </ListBox.ItemTemplate>
+   >    </ListBox>
+   >    ```
+   >
+   >    
+
+   ```csharp
+   public void OnMenuTappen()
+   {
+   	if(选择项 is null)
+       {
+   		return;
+       }
+   }
+   ```
+
+7. 创建两个ViewModel `FavoriteViewModel` `QueryViewModel` 继承 `ViewModelBase` 注册到依赖注入容器 (空Model) 并暴露
+
+   ```csharp
+   _serviceCollection.AddScoped<QueryViewModel>();
+   _serviceCollection.AddScoped<FavoriteViewModel>();
+   
+   public QueryViewModel QueryViewModel => _serviceProvider.GetService<QueryViewModel>();
+   public FavoriteViewModel FavoriteViewModel => _serviceProvider.GetService<FavoriteViewModel>();
+   ```
+
+   
+
+   1. 创建初始化界面的ViewModel `InitializationViewModel`
+
+   ```csharp
+   using Dpa.Library.Services;
+   using System;
+   using System.Collections.Generic;
+   using System.Linq;
+   using System.Text;
+   using System.Threading.Tasks;
+   using System.Windows.Input;
+   
+   namespace Dpa.Library.ViewModel
+   {
+       public class InitializationViewModel : ViewModelBase
+       {
+           private readonly IMenuNavigationService _menuNavigationService;
+           private readonly IRootNavigationService _rootNavigationService;
+           private readonly IPoetryStyService _poetryStyService;
+           public ICommand InitiaCommand { get; }
+   
+           public InitializationViewModel(IRootNavigationService rootNavigationService,IMenuNavigationService menuNavigationService,IPoetryStyService poetryStyService)
+           {
+               _menuNavigationService = menuNavigationService;
+               _rootNavigationService = rootNavigationService;
+               _poetryStyService = poetryStyService;
+           }
+   
+           /// <summary>
+           /// 初始化
+           /// </summary>
+           private async void Initia()
+           {
+               if (_poetryStyService.IsInitialized)
+               {
+                   ViewToMainView();
+                   return;
+               }
+               await _poetryStyService.InitializeAsync();
+               await System.Threading.Tasks.Task.Delay(1000);
+               ViewToMainView();
+           }
+   
+           /// <summary>
+           /// 引导View显示
+           /// </summary>
+           private void ViewToMainView()
+           {
+               _rootNavigationService.NavigateTo(ViewInfo.MainView);
+               _menuNavigationService.NavigateTo(MenuNavigationConstant.ToDayView);
+           }
+   
+       }
+   }
+   ```
+
+   
+
+   1. 初始化完成后跳转到`MainView`
+
+   2. 跳转后 将 `MainView` 的首页也生成
+
+      ```xaml
+      <UserControl
+          x:Class="Dpa.InitializationView"
+          xmlns="https://github.com/avaloniaui"
+          xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+          xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+          xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+          d:DesignHeight="450"
+          d:DesignWidth="800"
+          DataContext="{Binding InitiaCommand, Source={StaticResource ServiceLocator}}"
+          mc:Ignorable="d">
+          <!--  事件绑定  -->
+          <Interaction.Behaviors>
+              <EventTriggerBehavior EventName="Initialized">
+                  <InvokeCommandAction Command="{Binding InitiailzationCommand}" />
+              </EventTriggerBehavior>
+          </Interaction.Behaviors>
+          <ProgressBar
+              Width="100"
+              Height="100"
+              IsIndeterminate="True"
+              ShowProgressText=""
+              Theme="{DynamicResource ProgressRing}" />
+      </UserControl>
+      ```
+
+      
+
+8. 创建 ICommand 绑定 初始化方法
+
+   1. 迁移数据库
+   2. 等待1s `Task.Delay`
+   3. 跳转MainView
+   4. 显示主页
+
+9. `InitializationView` 创建事件绑定 绑定初始化事件
+
+10. 创建加载圈
+
+    ```xaml
+    <ProgressBar Width="xxx"
+                 Height="xxx"
+                 IsIndeterminate="True"
+                 Theme="{DynamicResource ProgressRing}"
+                 ShowProgressText>
+    ```
+
+11. 改造构造函数 引入页面跳转接口
+
+12. #### `MainWindowViewModel` 初始化内判断数据库是否初始化，如果初始化了 那么导航到主页, 如果没有初始化那么 跳转到初始化页 到这里
+
+13. 根导航现在只负责根导航了 `RootNavigationService`
+
+ 
 
 # 99 直角按钮
 

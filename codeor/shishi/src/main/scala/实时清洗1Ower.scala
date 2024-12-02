@@ -1,4 +1,5 @@
 import org.apache.flink.api.common.eventtime.WatermarkStrategy
+import org.apache.flink.api.common.functions.MapFunction
 import org.apache.flink.api.common.serialization.SimpleStringSchema
 import org.apache.flink.api.scala.createTypeInformation
 import org.apache.flink.connector.kafka.sink.{KafkaRecordSerializationSchema, KafkaSink, TopicSelector}
@@ -37,12 +38,11 @@ object 实时清洗1Ower {
             );
 
         val kafkaData = env.fromSource(Kafkas, WatermarkStrategy.noWatermarks(), "kafka")
-        .map(f =>{
-            f.split("\"data\":")(1)
-        }).map(f => f.substring(0,f.length-1))
+                .map(f => f.split("\"data\":")(1))
+                .map(f => f.substring(0,f.length-1))
+
         kafkaData.print();
         kafkaData.sinkTo(kafkasink.build());
-
         env.execute();
     }
 }

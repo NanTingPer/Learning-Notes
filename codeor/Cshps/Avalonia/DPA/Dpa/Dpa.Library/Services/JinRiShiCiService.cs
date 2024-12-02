@@ -131,8 +131,6 @@ public class JinRiShiCiService : IToDayPoetryStyService
     /// <returns></returns>
     public async Task<ToDayPoetry> RandomGetPortryAsync()
     {
-        await _poetryStyService.InitializeAsync();
-
         Random rom = new Random();
         int next = rom.Next(30);
         var list = await _poetryStyService.GetPoetryAsync(f => true, next, 1);

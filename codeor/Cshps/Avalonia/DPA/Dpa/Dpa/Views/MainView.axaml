@@ -52,6 +52,11 @@
                     Grid.Row="1"
                     ItemsSource="{Binding Source={x:Static lvm:MenuItem.Items}}"
                     SelectedItem="{Binding SelectedItem, Mode=TwoWay}">
+                    <Interaction.Behaviors>
+                        <EventTriggerBehavior EventName="Tapped">
+                            <InvokeCommandAction Command="{Binding ListBoxViewCommand}" />
+                        </EventTriggerBehavior>
+                    </Interaction.Behaviors>
                     <ListBox.ItemTemplate>
                         <DataTemplate>
                             <Label

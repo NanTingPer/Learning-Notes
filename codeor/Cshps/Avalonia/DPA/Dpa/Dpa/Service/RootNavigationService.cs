@@ -4,6 +4,9 @@ using Dpa.Library.ViewModel;
 
 namespace Dpa.Service;
 
+/// <summary>
+/// 用于MainView的Content导航
+/// </summary>
 public class RootNavigationService : IRootNavigationService
 {
     /// <summary>
@@ -15,8 +18,8 @@ public class RootNavigationService : IRootNavigationService
         ServiceLocator SL = ServiceLocator.Current;
         if (view.Equals(ViewInfo.MainView))
         {
-            SL.MainWindowModel.View = SL.MainViewModel;
-            SL.MainViewModel.SetViewAndClearStack(MenuNavigationConstant.ToDayView,ServiceLocator.Current.ToDayViewModel);
+            SL.MainWindowModel.View = SL.InitializationViewModel;
+            //SL.MainViewModel.SetViewAndClearStack(MenuNavigationConstant.ToDayView,ServiceLocator.Current.ToDayViewModel);
         }
     }
 }

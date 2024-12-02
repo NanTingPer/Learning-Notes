@@ -28,6 +28,12 @@ public class ServiceLocator
 
     public MainViewModel MainViewModel => _serviceProvider.GetService<MainViewModel>();
 
+    public QueryViewModel QueryViewModel => _serviceProvider.GetService<QueryViewModel>();
+
+    public FavoriteViewModel FavoriteViewModel => _serviceProvider.GetService<FavoriteViewModel>();
+
+    public InitializationViewModel InitializationViewModel => _serviceProvider.GetService<InitializationViewModel>();
+
     private static ServiceLocator _current;
     /// <summary> 
     /// <para> 用来从资源中试图获取ServiceLocator实例 </para> 
@@ -64,6 +70,12 @@ public class ServiceLocator
         _serviceCollection.AddScoped<MainViewModel>();
 
         _serviceCollection.AddScoped<IMenuNavigationService, MenuNavigationService>();
+
+        _serviceCollection.AddScoped<QueryViewModel>();
+
+        _serviceCollection.AddScoped<FavoriteViewModel>();
+
+        _serviceCollection.AddScoped<InitializationViewModel>();
         
         _serviceProvider = _serviceCollection.BuildServiceProvider();
     }

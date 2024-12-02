@@ -36,7 +36,7 @@ public class ContentViewModel : ViewModelBase
     public ContentViewModel(IPoetryStyService poetryStyService)
     {
         _poetryStyService = poetryStyService;
-        _poetryStyService.InitializeAsync();
+        //_poetryStyService.InitializeAsync();
         //Fact
         GetPoetryAllICommand = new AsyncRelayCommand(GetPoetryAsyncAll);
         AvaloniaInfiniteScrolling = new AvaloniaInfiniteScrollCollection<Poetry>()
@@ -74,7 +74,7 @@ public class ContentViewModel : ViewModelBase
     /// </summary>
     private async System.Threading.Tasks.Task GetPoetryAsyncAll()
     {
-        await _poetryStyService.InitializeAsync();
+        //await _poetryStyService.InitializeAsync();
         //每次调用
         PoetryList.Clear();
         

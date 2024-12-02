@@ -48,34 +48,14 @@ object 实时计算1Ower {
         """
             |  CREATE TABLE product_info_source (
             |  product_id BIGINT,
-            |  product_core STRING,
             |  product_name STRING,
-            |  bar_code STRING,
-            |  brand_id BIGINT,
-            |  one_category_id INTEGER,
-            |  two_category_id INTEGER,
-            |  three_category_id INTEGER,
-            |  supplier_id BIGINT,
-            |  price DOUBLE,
-            |  average_cost DOUBLE,
-            |  publish_status INTEGER,
-            |  audit_status INTEGER,
-            |  weight DOUBLE,
-            |  length DOUBLE,
-            |  height DOUBLE,
-            |  width DOUBLE,
-            |  color_type INTEGER,
-            |  production_date STRING,
-            |  shelf_life BIGINT,
-            |  descript STRING,
-            |  indate STRING,
             |  modified_time STRING,
             |  PRIMARY KEY (product_id) NOT ENFORCED
             |) WITH (
             |   'connector'='jdbc',
             |   'username'='root',
             |   'password'='123456',
-            |   'url'='jdbc:mysql://192.168.45.13:3306/ds_db01?useSSL=false&serverTimezone=Asia/Shanghai&useUnicode=true',
+            |   'url'='jdbc:mysql://192.168.45.13:3306/ds_db01?useSSL=false',
             |   'table-name'='product_info'
             |)
         """.stripMargin
@@ -156,6 +136,7 @@ object 实时计算1Ower {
               |    product_dim_table AS pdt ON tb2._2 = pdt.product_id
             """.stripMargin).execute().print()
 //            .executeInsert("product_pv_uv_hbase")
+
 
 //        envtable.executeSql("select * from product_pv_uv_hbase")
     }

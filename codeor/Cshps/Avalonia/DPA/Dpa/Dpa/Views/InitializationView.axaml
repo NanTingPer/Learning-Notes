@@ -6,12 +6,12 @@
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     d:DesignHeight="450"
     d:DesignWidth="800"
-    DataContext="{Binding InitiaCommand, Source={StaticResource ServiceLocator}}"
+    DataContext="{Binding InitializationViewModel, Source={StaticResource ServiceLocator}}"
     mc:Ignorable="d">
     <!--  事件绑定  -->
     <Interaction.Behaviors>
         <EventTriggerBehavior EventName="Initialized">
-            <InvokeCommandAction Command="{Binding InitiailzationCommand}" />
+            <InvokeCommandAction Command="{Binding InitiaCommand}" />
         </EventTriggerBehavior>
     </Interaction.Behaviors>
     <ProgressBar

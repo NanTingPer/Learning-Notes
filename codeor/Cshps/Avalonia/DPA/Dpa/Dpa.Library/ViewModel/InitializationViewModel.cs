@@ -16,13 +16,13 @@ namespace Dpa.Library.ViewModel
             _menuNavigationService = menuNavigationService;
             _rootNavigationService = rootNavigationService;
             _poetryStyService = poetryStyService;
-            InitiaCommand = new RelayCommand(Initia);
+            InitiaCommand = new AsyncRelayCommand(Initia);
         }
 
         /// <summary>
         /// 初始化
         /// </summary>
-        private async void Initia()
+        private async System.Threading.Tasks.Task Initia()
         {
             if (_poetryStyService.IsInitialized)
             {

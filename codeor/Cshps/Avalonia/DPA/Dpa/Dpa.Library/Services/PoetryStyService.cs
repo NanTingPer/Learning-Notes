@@ -52,7 +52,7 @@ public class PoetryStyService : IPoetryStyService
     /// </summary>
     public async System.Threading.Tasks.Task InitializeAsync()
     {
-        if (!IsInitialized)
+        if (IsInitialized == false)
         {
             //目标文件流，模式为 存在打开 不存在 创建
             await using FileStream FromStream = new FileStream(DbPath, FileMode.OpenOrCreate);

@@ -2787,7 +2787,7 @@ xmlns:lvm="using:Dpa.Library.ViewModel"
    >
    >    ```csharp
    >    public ICommand ListBoxViewCommand { get; }
-   >    
+   >       
    >    public MainViewModel(IMenuNavigationService menuNavigationService)
    >    {
    >        _menuNavigationService = menuNavigationService;
@@ -2795,7 +2795,7 @@ xmlns:lvm="using:Dpa.Library.ViewModel"
    >        ControlIsOpenCommand = new RelayCommand(ControlIsOpen);
    >        ListBoxViewCommand = new RelayCommand(ListBoxToView);
    >    }
-   >    
+   >       
    >    /// <summary>
    >    /// 绑定ListBox的选项点击事件
    >    /// </summary>
@@ -2969,9 +2969,163 @@ xmlns:lvm="using:Dpa.Library.ViewModel"
 
 11. 改造构造函数 引入页面跳转接口
 
-12. #### `MainWindowViewModel` 初始化内判断数据库是否初始化，如果初始化了 那么导航到主页, 如果没有初始化那么 跳转到初始化页 到这里
+12. `MainWindowViewModel` 初始化内判断数据库是否初始化，如果初始化了 那么导航到主页, 如果没有初始化那么 跳转到初始化页
+
+    - 新建的UserControl 名称空间是错的 需要自己添加正确的名称空间
+    - 更改.cs文件的名称空间 还要更改axaml的名称空间
+
+    ```csharp
+    <UserControl
+        x:Class="Dpa.Views.QueryView"/>
+    namespace Dpa.Views;
+    public partial class QueryView : UserControl
+    
+    ```
+
+    
 
 13. 根导航现在只负责根导航了 `RootNavigationService`
+
+- ### 下列可正常导航 界面正常
+
+> #### RootNavigationService
+
+```csharp
+using Avalonia.Controls;
+using Dpa.Library.Services;
+using Dpa.Library.ViewModel;
+
+namespace Dpa.Service;
+
+/// <summary>
+/// 用于MainView的Content导航
+/// </summary>
+public class RootNavigationService : IRootNavigationService
+{
+    /// <summary>
+    /// 用于MainView的Content导航
+    /// </summary>
+    /// <param name="view"></param>
+    public void NavigateTo(string view)
+    {
+        ServiceLocator SL = ServiceLocator.Current;
+        if (view.Equals(ViewInfo.MainView))
+        {
+            SL.MainWindowModel.View = SL.MainViewModel;
+            //SL.MainViewModel.SetViewAndClearStack(MenuNavigationConstant.ToDayView,ServiceLocator.Current.ToDayViewModel);
+        }
+        else
+        {
+            SL.MainWindowModel.View = SL.InitializationViewModel;
+        }
+    }
+}
+```
+
+
+
+> #### MainWindowModel
+
+```csharp
+using CommunityToolkit.Mvvm.Input;
+using Dpa.Library.Services;
+using System.Windows.Input;
+
+namespace Dpa.Library.ViewModel;
+
+public class MainWindowModel : ViewModelBase
+{
+    private ViewModelBase _view;
+    private IRootNavigationService _rootNavigationService;
+    private IPoetryStyService _poetryStyService;
+    public ICommand OnInitializedCommand { get; }
+
+    public MainWindowModel(IRootNavigationService rootNavigationService,IPoetryStyService p)
+    {
+        _rootNavigationService = rootNavigationService;
+        _poetryStyService = p;
+        OnInitializedCommand = new RelayCommand(OnInitialized);
+    }
+    public ViewModelBase View
+    {
+        get => _view;
+        set => SetProperty(ref _view, value);
+    }
+
+    /// <summary>
+    /// 这里是主窗口
+    /// 启动都会先执行 MainWindow的小玩意
+    /// 只需要在MainWindow的View(axaml)文件 中 使用事件绑定的方式 将Initia绑定到该方法的ICommand中\n
+    /// 就可以将主界面显示为MainView
+    /// </summary>
+    private void OnInitialized()
+    {
+        if(_poetryStyService.IsInitialized) 
+        {
+            _rootNavigationService.NavigateTo(ViewInfo.MainView);
+            return;
+        }
+        _rootNavigationService.NavigateTo(ViewInfo.InitializationView);
+    }
+
+}
+```
+
+
+
+> ### InitializationViewModel
+
+```csharp
+using CommunityToolkit.Mvvm.Input;
+using Dpa.Library.Services;
+using System.Threading.Tasks;
+
+namespace Dpa.Library.ViewModel
+{
+    public class InitializationViewModel : ViewModelBase
+    {
+        private readonly IMenuNavigationService _menuNavigationService;
+        private readonly IRootNavigationService _rootNavigationService;
+        private readonly IPoetryStyService _poetryStyService;
+        public ICommand InitiaCommand { get; }
+
+        public InitializationViewModel(IRootNavigationService rootNavigationService,IMenuNavigationService menuNavigationService,IPoetryStyService poetryStyService)
+        {
+            _menuNavigationService = menuNavigationService;
+            _rootNavigationService = rootNavigationService;
+            _poetryStyService = poetryStyService;
+            InitiaCommand = new RelayCommand(Initia);
+        }
+
+        /// <summary>
+        /// 初始化
+        /// </summary>
+        private async void Initia()
+        {
+            if (_poetryStyService.IsInitialized)
+            {
+                ViewToMainView();
+                return;
+            }
+            await _poetryStyService.InitializeAsync();
+            await System.Threading.Tasks.Task.Delay(1000);
+            ViewToMainView();
+        }
+
+        /// <summary>
+        /// 引导View显示
+        /// </summary>
+        private void ViewToMainView()
+        {
+            _rootNavigationService.NavigateTo(ViewInfo.MainView);
+            _menuNavigationService.NavigateTo(MenuNavigationConstant.ToDayView);
+        }
+
+    }
+}
+```
+
+
 
  
 

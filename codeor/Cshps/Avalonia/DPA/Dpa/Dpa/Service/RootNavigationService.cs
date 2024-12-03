@@ -18,8 +18,12 @@ public class RootNavigationService : IRootNavigationService
         ServiceLocator SL = ServiceLocator.Current;
         if (view.Equals(ViewInfo.MainView))
         {
-            SL.MainWindowModel.View = SL.InitializationViewModel;
+            SL.MainWindowModel.View = SL.MainViewModel;
             //SL.MainViewModel.SetViewAndClearStack(MenuNavigationConstant.ToDayView,ServiceLocator.Current.ToDayViewModel);
+        }
+        else
+        {
+            SL.MainWindowModel.View = SL.InitializationViewModel;
         }
     }
 }

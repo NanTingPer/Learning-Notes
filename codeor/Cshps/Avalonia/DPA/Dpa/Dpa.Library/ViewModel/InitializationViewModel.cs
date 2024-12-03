@@ -1,9 +1,5 @@
-﻿using Dpa.Library.Services;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using CommunityToolkit.Mvvm.Input;
+using Dpa.Library.Services;
 using System.Windows.Input;
 
 namespace Dpa.Library.ViewModel
@@ -20,6 +16,7 @@ namespace Dpa.Library.ViewModel
             _menuNavigationService = menuNavigationService;
             _rootNavigationService = rootNavigationService;
             _poetryStyService = poetryStyService;
+            InitiaCommand = new RelayCommand(Initia);
         }
 
         /// <summary>

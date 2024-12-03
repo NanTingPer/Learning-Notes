@@ -70,14 +70,7 @@ namespace Dpa.Library.ViewModel
         /// </summary>
         private void ControlIsOpen()
         {
-            if (IsOpen == true)
-            {
-                IsOpen = false;
-            }
-            else
-            {
-                IsOpen = true;
-            }
+            IsOpen = !IsOpen;
         }
 
         /// <summary>

@@ -8,5 +8,5 @@
     d:DesignWidth="800"
     DataContext="{Binding FavoriteViewModel, Source={StaticResource ServiceLocator}}"
     mc:Ignorable="d">
-    Welcome to Avalonia!
+    这里是FavoriteView
 </UserControl>

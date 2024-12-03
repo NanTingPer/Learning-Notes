@@ -9,9 +9,12 @@ import org.apache.flink.streaming.api.scala.function.ProcessWindowFunction
 import org.apache.flink.streaming.api.windowing.assigners.TumblingProcessingTimeWindows
 import org.apache.flink.streaming.api.windowing.time.Time
 import org.apache.flink.streaming.api.windowing.windows.TimeWindow
+import org.apache.flink.table.api._
 import org.apache.flink.table.api.bridge.scala.StreamTableEnvironment
 import org.apache.flink.util.Collector
 
+import java.text.SimpleDateFormat
+import java.util.{Date, Random}
 import java.{lang, util}
 
 object 实时计算22_1 {
@@ -121,6 +124,11 @@ object 实时计算22_1 {
                         .executeInsert("hbaseT")
 
                 tableEnv.executeSql("select * from hbaseT").print()
+                tableEnv.sqlQuery("select * from hbaseT")
+                        .select(concat(new SimpleDateFormat("yyyy-MM-dd HH:mm:ss")
+                                .format(new Date(System.currentTimeMillis())),
+                                "-",
+                                $"product_id").as("row_key"))
 
 
 //                val streamTable = tableEnv.fromDataStream(stream)

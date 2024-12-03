@@ -30,7 +30,7 @@ namespace Dpa.Library.ViewModel
                 return;
             }
             await _poetryStyService.InitializeAsync();
-            await System.Threading.Tasks.Task.Delay(1000);
+            await System.Threading.Tasks.Task.Delay(5000);
             ViewToMainView();
         }
 

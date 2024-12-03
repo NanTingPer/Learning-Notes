@@ -2787,7 +2787,7 @@ xmlns:lvm="using:Dpa.Library.ViewModel"
    >
    >    ```csharp
    >    public ICommand ListBoxViewCommand { get; }
-   >       
+   >          
    >    public MainViewModel(IMenuNavigationService menuNavigationService)
    >    {
    >        _menuNavigationService = menuNavigationService;
@@ -2795,7 +2795,7 @@ xmlns:lvm="using:Dpa.Library.ViewModel"
    >        ControlIsOpenCommand = new RelayCommand(ControlIsOpen);
    >        ListBoxViewCommand = new RelayCommand(ListBoxToView);
    >    }
-   >       
+   >          
    >    /// <summary>
    >    /// 绑定ListBox的选项点击事件
    >    /// </summary>
@@ -3127,7 +3127,28 @@ namespace Dpa.Library.ViewModel
 
 
 
- 
+#  3.9 主页图片显示
+
+1. 创建模型类 `ToDayImage`
+
+   ```csharp
+   public string FullStartDate {get;set;} = string.Empty;
+   public DateTime ExpiresAt{get;set;}
+   public string Copyright{get;set;} = string.Empty;
+   public string CopyrigthLink{get;set;} = string.Empty;
+   public byte[] ImageBytes{get;set;}
+   ```
+
+2. 创建每日图片服务接口 `IToDayImageStorage`
+
+   ```csharp
+   Task<TodayImage> GetToDayImageAsync(bool isIncludingImageStream);
+   Task SaveToDayImageAsync(ToDayImage todayImage)
+   ```
+
+   
+
+
 
 # 99 直角按钮
 

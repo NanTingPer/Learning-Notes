@@ -99,3 +99,42 @@ with serdeproperties(
     info:pv,
     info:modified_time')
 tblproperties('hbase.table.name'='ods:TempTable','hbase.table.default.storage.type'='binary');
+
+
+
+$"order_id"
+$"order_sn"
+$"customer_id"
+$"shipping_user"
+$"province"
+$"city"
+$"address"
+$"order_source"
+$"payment_method"
+$"order_money"
+$"district_money"
+$"shipping_money"
+$"payment_money"
+$"shipping_comp_name"
+$"shipping_sn"
+$"create_time"
+$"shipping_time"
+$"pay_time"
+$"receive_time"
+$"order_status"
+$"order_point"
+$"invoice_title"
+$"modified_time"
+
+
+CREATE EXTERNAL TABLE ads.online_uv_pv(
+    key STRING,
+    product_id BIGINT,
+    product_name STRING,
+    uv BIGINT,
+    pv BIGINT
+) ROW FORMAT SERDE 'org.apache.hadoop.hive.hbase.HBaseSerDe'
+STORED BY 'org.apache.hadoop.hive.hbase.HBaseStorageHandler'
+with serdeproperties('hbase.columns.mapping'=':key,info:product_id,info:product_name,info:uv,info:pv')
+tblproperties('hbase.table.name'='ads:online_uv_pv','hbase.table.default.storage.type'='binary');
+

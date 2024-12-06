@@ -1,28 +1,19 @@
+package OldJobTest
+
 import org.apache.flink.api.common.eventtime.WatermarkStrategy
-import org.apache.flink.api.common.functions.ReduceFunction
 import org.apache.flink.api.common.serialization.SimpleStringSchema
-import org.apache.flink.api.common.state.{MapState, MapStateDescriptor}
-import org.apache.flink.api.common.typeinfo.{TypeInformation, Types}
 import org.apache.flink.api.scala.createTypeInformation
-import org.apache.flink.configuration.Configuration
-import org.apache.flink.connector.jdbc.table.JdbcTableSource
 import org.apache.flink.connector.kafka.source.KafkaSource
-import org.apache.flink.streaming.api.functions.{KeyedProcessFunction, ProcessFunction}
 import org.apache.flink.streaming.api.scala.StreamExecutionEnvironment
 import org.apache.flink.streaming.api.scala.function.ProcessAllWindowFunction
 import org.apache.flink.streaming.api.windowing.assigners.TumblingProcessingTimeWindows
 import org.apache.flink.streaming.api.windowing.time.Time
 import org.apache.flink.streaming.api.windowing.windows.TimeWindow
-import org.apache.flink.table.api._
+import org.apache.flink.table.api.bridge.scala.StreamTableEnvironment
 import org.apache.flink.table.api.bridge.scala.StreamTableEnvironment
 import org.apache.flink.util.Collector
-import org.apache.hadoop.hbase.shaded.protobuf.generated.FSProtos.HBaseVersionFileContentOrBuilder
 
-import java.time.LocalDateTime
-import java.time.format.DateTimeFormatter
 import java.util
-import javax.xml.crypto.{AlgorithmMethod, KeySelector, KeySelectorResult, XMLCryptoContext}
-import javax.xml.crypto.dsig.keyinfo.KeyInfo
 
 object 实时计算1Ower {
     def main(args: Array[String]): Unit = {

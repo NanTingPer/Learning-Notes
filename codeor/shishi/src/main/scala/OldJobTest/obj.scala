@@ -1,3 +1,5 @@
+package OldJobTest
+
 import org.apache.flink.streaming.api.scala.StreamExecutionEnvironment
 import org.apache.flink.table.api
 import org.apache.flink.table.api.Expressions.{dateFormat, randInteger}

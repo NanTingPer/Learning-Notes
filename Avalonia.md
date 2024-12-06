@@ -2787,7 +2787,7 @@ xmlns:lvm="using:Dpa.Library.ViewModel"
    >
    >    ```csharp
    >    public ICommand ListBoxViewCommand { get; }
-   >          
+   >             
    >    public MainViewModel(IMenuNavigationService menuNavigationService)
    >    {
    >        _menuNavigationService = menuNavigationService;
@@ -2795,7 +2795,7 @@ xmlns:lvm="using:Dpa.Library.ViewModel"
    >        ControlIsOpenCommand = new RelayCommand(ControlIsOpen);
    >        ListBoxViewCommand = new RelayCommand(ListBoxToView);
    >    }
-   >          
+   >             
    >    /// <summary>
    >    /// 绑定ListBox的选项点击事件
    >    /// </summary>
@@ -3144,6 +3144,38 @@ namespace Dpa.Library.ViewModel
    ```csharp
    Task<TodayImage> GetToDayImageAsync(bool isIncludingImageStream);
    Task SaveToDayImageAsync(ToDayImage todayImage)
+   ```
+
+3. 创建每日图片实现类`ToDayImageStorage`
+
+   ```csharp
+   public class ToDayImageStorage
+   {
+       //这个是 存储配置文件的那个类 IConfig
+   	private readonly IPreferenceStorage _preferenceStorage;
+       
+       public ToDayImageStorage(IPreferenceStorage preferenceStorage)
+       {
+           _preferenceStorage = preferenceStorage;
+       }
+       
+       //配置文件的Key
+       public static readonly string FullStartDateKey = nameof(ToDayImageStorage)+"."+nameof(ToDayImage.FullStartDate);
+       public static readonly string ExpiresAtKey = nameof(ToDayImageStorage)+"."+nameof(ToDayImage.ExpiresAt);
+       public static readonly string CopyrightKey = nameof(ToDayImageStorage)+"."+nameof(ToDayImage.Copyright);
+       public static readonly string CopyrightLinkKey = nameof(ToDayImageStorage)+"."+nameof(ToDayImage.CopyrightLink);
+       
+       //默认值
+       public const string FullStartDateDefault = "202412052130";
+       public static readonly DateTime ExpiresAtDefault = new(2024,12,5);
+       public const string CopyrightDefault = "Salt field province vitnam work (© Quangpraha/Pixabay)";
+       
+       
+       
+       
+       
+       
+   }
    ```
 
    

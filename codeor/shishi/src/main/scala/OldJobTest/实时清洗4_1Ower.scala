@@ -1,3 +1,5 @@
+package OldJobTest
+
 import com.esotericsoftware.kryo.serializers.DefaultSerializers.StringSerializer
 import org.apache.flink.api.common.eventtime.WatermarkStrategy
 import org.apache.flink.api.common.serialization.SimpleStringSchema

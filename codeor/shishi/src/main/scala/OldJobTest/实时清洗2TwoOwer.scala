@@ -1,3 +1,5 @@
+package OldJobTest
+
 import com.google.gson.Gson
 import org.apache.flink.api.common.eventtime.WatermarkStrategy
 import org.apache.flink.api.common.serialization.SimpleStringSchema

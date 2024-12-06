@@ -1,5 +1,15 @@
 # Flume - 已被标记休眠
 
+```txt
+Network streams 网络流 类型
+Flume supports the following mechanisms to read data from popular log stream types, such as:
+
+Avro -> Json定义
+Thrift -> 二进制通讯接口
+Syslog -> 系统日志捕捉
+Netcat -> TCP / UDP 网络数据传输
+```
+
 Flume是Cloudera提供的一个高可用的 高可靠 分布式的**海量日志采集、聚合和传输的系统**
 
 

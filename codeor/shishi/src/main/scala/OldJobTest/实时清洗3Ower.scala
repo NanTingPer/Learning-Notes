@@ -1,3 +1,5 @@
+package OldJobTest
+
 import org.apache.flink.api.common.eventtime.WatermarkStrategy
 import org.apache.flink.api.common.serialization.SimpleStringSchema
 import org.apache.flink.api.java.tuple.Tuple23

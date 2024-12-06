@@ -1,3 +1,5 @@
+package OldJobTest
+
 import com.google.gson.{Gson, JsonParser}
 import org.apache.flink.api.common.eventtime.WatermarkStrategy
 import org.apache.flink.api.common.functions.AggregateFunction

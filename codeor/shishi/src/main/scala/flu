@@ -1,0 +1,30 @@
+a1.channels = c1
+a1.sinks = k1
+a1.sources = s1
+
+a1.channels.c1.type = memory
+
+a1.sinks.k1.type = org.apache.flume.sink.kafka.KafkaSink
+a1.sinks.k1.brokerList = 192.168.45.10:9092
+a1.sinks.k1.topic = ods_mall_log
+
+a1.sources.s1.type = netcat
+a1.sources.s1.bind = 127.0.0.1
+a1.sources.s1.port = 25001
+
+a1.sinks.k1.channels = c1
+a1.sources.s1.channels = c1
+
+
+$"order_detail_id"
+$"order_sn"
+$"product_id"
+$"product_name"
+$"product_cnt"
+$"product_price"
+$"average_cost"
+$"weight"
+$"fee_money"
+$"w_id"
+$"create_time"
+$"modified_time"

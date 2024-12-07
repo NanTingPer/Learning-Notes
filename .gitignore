@@ -57,3 +57,5 @@ codeor/AcortDome/
 *.json
 /codeor/Cshps/Avalonia/DPA/Dpa/Dpa/obj
 *.vsidx
+*.bin
+*.v2

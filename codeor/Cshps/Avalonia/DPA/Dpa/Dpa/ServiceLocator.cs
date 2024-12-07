@@ -43,7 +43,6 @@ public class ServiceLocator
     {
         get
         {
-            
             if (_current is not null) return _current;
             if (Application.Current.TryGetResource(nameof(ServiceLocator),
                     null,

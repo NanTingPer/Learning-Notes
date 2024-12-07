@@ -1,7 +1,5 @@
 package OldJobTest
 
-import com.google.gson.JsonParser
-import com.ss2023.run.RedisSinkMapper
 import org.apache.flink.api.common.eventtime.{WatermarkGenerator, WatermarkGeneratorSupplier, WatermarkOutput, WatermarkStrategy}
 import org.apache.flink.api.common.functions.AggregateFunction
 import org.apache.flink.api.common.serialization.SimpleStringSchema

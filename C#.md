@@ -387,16 +387,25 @@ object Generic = Activator.CreateInstance(makeType);
 
 - 表达式树`Expression`有一个静态方法`.Add`可以将多个表达式树拼接在一起
 
-| Parameter                    | 该表达式要处理的参数       | `typeof(Student),"stu"`        |
-| ---------------------------- | ---------------- | ------------------------------ |
+| Parameter                    | 该表达式要处理的参数         | `typeof(Student),"stu"`        |
+| ---------------------------- | ---------------------------- | ------------------------------ |
 | **Property**                 | **该表达式要处理的参数属性** | **`pExp,nameof(Student.Age)`** |
-| **Constant***                | **双目运算符右边的值**    | **`10`可以是变量**                  |
-| GreaterThan                  | 双目运算符中间的表达 >     | **`levelExp,rightExp`**        |
-| Lambda`<Func<Student,bool>>` | 变换为表达式           | `bodyExp,pExp`                 |
+| **Constant**                 | **双目运算符右边的值**       | **`10`可以是变量**             |
+| GreaterThan                  | 双目运算符中间的表达 >       | **`levelExp,rightExp`**        |
+| Lambda`<Func<Student,bool>>` | 变换为表达式                 | `bodyExp,pExp`                 |
 
 
 
 # 7.0 IL
+
+| 指令 | 效果                   |                                                    |
+| ---- | ---------------------- | -------------------------------------------------- |
+| Pop  | 丢弃上一个方法的返回值 | il.InsertBefore(x,ilProcessor.Create(OpCodes.Pop)) |
+|      |                        |                                                    |
+|      |                        |                                                    |
+
+1. 加载程序
+2. 加载指定方法 获取IL 处理器
 
 - ### Mono.Cecil库
 
@@ -508,6 +517,82 @@ youtube .NET IL Weaving Demo with Mono.Cecil
 15. 使用`ImportReference()` 所有于mf相关的东西都会被导入到指定模块 , 这样可以避免发生来自不同模块的方法引用错误
 
 16. 再次运行,编译App.dll 可以看到成功运行
+
+
+
+```csharp
+using Mono.Cecil;
+using Mono.Cecil.Cil;
+using Mono.Cecil.Rocks;
+using List = Mono.Collections.Generic;
+
+namespace CecilDemo
+{
+    internal class Program
+    {
+        static void Main(string[] args)
+        {
+            string _sourceDll = "D:\\CodeRun\\Learning-Notes\\codeor\\Cshps\\Cecil\\Cedll\\bin\\Debug\\net8.0\\Cedll.dll";
+            string _sinkDll = "D:\\CodeRun\\Learning-Notes\\codeor\\Cshps\\Cecil\\Sinks\\bin\\Debug\\net8.0\\Sinks.dll";
+
+            ModuleDefinition source = ModuleDefinition.ReadModule(_sourceDll);
+            
+            //需要开启可写
+            ModuleDefinition sink = ModuleDefinition.ReadModule(_sinkDll,new ReaderParameters() { ReadWrite = true});
+
+            IEnumerable<TypeDefinition> oTypes = source.GetTypes();
+            IEnumerable<TypeDefinition> sTypes = sink.GetTypes();
+            //Cedll.Program
+            //Print
+
+            //Sinks.Program
+            //Main
+
+
+            //取出源方法
+            MethodDefinition? sourceMethod = oTypes.FirstOrDefault(f => "Cedll.Program".Equals(f.FullName))
+                .GetMethods().FirstOrDefault(f => "Print".Equals(f.Name));
+
+            if(sourceMethod is null) return;
+
+            //取出目标方法
+            MethodDefinition? sinkMethod = sTypes.FirstOrDefault(f => "Sinks.Program".Equals(f.FullName))
+                .GetMethods().FirstOrDefault(f => "Main".Equals(f.Name));
+
+            if(sinkMethod is null) return;
+
+            //源方法的IL处理器
+            ILProcessor sourcesMtIL = sourceMethod.Body.GetILProcessor();
+
+            //目标方法的IL处理器
+            ILProcessor sinkMtIL = sinkMethod.Body.GetILProcessor();
+
+            //获取源方法的全部IL指令
+            List::Collection<Instruction> sourceILs = sourceMethod.Body.Instructions;
+
+            //清空目标方法的全部IL指令
+            sinkMtIL.Clear();
+
+            //遍历源方法的IL指令 并插入目标方法
+            foreach (Instruction il in sourceILs)
+            {
+                //这样判断指定死了 但是源方法中有两个方法引用 一个是WriteKey 一个 输出
+                if(il.Operand is MethodReference MethodF)
+                {
+                    il.Operand = sink.ImportReference(MethodF);
+                }
+                sinkMtIL.Append(il);
+            }
+
+            //保存回到原本的dll
+            sink.Write();
+        }
+    }
+}
+
+```
+
+
 
 
 

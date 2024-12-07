@@ -617,11 +617,33 @@ namespace CecilDemo
 
 
 
-| 类型             | 方法名称                    | 作用            |
-| ---------------- | --------------------------- | --------------- |
-| SQLiteConnection | CreateFile(String filePath) | 加载/创建数据库 |
-|                  |                             |                 |
-|                  |                             |                 |
+| 类型                        | 方法名称                               | 作用                       | 示例 |
+| --------------------------- | -------------------------------------- | -------------------------- | ---- |
+| <u>~~SQLiteConnection~~</u> | <u>~~CreateFile(String filePath)~~</u> | <u>~~加载/创建数据库~~</u> |      |
+| SQLiteConnection            | new                                    | 创建数据库连接             |      |
+| SQLiteCommand               | new                                    | 创建SQL查询                |      |
+
+> ### SQLiteConnection
+
+```csharp
+SQLConn = new SQLiteConnection("Data Source = D:\\CodeRun\\Learning-Notes\\codeor\\Cshps\\Cecil\\Demo02\\SerblDll\\bin\\Debug\\net8.0\\stardict.db");
+SQLConn.Open();
+```
+
+
+
+> ### SQLiteCommand
+
+```csharp
+SQLiteCommand SCommand = new SQLiteCommand("select * from stardict limit 10", SQLConn);
+SQLiteDataReader Data = SCommand.ExecuteReader();
+while (Data.Read())
+{
+    Console.WriteLine($"{Data["id"]}\t{Data["word"]}\t{Data["translation"]}"); 
+}
+```
+
+
 
 
 

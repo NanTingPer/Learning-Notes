@@ -10,9 +10,30 @@ namespace Demo02
 {
     public class CecilMain
     {
+        //数据库链接
+        private static SQLiteConnection _sqlConn;
+        public static SQLiteConnection SQLConn
+        {
+            get
+            {
+                if (_sqlConn is null)
+                    SQLiteConnector();
+                return _sqlConn;
+            }
+            private set => _sqlConn = value;
+        }
+        
         static void Main(string[] args)
         {
+            SQLiteCommand SCommand = new SQLiteCommand("select * from stardict limit 10", SQLConn);
+            SQLiteDataReader Data = SCommand.ExecuteReader();
+            while (Data.Read())
+            {
+                Console.WriteLine($"{Data["id"]}\t{Data["word"]}\t{Data["translation"]}"); 
+            }
+
             string dllPath = "C:\\Users\\23759\\Documents\\My Games\\Terraria\\tModLoader\\ModReader\\FargowiltasSouls\\FargowiltasSouls.dll";
+
             
             //使用Location可以获取目标dll路径
             ModuleDefinition target_module = ModuleDefinition.ReadModule(dllPath);
@@ -46,11 +67,15 @@ namespace Demo02
             Console.Read();
         }
 
-        static SQLiteConnection SQLiteConnector()
+        static void SQLiteConnector()
         {
-            SQLiteConnection conn = new SQLiteConnection("D:\\CodeRun\\Learning-Notes\\codeor\\Cshps\\Cecil\\Demo02\\SerblDll\\bin\\Debug\\net8.0\\stardict.db");
-            conn.Open();
-            return conn;
+            SQLConn = new SQLiteConnection("Data Source = D:\\CodeRun\\Learning-Notes\\codeor\\Cshps\\Cecil\\Demo02\\SerblDll\\bin\\Debug\\net8.0\\stardict.db");
+            SQLConn.Open();
+        }
+
+        static void CloseSQLite()
+        {
+            SQLConn.Close();
         }
     }
 }

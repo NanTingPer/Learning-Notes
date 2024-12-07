@@ -1,0 +1,28 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.12.35527.113 d17.12
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Demo02", "Demo02\Demo02.csproj", "{55E295B3-DAA2-4265-BA49-E83D4E7CC1BD}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SerblDll", "SerblDll\SerblDll.csproj", "{3D589957-70AF-44D3-A5FF-F7FC93247E04}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{55E295B3-DAA2-4265-BA49-E83D4E7CC1BD}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{55E295B3-DAA2-4265-BA49-E83D4E7CC1BD}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{55E295B3-DAA2-4265-BA49-E83D4E7CC1BD}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{55E295B3-DAA2-4265-BA49-E83D4E7CC1BD}.Release|Any CPU.Build.0 = Release|Any CPU
+		{3D589957-70AF-44D3-A5FF-F7FC93247E04}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{3D589957-70AF-44D3-A5FF-F7FC93247E04}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{3D589957-70AF-44D3-A5FF-F7FC93247E04}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{3D589957-70AF-44D3-A5FF-F7FC93247E04}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+EndGlobal

@@ -401,8 +401,16 @@ object Generic = Activator.CreateInstance(makeType);
 | 指令 | 效果                   |                                                    |
 | ---- | ---------------------- | -------------------------------------------------- |
 | Pop  | 丢弃上一个方法的返回值 | il.InsertBefore(x,ilProcessor.Create(OpCodes.Pop)) |
-|      |                        |                                                    |
-|      |                        |                                                    |
+
+
+
+| 方法    | 效果                  | Instruction |
+| ------- | --------------------- | ----------- |
+| Operand | 值 例如 "Hello World" |             |
+| Next    | 该IL指令的全部内容    |             |
+| OpCode  | 该IL的指令            |             |
+
+
 
 1. 加载程序
 2. 加载指定方法 获取IL 处理器
@@ -594,7 +602,26 @@ namespace CecilDemo
 
 
 
+# 8.0 Regex正则表达式
 
+| 方法              | 作用             | 例子                                |
+| ----------------- | ---------------- | ----------------------------------- |
+| new Regex(表达式) | 创建正则匹配对象 | Regex reg = new Regex(@"[\/.\s:]"); |
+| Count(string str) | 计算正则匹配次数 | reg.Count(str) <= 0                 |
+
+
+
+# 9.0 C# SQL Lite
+
+1. 安装 nuget 包 => `System.Data.SQLite.Core`
+
+
+
+| 类型             | 方法名称                    | 作用            |
+| ---------------- | --------------------------- | --------------- |
+| SQLiteConnection | CreateFile(String filePath) | 加载/创建数据库 |
+|                  |                             |                 |
+|                  |                             |                 |
 
 
 

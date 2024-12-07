@@ -59,3 +59,4 @@ codeor/AcortDome/
 *.vsidx
 *.bin
 *.v2
+/codeor/Cshps/Cecil/Demo02/SerblDll/bin

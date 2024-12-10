@@ -2787,7 +2787,7 @@ xmlns:lvm="using:Dpa.Library.ViewModel"
    >
    >    ```csharp
    >    public ICommand ListBoxViewCommand { get; }
-   >             
+   >                      
    >    public MainViewModel(IMenuNavigationService menuNavigationService)
    >    {
    >        _menuNavigationService = menuNavigationService;
@@ -2795,7 +2795,7 @@ xmlns:lvm="using:Dpa.Library.ViewModel"
    >        ControlIsOpenCommand = new RelayCommand(ControlIsOpen);
    >        ListBoxViewCommand = new RelayCommand(ListBoxToView);
    >    }
-   >             
+   >                      
    >    /// <summary>
    >    /// 绑定ListBox的选项点击事件
    >    /// </summary>
@@ -3269,5 +3269,140 @@ public object Convert(object value,Type type,object Max)
         </DataTemplate>
     </ListBox.ItemTemplate>
 </ListBox>
+```
+
+
+
+# 94 事件绑定
+
+6. 在View模块安装 **Avalonia.Xaml.Behaviors nuget包**
+
+7. 引入两个名称空间
+
+```xaml
+xmlns:i="using:Avalonia.Xaml.Interactivity"
+xmlns:ia="using:Avalonia.Xaml.Interactions.Core"
+```
+
+10. 对事件的触发进行绑定
+
+```xaml
+<i:Interaction.Behaviors>
+    <ia:EventTriggerBehavior EventName="Initialized">
+        <ia:InvokeCommandAction Command="{Binding GetPoetryAllICommand}"></ia:InvokeCommandAction>
+    </ia:EventTriggerBehavior>
+</i:Interaction.Behaviors>
+```
+
+
+
+
+
+# 93 添加资源
+
+> 右键解决方法 => 资源 => 添加
+>
+> 编辑项目
+
+```xml
+<ItemGroup>
+<None Remove="stardict.db" />
+<EmbeddedResource Include="stardict.db">
+  <LogicalName>stardict.db</LogicalName>
+</EmbeddedResource>
+<Folder Include="ModelClass\" />
+</ItemGroup>
+```
+
+```csharp
+Assembly assembly = typeof(SQLiteService).Assembly;
+//string resourceName = assembly.GetManifestResourceNames().FirstOrDefault(f => f.Contains("stardict"));
+
+using Stream database = assembly.GetManifestResourceStream(_databaseName);
+using Stream fromStram = new FileStream(GetAppFilePath.GetPathAndCreate(_databaseName), FileMode.Open);
+await database.CopyToAsync(fromStram);
+```
+
+
+
+# 92 几个控件属性
+
+## 1 通用
+
+| HorizontalAlignment | 水平对齐方式 | 如果加上Content就是内容对齐方式 |
+| ------------------- | ------------ | ------------------------------- |
+| VerticalAlignment   | 垂直对齐方式 | 如果加上Content就是内容对齐方式 |
+| CornerRadius        | 圆角润滑度   |                                 |
+
+
+
+
+
+# 93 带参数Command
+
+> #### 在axaml的事件绑定上`CommandParameter`后面跟的就是传递的参数
+
+> 在DataGrid有个 SelectedItems 属性 [Avalonia UI Framework - API - DataGrid.SelectedItems Property](https://reference.avaloniaui.net/api/Avalonia.Controls/DataGrid/434E79A7)
+
+```xaml
+<DataGrid
+    x:Name="grid"
+    Grid.Row="4"
+    HorizontalAlignment="Center"
+    AutoGenerateColumns="True"
+    Background="#88eeecc6"
+    CanUserResizeColumns="True"
+    GridLinesVisibility="All"
+    IsReadOnly="True"
+    ItemsSource="{Binding TranslatorList}">
+    <Interaction.Behaviors>
+        <EventTriggerBehavior EventName="SelectionChanged">
+            <InvokeCommandAction Command="{Binding GetPitchs}" CommandParameter="{Binding #grid.SelectedItems}" />
+        </EventTriggerBehavior>
+    </Interaction.Behaviors>
+    <!--
+    <DataGrid.Columns>
+        <DataGridTextColumn Binding="{Binding Word}" Header="单词" />
+        <DataGridTextColumn Binding="{Binding Translation}" Header="翻译" />
+    </DataGrid.Columns>
+    -->
+</DataGrid>
+
+```
+
+
+
+> #### 数据绑定当前页面其他内容
+>
+> 需要先为控件起个名字 `x:Name`
+
+```xaml
+<DataGrid
+    x:Name="grid"/>
+```
+
+> 绑定
+
+```xaml
+<InvokeCommandAction Command="{Binding GetPitchs}" CommandParameter="{Binding #grid.SelectedItems}" />
+```
+
+> 绑定到页面的其他ViewModel的Command
+
+```xaml
+<InvokeCommandAction Command="{Binding "属性.Command",ElementName="x:Name定义的名字"}" />
+<!-- 例如 x:Name = "TheResultView"  DataContext 绑定一个ViewModel  里面有一个showComm-->
+<!-- 如果使用Riedr 反射已经不给提示了 -->
+<InvokeCommandAction Command="{Binding DataContext.ViewModel,ElemntName=TheResultView}">
+```
+
+
+
+## 声明带参Command
+
+> T是接收到的数据类型
+
+```csharp
+public IRelayCommand<T> CommandName { get; }
 ```
 

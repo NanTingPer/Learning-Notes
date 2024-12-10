@@ -5,10 +5,12 @@ import org.apache.spark.sql.expressions.Window
 
 object CleaningJob01 {
   def main(arg:Array[String]): Unit = {
+    System.setProperty("HADOOP_USER_NAME","root")
     val spark = SparkSession.builder()
       .master("local[*]")
       .appName("CLEAN Job")
       .config("hive.exec.dynamic.partition","true")
+      .config("hive.exec.scratchdir","hdfs://192.168.45.13:9000/user/hive/temp")
       .config("hive.exec.dynamic.partition.mode","nonstrict")
       .config("spark.sql.sources.partitionOverwriteMode","dynamic")
       .config("spark.sql.parquet.writeLegacyFormat","true")

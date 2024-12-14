@@ -2787,7 +2787,7 @@ xmlns:lvm="using:Dpa.Library.ViewModel"
    >
    >    ```csharp
    >    public ICommand ListBoxViewCommand { get; }
-   >                      
+   >                            
    >    public MainViewModel(IMenuNavigationService menuNavigationService)
    >    {
    >        _menuNavigationService = menuNavigationService;
@@ -2795,7 +2795,7 @@ xmlns:lvm="using:Dpa.Library.ViewModel"
    >        ControlIsOpenCommand = new RelayCommand(ControlIsOpen);
    >        ListBoxViewCommand = new RelayCommand(ListBoxToView);
    >    }
-   >                      
+   >                            
    >    /// <summary>
    >    /// 绑定ListBox的选项点击事件
    >    /// </summary>
@@ -3406,3 +3406,16 @@ await database.CopyToAsync(fromStram);
 public IRelayCommand<T> CommandName { get; }
 ```
 
+
+
+# 92 ViewModel in ViewModel
+
+
+
+
+
+# 91 DataGrid
+
+## 事件
+
+- CellEditEnded 编辑结束后发生

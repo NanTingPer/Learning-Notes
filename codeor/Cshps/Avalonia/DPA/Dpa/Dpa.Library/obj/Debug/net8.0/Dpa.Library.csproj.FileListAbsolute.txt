@@ -1,0 +1,13 @@
+D:\CodeRun\Learning-Notes\codeor\Cshps\Avalonia\DPA\Dpa\Dpa.Library\bin\Debug\net8.0\Dpa.Library.deps.json
+D:\CodeRun\Learning-Notes\codeor\Cshps\Avalonia\DPA\Dpa\Dpa.Library\bin\Debug\net8.0\Dpa.Library.dll
+D:\CodeRun\Learning-Notes\codeor\Cshps\Avalonia\DPA\Dpa\Dpa.Library\bin\Debug\net8.0\Dpa.Library.pdb
+D:\CodeRun\Learning-Notes\codeor\Cshps\Avalonia\DPA\Dpa\Dpa.Library\obj\Debug\net8.0\Dpa.Library.csproj.AssemblyReference.cache
+D:\CodeRun\Learning-Notes\codeor\Cshps\Avalonia\DPA\Dpa\Dpa.Library\obj\Debug\net8.0\Dpa.Library.GeneratedMSBuildEditorConfig.editorconfig
+D:\CodeRun\Learning-Notes\codeor\Cshps\Avalonia\DPA\Dpa\Dpa.Library\obj\Debug\net8.0\Dpa.Library.AssemblyInfoInputs.cache
+D:\CodeRun\Learning-Notes\codeor\Cshps\Avalonia\DPA\Dpa\Dpa.Library\obj\Debug\net8.0\Dpa.Library.AssemblyInfo.cs
+D:\CodeRun\Learning-Notes\codeor\Cshps\Avalonia\DPA\Dpa\Dpa.Library\obj\Debug\net8.0\Dpa.Library.csproj.CoreCompileInputs.cache
+D:\CodeRun\Learning-Notes\codeor\Cshps\Avalonia\DPA\Dpa\Dpa.Library\obj\Debug\net8.0\Dpa.Library.sourcelink.json
+D:\CodeRun\Learning-Notes\codeor\Cshps\Avalonia\DPA\Dpa\Dpa.Library\obj\Debug\net8.0\Dpa.Library.dll
+D:\CodeRun\Learning-Notes\codeor\Cshps\Avalonia\DPA\Dpa\Dpa.Library\obj\Debug\net8.0\refint\Dpa.Library.dll
+D:\CodeRun\Learning-Notes\codeor\Cshps\Avalonia\DPA\Dpa\Dpa.Library\obj\Debug\net8.0\Dpa.Library.pdb
+D:\CodeRun\Learning-Notes\codeor\Cshps\Avalonia\DPA\Dpa\Dpa.Library\obj\Debug\net8.0\ref\Dpa.Library.dll

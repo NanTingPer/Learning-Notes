@@ -1,0 +1,66 @@
+NAME 
+ VERSIONS 
+ EVICT_BLOCKS_ON_CLOSE 
+ NEW_VERSION_BEHAVIOR 
+ KEEP_DELETED_CELLS 
+ CACHE_DATA_ON_WRITE
+ DATA_BLOCK_ENCODING 
+ TTL 
+ MIN_VERSIONS 
+ REPLICATION_SCOPE 
+ BLOOMFILTER 
+ CACHE_INDEX_ON_WRITE
+ IN_MEMORY 
+ CACHE_BLOOMS_ON_WRITE 
+ PREFETCH_BLOCKS_ON_OPEN 
+ COMPRESSION 
+ BLOCKCACHE
+ BLOCKSIZE
+ 
+ 
+ 
+ tableInfo.get("order_id"),
+ tableInfo.get("order_sn"),
+ tableInfo.get("customer_id"),
+ tableInfo.get("shipping_user"),
+ tableInfo.get("province"),
+ tableInfo.get("city"),
+ tableInfo.get("address"),
+ tableInfo.get("order_source"),
+ tableInfo.get("payment_method"),
+ tableInfo.get("order_money"),
+ tableInfo.get("district_money"),
+ tableInfo.get("shipping_money"),
+ tableInfo.get("payment_money"),
+ tableInfo.get("shipping_comp_name"),
+ tableInfo.get("shipping_sn"),
+ tableInfo.get("create_time"),
+ tableInfo.get("shipping_time"),
+ tableInfo.get("pay_time"),
+ tableInfo.get("receive_time"),
+ tableInfo.get("order_status"),
+ tableInfo.get("order_point"),
+ tableInfo.get("invoice_title"),
+ tableInfo.get("modified_time"),
+
+
+ map.get("order_detail_id"),
+ map.get("order_sn"),
+ map.get("product_id"),
+ map.get("product_name"),
+ map.get("product_cnt"),
+ map.get("product_price"),
+ map.get("average_cost"),
+ map.get("weight"),
+ map.get("fee_money"),
+ map.get("w_id"),
+ map.get("create_time"),
+ map.get("modified_time"),
+
+
+ map.get("log_id")
+ map.get("product_id")
+ map.get("customer_id")
+ map.get("gen_order")
+ map.get("order_sn")
+ map.get("modified_time")

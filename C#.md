@@ -394,7 +394,7 @@ object Generic = Activator.CreateInstance(makeType);
 | GreaterThan                  | 双目运算符中间的表达 >       | **`levelExp,rightExp`**        |
 | Lambda`<Func<Student,bool>>` | 变换为表达式                 | `bodyExp,pExp`                 |
 
-
+ 
 
 # 7.0 IL
 
@@ -696,6 +696,23 @@ while (Data.Read())
   - async
   
   - await
+  
+  - yield
+
+> yield可以让方法返回一个集合(多个返回值) 
+>
+> 底层封装了一个类实现 使用状态机
+>
+> yield => 流式返回
+>
+> 使用yield进行迭代返回，每返回一次 调用方先执行后再返回yield进行迭代
+>
+> 知道迭代结束或者遇到yiel break结束
+>
+> async不能使用yield
+
+- async关键字使用yield（C#8）
+  - 使用IAsyncEnumerable 不加Task 并调用方 需要await
 
 > async、await不等于多线程
 > 
@@ -978,3 +995,175 @@ await CancellationToken_.Run("https://www.baidu.com/", 100, token);
         信号量阻塞相当于让线程挂起，可以让出自己的位置让CPU更好的处理其他线程，等到信号来了，又醒过来开始干活。
 
         比轮询效率更高，更准确
+
+
+
+# 1.4 LINQ
+
+| LINQ   | Scala  |          |
+| ------ | ------ | -------- |
+| Where  | Filter | 过滤     |
+| Select | Map    | 类型转换 |
+|        |        |          |
+
+
+
+## 1 LINQ简单实现
+
+```csharp
+    internal class Program
+    {
+        static void Main(string[] args)
+        {
+            //第一节 手写简单LINQ
+            IEnumerable<int> nums = new List<int> { 1,2,3,4,5,6,7,8,1,1,11,11,12};
+            var value = PartOneMyWhere<int>(nums, f => f > 10);
+            foreach (var i in value)
+            { 
+                Console.WriteLine(i); 
+            }
+        }
+
+        //第一节
+        static IEnumerable<T> PartOneMyWhere<T>(IEnumerable<T> list,Func<T,bool> func)
+        {
+            foreach(var num in list)
+            {
+                if (func(num))
+                {
+                    //流式返回
+                    yield return num;
+                }
+            }
+        }
+    }
+
+```
+
+
+
+## 2 常用扩展方法1
+
+> 类型
+
+```csharp
+class Employee
+{
+    public long Id { get; set; }
+    public string Name { get; set; }
+    public int Age { get; set; }
+    public bool Gender { get; set; }
+    public int Salary { get; set; }
+}
+```
+
+> 数据
+
+```csharp
+List<Employee> list = new List<Employee>();
+list.Add(new Employee { Id = 1, Name = "jerry", Age = 28, Gender = true, Salary = 5000 });
+list.Add(new Employee { Id = 2, Name = "jim", Age = 33, Gender = true, Salary = 3000 });
+list.Add(new Employee { Id = 3, Name = "lily", Age = 35, Gender = false, Salary = 9000 });
+list.Add(new Employee { Id = 4, Name = "lucy", Age = 16, Gender = false, Salary = 2000 });
+list.Add(new Employee { Id = 5, Name = "kimi", Age = 25, Gender = true, Salary = 1000 });
+list.Add(new Employee { Id = 6, Name = "nancy", Age = 35, Gender = false, Salary = 8000 });
+list.Add(new Employee { Id = 7, Name = "zack", Age = 35, Gender = true, Salary = 8500 });
+list.Add(new Employee { Id = 8, Name = "jack", Age = 33, Gender = true, Salary = 8000 });
+```
+
+
+
+## 3 常用扩展方法2
+
+> ### 匿名类型
+
+- 只能使用var 属性自定义
+- 编译后是确定的类型
+- 其访问修饰符是INTERNAL
+
+```csharp
+var obj1 = new {Name = "dddd" , Salay = 3 , AAA = "dawf"};
+```
+
+
+
+## 4 LINQ的性能难题
+
+> 使用LINQ必须先打包，打包消耗资源，在能直接比较/取值的时候 不使用LINQ性能更高
+
+
+
+# 1.5 依赖注入
+
+> #### 控制反转IOC (Inversion of Control)
+
+- 别人要什么我就给什么
+
+> ##### 目的
+
+- "怎样创建xx对象" => "你给我xx对象"
+
+> #### 依赖注入只是控制反转的一种实现方式
+
+
+
+## 1 DI的几个概念
+
+- 服务(service ) : 对象 用来注册服务
+- 服务容器 : 负责管理注册的服务
+- 查询服务 : 创建对象以及关联对象
+- 对象生命周期 : 
+  - Transient(瞬态)  获取一次 给一个新的 用完就丢
+  - Scoped(范围)  在范围内 每次获取同一个对象
+  - Singleton(单例) 无论怎么拿都是同一个
+
+
+
+## 2 依赖注入的基本使用
+
+- NuGet包 Microsoft.Extensions,DependencyInjection
+- ServiceCollection 构造容器
+- BuildServiceProvoider() 获取对象
+
+
+
+> ##### 接口/实现类
+
+```csharp
+public interface ITestService
+{
+    public string Name { get; set; }
+    public void SayHi();
+}
+```
+
+```csharp
+public class TestServiceImpl : ITestService
+{
+    public string Name { get; set; }
+    public void SayHi()
+    {
+        Console.WriteLine($"Hi, I'm {Name}");
+    }
+}
+```
+
+```csharp
+public class TestServiceImpl2 : ITestService
+{
+    public string Name { get; set; }
+    public void SayHi()
+    {
+        Console.WriteLine($"你好，我是{Name}");
+    }
+}
+```
+
+
+
+## 3 服务的生命周期
+
+- 不要在长生命周期中引用比他生命周期短的对象
+- 如果类无状态 建议为Singleton
+- 如果类有状态,且有Scope控制 建议为Scoped 因为通常这种Scoped控制下的代码都是运行在同一个线程中的，并没有并发修改问题
+- 在使用Transient的时候要谨慎

@@ -46,7 +46,6 @@ object 离线清洗02 {
 
 
 
-
         maxTime = spark.sql("select max(etl_date) from ods.coupon_info")
         //        dwd_insert_user
         //        dwd_insert_time

@@ -156,7 +156,7 @@ tblproperties('hbase.table.name'='ads:online_uv_pv','hbase.table.default.storage
 
 
 
-
+CREATE TABLE IF NOT EXISTS ds_result.payment_cvr(province String, creat_order UInt64,payment UInt64,payCVR Float64, ranking UInt64) ENGINE = MergeTree() ORDER BY ranking;
 
 
 

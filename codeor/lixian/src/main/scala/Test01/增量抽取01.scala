@@ -34,23 +34,23 @@ object 增量抽取01 {
         //TODO 任务4
 //        SaveTable(spark,"ds_db01","coupon_use","ods","coupon_use","")
 //
-//        SaveTable("ds_db01","order_detail","ods","order_detail","modified_time","etl_data")
-//
-//        SaveTable("ds_db01","coupon_info","ods","coupon_info","modified_time","etl_data")
-//
-//        SaveTable("ds_db01","product_browse","ods","product_browse","modified_time","etl_data")
-//
-//        SaveTable("ds_db01","product_info","ods","product_info","modified_time","etl_data")
-//
-//        SaveTable("ds_db01","customer_inf","ods","customer_inf","modified_time","etl_data")
-//
-//        SaveTable("ds_db01","customer_login_log","ods","customer_login_log","login_time","etl_data")
-//
-//        SaveTable("ds_db01","order_cart","ods","order_cart","modified_time","etl_data")
-//
-//        SaveTable("ds_db01","customer_addr","ods","customer_addr","modified_time","etl_data")
-//
-//        SaveTable("ds_db01","customer_level_inf","ods","customer_level_inf","modified_time","etl_data")
+        SaveTable("ds_db01","order_detail","ods","order_detail","modified_time","etl_data")
+
+        SaveTable("ds_db01","coupon_info","ods","coupon_info","modified_time","etl_data")
+
+        SaveTable("ds_db01","product_browse","ods","product_browse","modified_time","etl_data")
+
+        SaveTable("ds_db01","product_info","ods","product_info","modified_time","etl_data")
+
+        SaveTable("ds_db01","customer_inf","ods","customer_inf","modified_time","etl_data")
+
+        SaveTable("ds_db01","customer_login_log","ods","customer_login_log","login_time","etl_data")
+
+        SaveTable("ds_db01","order_cart","ods","order_cart","modified_time","etl_data")
+
+        SaveTable("ds_db01","customer_addr","ods","customer_addr","modified_time","etl_data")
+
+        SaveTable("ds_db01","customer_level_inf","ods","customer_level_inf","modified_time","etl_data")
 
 
     }

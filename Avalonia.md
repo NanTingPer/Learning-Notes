@@ -2787,7 +2787,7 @@ xmlns:lvm="using:Dpa.Library.ViewModel"
    >
    >    ```csharp
    >    public ICommand ListBoxViewCommand { get; }
-   >                            
+   >                               
    >    public MainViewModel(IMenuNavigationService menuNavigationService)
    >    {
    >        _menuNavigationService = menuNavigationService;
@@ -2795,7 +2795,7 @@ xmlns:lvm="using:Dpa.Library.ViewModel"
    >        ControlIsOpenCommand = new RelayCommand(ControlIsOpen);
    >        ListBoxViewCommand = new RelayCommand(ListBoxToView);
    >    }
-   >                            
+   >                               
    >    /// <summary>
    >    /// 绑定ListBox的选项点击事件
    >    /// </summary>
@@ -3419,3 +3419,12 @@ public IRelayCommand<T> CommandName { get; }
 ## 事件
 
 - CellEditEnded 编辑结束后发生
+
+
+
+# 90 文件拖入
+
+- 控件属性设置 DragDrop.AllowDrop = true
+- 拖入触发事件 DragDrop.Drop
+- 静态事件使用 RoutedEventTriggerBehavior RoutedEvent="{x:Static DragDrop.DropEvent}"
+- 事件绑定设置 PassEventArgsToCommand 事件结果传入 Command

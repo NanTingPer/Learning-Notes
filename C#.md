@@ -1167,3 +1167,11 @@ public class TestServiceImpl2 : ITestService
 - 如果类无状态 建议为Singleton
 - 如果类有状态,且有Scope控制 建议为Scoped 因为通常这种Scoped控制下的代码都是运行在同一个线程中的，并没有并发修改问题
 - 在使用Transient的时候要谨慎
+
+
+
+# 1.6 可覆盖配置
+
+- 配置服务器 本地环境变量 本地配置文件
+- 先从本地配置 再从环境变量 再从配置服务器
+- 本地的配置 覆盖配置服务器的配置

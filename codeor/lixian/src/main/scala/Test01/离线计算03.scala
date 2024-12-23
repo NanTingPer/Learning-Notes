@@ -11,7 +11,7 @@ object 离线计算03 {
         val sp = SparkSession.builder()
                 .master("local[*]")
                 .appName("spark03")
-                .config("hive.exec.scratchdir","hdfs://192.168.45.13:9000/user/hive/temp")
+                .config("hive.exec.scratchdir","hdfs://192.168.45.20:9000/user/hive/temp")
                 .config("hive.exec.dynamic.partition.mode","nonstrict")
                 .enableHiveSupport()
                 .getOrCreate()
@@ -40,6 +40,5 @@ object 离线计算03 {
                 .agg(countDistinct(col("login_time")).as("login_count"))
                 .where(col("login_count") >= 3)
                 .show()
-
     }
 }

@@ -1,13 +1,13 @@
 ----------------------------------------------------------------
-Tue Nov 12 12:10:30 CST 2024:
-Booting Derby version The Apache Software Foundation - Apache Derby - 10.12.1.1 - (1704137): instance a816c00e-0193-1e90-daf7-00000fe1d5a8 
-on database directory /root/桌面/shishi (copy)/metastore_db with class loader org.apache.spark.sql.hive.client.IsolatedClientLoader$$anon$1@eb6ec6 
-Loaded from file:/root/.m2/repository/org/apache/derby/derby/10.12.1.1/derby-10.12.1.1.jar
-java.vendor=Oracle Corporation
-java.runtime.version=1.8.0_212-b10
-user.dir=/root/桌面/shishi (copy)
-os.name=Linux
+Wed Dec 18 18:43:35 CST 2024:
+Booting Derby version The Apache Software Foundation - Apache Derby - 10.12.1.1 - (1704137): instance a816c00e-0193-d95d-aee9-00000bc44c90 
+on database directory D:\CodeRun\Learning-Notes\codeor\lixian\metastore_db with class loader org.apache.spark.sql.hive.client.IsolatedClientLoader$$anon$1@101a461c 
+Loaded from file:/C:/Users/23759/.m2/repository/org/apache/derby/derby/10.12.1.1/derby-10.12.1.1.jar
+java.vendor=OpenLogic-OpenJDK
+java.runtime.version=1.8.0_392-392-b08
+user.dir=D:\CodeRun\Learning-Notes\codeor\lixian
+os.name=Windows 11
 os.arch=amd64
-os.version=5.4.0-150-generic
+os.version=10.0
 derby.system.home=null
 Database Class Loader started - derby.database.classpath=''

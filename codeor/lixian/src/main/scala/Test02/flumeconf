@@ -1,0 +1,21 @@
+a1.sinks = k1 k2
+a1.channels = c1
+a1.sources = s1
+
+a1.sinks.k1.type = hdfs
+a1.sinks.k1.hdfs.path = hdfs://192.168.45.13:9000/user/test/flumebackup
+a1.sinks.k1.hdfs.writeFormat = Text
+
+a1.sinks.k2.type = org.apache.flume.sink.kafka.KafkaSink
+a1.sinks.k2.kafka.topic = order
+a1.sinks.k2.kafka.bootstrap.servers = 192.168.45.13:9092
+
+a1.sources.s1.type = netcat
+a1.sources.s1.bind = 127.0.0.1
+a1.sources.s1.port = 25001
+
+a1.channels.c1.type = memory
+
+a1.sinks.k1.channel = c1
+a1.sinks.k2.channel = c1
+a1.sources.s1.channels = c1

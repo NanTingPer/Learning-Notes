@@ -1,0 +1,26 @@
+set hive.exec.dynamic.partition.mode=nonstrict;
+set hive.exec.dynamic.partition=true;
+set hive.exec.max.dynamic.partitions=1000;
+
+create table if not exists dwd.dim_coupon_info(
+  coupon_id bigint,
+  coupon_name string,
+  coupon_type int,
+  condition_amount bigint,
+  condition_num bigint,
+  activity_id string,
+  benefit_amount decimal(8,2),
+  benefit_discount decimal(8,2),
+  modified_time timestamp,
+  dwd_insert_user string,
+  dwd_insert_time timestamp,
+  dwd_modify_user string,
+  dwd_modify_time timestamp
+)
+partitioned by (etl_date string)
+row format delimited
+fields terminated by ','
+stored as textfile;
+
+insert into dwd.dim_coupon_info values(0,"run",11,11000,3,"6569962031230",0.00,0.10,"2022-09-09 06:23:07","user1","2023-12-23 09:53:08","user1","2023-12-23 09:53:08","20231225");
+insert into dwd.dim_coupon_info values(1,"run",11,11000,3,"6569962031230",0.00,0.10,"2022-09-09 06:23:07","user1","2023-12-23 09:53:08","user1","2023-12-23 09:53:08","20231225");

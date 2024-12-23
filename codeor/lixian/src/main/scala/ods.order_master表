@@ -1,0 +1,36 @@
+手工创建
+create database ods;
+
+
+create table if not exists ods.order_master(
+  order_id bigint,
+  order_sn string,
+  customer_id bigint,
+  shipping_user string,
+  province string,
+  city string,
+  address string,
+  order_source int,
+  payment_method int,
+  order_money decimal(8,2),
+  district_money decimal(8,2),
+  shipping_money decimal(8,2),
+  payment_money decimal(8,2),
+  shipping_comp_name string,
+  shipping_sn string,
+  create_time string,
+  shipping_time string,
+  pay_time string,
+  receive_time string,
+  order_status string,
+  order_point bigint,
+  invoice_title string,
+  modified_time timestamp
+)
+partitioned by (etl_date string)
+row format delimited
+fields terminated by ','
+null defined as 'NULL'
+stored as textfile
+tblproperties("serialization.null.format"='NULL');
+

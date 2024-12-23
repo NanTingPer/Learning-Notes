@@ -3426,5 +3426,5 @@ public IRelayCommand<T> CommandName { get; }
 
 - 控件属性设置 DragDrop.AllowDrop = true
 - 拖入触发事件 DragDrop.Drop
-- 静态事件使用 RoutedEventTriggerBehavior RoutedEvent="{x:Static DragDrop.DropEvent}"
-- 事件绑定设置 PassEventArgsToCommand 事件结果传入 Command
+- 静态事件使用 `RoutedEventTriggerBehavior RoutedEvent="{x:Static DragDrop.DropEvent}"`
+- 事件绑定设置 `PassEventArgsToCommand` 事件结果传入 Command

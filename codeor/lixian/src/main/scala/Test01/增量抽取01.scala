@@ -1,4 +1,4 @@
-package Test01
+//package Test01
 
 import org.apache.spark.sql.functions.lit
 import org.apache.spark.sql.{SaveMode, SparkSession}
@@ -29,28 +29,75 @@ object 增量抽取01 {
         //TODO 进入Hive 的ods 库中表order_master。
 
         //TODO 没表
-        SaveTable("ds_db01","order_master","ods","order_master","modified_time","etl_data")
 
-        //TODO 任务4
-//        SaveTable(spark,"ds_db01","coupon_use","ods","coupon_use","")
+        System.setProperty("HADOOP_USER_NAME","root")
+        val spark = SparkSession.builder()
+                .master("local[*]")
+                .appName("666")
+                .config("hive.exec.scratchdir","hdfs://192.168.45.13:9000/user/hive/temp")
+                .config("hive.exec.dynamic.partition.mode","nonstrict")
+                .enableHiveSupport()
+                .getOrCreate()
+
+        val confs = new Properties()
+        confs.put("user","root")
+        confs.put("password","123456")
+        spark.read.jdbc(s"jdbc:mysql://192.168.45.13:3306/ds_db01?useSSL=false", "order_master", confs)
+                .withColumn("etl_data",lit("20241218"))
+                .write
+                .format("hive")
+                .mode(SaveMode.Overwrite)
+                .partitionBy("etl_data")
+                .saveAsTable("ods.order_master")
+
+
+
+
+//        var MaxTime = spark.sql(s"select max(modified_time) from ds_db01.order_master ").first().getAs[Timestamp](0)
+//        val conf = new Properties()
+//        conf.put("user","root")
+//        conf.put("password","123456")
+//        val frame = spark.read.jdbc(s"jdbc:mysql://192.168.45.13:3306/ods?useSSL=false", "order_master", conf)
+//        frame.createOrReplaceTempView("mysql")
 //
-        SaveTable("ds_db01","order_detail","ods","order_detail","modified_time","etl_data")
+//        spark.sql(s"select * from mysql where modified_time > '${MaxTime}'")
+//                .withColumn("etl_data",lit("20241208"))
+//                .write
+//                .format("hive")
+//                .mode(SaveMode.Overwrite)
+//                .partitionBy("etl_data")
+//                .saveAsTable("ods.order_master")
+//        println("\t\t\t\t\t\t\t\t完成")
+//        println("-----------------------------------------------------------------------------------------")
+//        println("-----------------------------------------------------------------------------------------")
+//        println("-----------------------------------------------------------------------------------------")
+//        println("-----------------------------------------------------------------------------------------")
 
-        SaveTable("ds_db01","coupon_info","ods","coupon_info","modified_time","etl_data")
 
-        SaveTable("ds_db01","product_browse","ods","product_browse","modified_time","etl_data")
 
-        SaveTable("ds_db01","product_info","ods","product_info","modified_time","etl_data")
 
-        SaveTable("ds_db01","customer_inf","ods","customer_inf","modified_time","etl_data")
-
-        SaveTable("ds_db01","customer_login_log","ods","customer_login_log","login_time","etl_data")
-
-        SaveTable("ds_db01","order_cart","ods","order_cart","modified_time","etl_data")
-
-        SaveTable("ds_db01","customer_addr","ods","customer_addr","modified_time","etl_data")
-
-        SaveTable("ds_db01","customer_level_inf","ods","customer_level_inf","modified_time","etl_data")
+        //        SaveTable("ds_db01","order_master","ods","order_master","modified_time","etl_data")
+//
+//        //TODO 任务4
+////        SaveTable(spark,"ds_db01","coupon_use","ods","coupon_use","")
+////
+//        SaveTable("ds_db01","order_detail","ods","order_detail","modified_time","etl_data")
+//
+//        SaveTable("ds_db01","coupon_info","ods","coupon_info","modified_time","etl_data")
+//
+//        SaveTable("ds_db01","product_browse","ods","product_browse","modified_time","etl_data")
+//
+//        SaveTable("ds_db01","product_info","ods","product_info","modified_time","etl_data")
+//
+//        SaveTable("ds_db01","customer_inf","ods","customer_inf","modified_time","etl_data")
+//
+//        SaveTable("ds_db01","customer_login_log","ods","customer_login_log","login_time","etl_data")
+//
+//        SaveTable("ds_db01","order_cart","ods","order_cart","modified_time","etl_data")
+//
+//        SaveTable("ds_db01","customer_addr","ods","customer_addr","modified_time","etl_data")
+//
+//        SaveTable("ds_db01","customer_level_inf","ods","customer_level_inf","modified_time","etl_data")
 
 
     }

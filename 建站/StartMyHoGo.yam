@@ -1,0 +1,18 @@
+name: myhugo
+services:
+    hugo:
+      container_name: myhugo
+      image: nanting/myhugo
+      ports: 
+        - "9996:80"
+      environment:
+        - BIND=0.0.0.0
+        - PORT=80
+        # 自己的公网IP
+        - BURL=http://127.0.0.1/
+      volumes:
+        - content:/app/nantingblog/content/posts
+      restart: always
+
+volumes:
+  content:

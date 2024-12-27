@@ -541,3 +541,13 @@ EXPOSE 80
 ENTRYPOINT ["./hugo","server","--bind","0.0.0.0","-p","80",-b,"http://122.11.29.203"]
 ```
 
+
+
+> Windows 更改Docker文件位置
+
+```SH
+wsl --export docker-desktop "D:\\All\docker.tar"
+wsl --unregister docker-desktop
+wsl --import docker-desktop "D:\\All\\docker" "D:\\All\\docker.tar" --version 2
+```
+

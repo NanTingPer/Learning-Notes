@@ -1,7 +1,7 @@
 package _20241220
 
 import org.apache.spark.sql.{SaveMode, SparkSession}
-import org.apache.spark.sql.functions.lit
+import org.apache.spark.sql.functions.{lit, max}
 
 import java.util
 import java.util.Properties
@@ -18,7 +18,6 @@ object caiji {
         sparke("order_cart","ods.order_cart")
         sparke("customer_addr","ods.customer_addr")
         sparke("customer_level_inf","ods.customer_level_inf")
-
     }
 
     def sparke(mysqltable : String,hivetable : String) = {

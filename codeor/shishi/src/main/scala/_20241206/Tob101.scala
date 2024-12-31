@@ -15,7 +15,7 @@ object Tob101 {
                 .setBootstrapServers("192.168.45.13:9092")
                 .setGroupId("awgfawg")
                 .setValueOnlyDeserializer(new SimpleStringSchema())
-                .setTopics("ods_mall_data")
+                .setTopics("maxwell")
                 .build()
 
         val kk = KafkaSink.builder()

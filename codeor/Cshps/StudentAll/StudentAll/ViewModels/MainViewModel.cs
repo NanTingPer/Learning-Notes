@@ -30,6 +30,7 @@ namespace StudentAll.ViewModels
         public ICommand DeleteDataCommand { get; private set; }
         public ICommand InitializedCommand { get; private set; }    
         public ICommand AlterDataCommand { get; private set; }
+        public ICommand SelectDataCommand { get; private set; }
 
         public string Id { get => _id; set => SetProperty(ref _id, value); }                                //学号
         public string Age { get => _age; set => SetProperty(ref _age, value); }                             //年龄
@@ -46,6 +47,7 @@ namespace StudentAll.ViewModels
             DeleteDataCommand = new AsyncRelayCommand(DeleteData);
             InitializedCommand = new AsyncRelayCommand(Initialized);
             AlterDataCommand = new AsyncRelayCommand(AlterData);
+            SelectDataCommand = new AsyncRelayCommand(SelectData);
 
             _sQLiteService = sQLiteService;
 
@@ -57,23 +59,24 @@ namespace StudentAll.ViewModels
 
         public async Task AddData()
         {
-            uint age;
-            ulong id;
+            short age;
+            long id;
 
-            if (!uint.TryParse(Age, out age))
+            if (!short.TryParse(Age, out age))
             {
                 ViewText = "年龄错误";
                 return;
             }
 
-            if (!ulong.TryParse(Id, out id))
+            if (!long.TryParse(Id, out id))
             {
                 ViewText = "学号错误";
                 return;
             }
 
             //20245230315
-            if (id < 99999999999 || id < 10000000000 || age > 120 || age <= 0 || BanJi == "" || Name == "")
+            //20245230315
+            if (id > 99999999999 || id < 10000000000 || age > 120 || age <= 0 || BanJi == "" || Name == "")
             {
                 ViewText = "学号过大/过小 或 年龄不正确 或 班级不能为空 或 名字不能为空";
                 return;
@@ -85,6 +88,34 @@ namespace StudentAll.ViewModels
             {
                 Obc.Add(item);
             };
+        }
+
+        public async Task SelectData()
+        {
+            short age;
+            long id;
+
+            if (!short.TryParse(Age, out age))
+            {
+                age = short.MaxValue;
+            }
+
+            if (!long.TryParse(Id, out id))
+            {
+                id = long.MaxValue;
+            }
+
+            for (int i = Obc.Count; i > 0; i--)
+            {
+                Obc.RemoveAt(i-1);
+            }
+            
+
+            await foreach (var item in _sQLiteService.GetData(DataPath, 0, id, Name, BanJi, age))
+            {
+                Obc.Add(item);
+            };
+
         }
 
         public async Task DeleteData()
@@ -122,7 +153,7 @@ namespace StudentAll.ViewModels
         public ulong Key { get; set; }
 
         [Column("Id")]
-        public ulong Id { get; set; } = 0UL;
+        public long Id { get; set; } = 0L;
 
         [Column("Name")]
         public string Name { get; set; } = string.Empty;
@@ -131,7 +162,7 @@ namespace StudentAll.ViewModels
         public string BanJi { get; set; } = string.Empty;
 
         [Column("Age")]
-        public uint Age { get; set; } = 0;
+        public short Age { get; set; } = 0;
     }
 
 }

@@ -36,7 +36,9 @@ namespace StudentAll.SQLite
         public async Task AddData(string path, params StudentInfo[] student)
         {
             await InitionConnection(path);
-            int r = await Connection.Table<StudentInfo>().Skip(0).Where(f => f.Id == student[0].Id).CountAsync();
+            StudentInfo stu = student[0];
+
+            int r = await Connection.Table<StudentInfo>().Skip(0).Where(f => f.Id == stu.Id).CountAsync();
             if (r <= 0)
             {
                 await Connection.InsertAllAsync(student);
@@ -73,7 +75,7 @@ namespace StudentAll.SQLite
             await Dispose();
         }
 
-        public async IAsyncEnumerable<StudentInfo> GetData(string path,int skip)
+        public async IAsyncEnumerable<StudentInfo> GetData(string path,int skip, long id = long.MaxValue, string name = "", string banji = "", short age = short.MaxValue)
         {
             await InitionConnection(path);
 
@@ -81,25 +83,36 @@ namespace StudentAll.SQLite
             {
                 yield break;
             }
-            List<StudentInfo> dataList = await Connection.Table<StudentInfo>().Skip(skip).ToListAsync();
+
+            List<StudentInfo> dataList;
+
+            bool banjiF =   !string.IsNullOrWhiteSpace(banji);         //true 说明有
+            bool idF    =   (id != long.MaxValue);                        //true 说明有
+            bool ageF   =   (age != short.MaxValue);                      //true 说明有
+            bool nameF  =   !string.IsNullOrWhiteSpace(name);           //true 说明有
+
+
+            if (banjiF || idF || ageF || nameF)
+            {
+                Expression<Func<StudentInfo, bool>> exp = stu =>
+                    (!banjiF    ||  stu.BanJi.Contains(banji))   &&
+                    (!idF       ||  stu.Id == id)                &&
+                    (!ageF      ||  stu.Age == age)              &&
+                    (!nameF     ||  stu.Name.Contains(name));
+
+
+                dataList = await Connection.Table<StudentInfo>().Where(exp).ToListAsync();
+            }
+            else
+            {
+                dataList = await Connection.Table<StudentInfo>().Skip(skip).ToListAsync();
+            }
+
             foreach (var item in dataList)
             {
                 yield return item;
             }
-        }
-
-        public Expression<Func<StudentInfo,string>> GetExpression(StudentInfo student)
-        {
-            ParameterExpression parameter = Expression.Parameter(typeof(StudentInfo), "student");
-            MemberExpression studentID = Expression.Property(parameter, "Id");
-            MethodCallExpression MCExp = Expression.Call(studentID, "ToString", null);
-
-            Expression<Func<StudentInfo,string>> expression = Expression.Lambda<Func<StudentInfo,string>>(MCExp, new ParameterExpression[]
-            {
-                parameter,
-            });
-
-            return expression;
+            await Dispose();
         }
 
     }

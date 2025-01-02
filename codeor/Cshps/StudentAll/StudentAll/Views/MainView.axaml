@@ -92,6 +92,12 @@
                 Grid.Column="9"
                 Command="{Binding DeleteDataCommand}"
                 Content="删除" />
+
+            <Button
+                Grid.Column="10"
+                Command="{Binding SelectDataCommand}"
+                Content="查询" />
+
         </Grid>
 
         <Label Grid.Row="2" Content="{Binding ViewText}" />

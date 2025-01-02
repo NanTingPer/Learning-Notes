@@ -53,7 +53,7 @@ object Tob1032 {
               |     modified_time string
               | >) with (
               |     'connector'='hbase-2.2',
-              |     'table-name'='ods:order_detail',
+              |     'table-name'='order_detail',
               |     'zookeeper.quorum'='192.168.45.13:2181'
               | )
               |""".stripMargin)

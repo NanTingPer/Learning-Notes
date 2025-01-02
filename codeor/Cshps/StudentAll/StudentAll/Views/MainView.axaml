@@ -1,0 +1,101 @@
+<UserControl
+    x:Class="StudentAll.Views.MainView"
+    xmlns="https://github.com/avaloniaui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:avalonia="clr-namespace:Avalonia.Controls;assembly=Avalonia.Controls.DataGrid"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:i="using:Avalonia.Xaml.Interactivity"
+    xmlns:ia="using:Avalonia.Xaml.Interactions.Core"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    d:DesignHeight="450"
+    d:DesignWidth="800"
+    DataContext="{Binding MainViewModel, Source={StaticResource ServiceLocator}}"
+    mc:Ignorable="d">
+    <UserControl.Styles>
+        <Style Selector="Button">
+            <Setter Property="HorizontalAlignment" Value="Stretch" />
+            <Setter Property="VerticalAlignment" Value="Stretch" />
+            <Setter Property="CornerRadius" Value="0" />
+            <Setter Property="HorizontalContentAlignment" Value="Center" />
+            <Setter Property="VerticalContentAlignment" Value="Center" />
+        </Style>
+        <Style Selector="TextBox">
+            <Setter Property="AcceptsReturn" Value="True" />
+            <Setter Property="HorizontalContentAlignment" Value="Center" />
+            <Setter Property="VerticalContentAlignment" Value="Center" />
+            <Setter Property="BorderThickness" Value="0" />
+            <Setter Property="CornerRadius" Value="0" />
+        </Style>
+        <Style Selector="Label">
+            <Setter Property="HorizontalContentAlignment" Value="Center" />
+            <Setter Property="VerticalContentAlignment" Value="Center" />
+            <Setter Property="CornerRadius" Value="0" />
+        </Style>
+    </UserControl.Styles>
+
+    <i:Interaction.Behaviors>
+        <ia:EventTriggerBehavior EventName="Initialized">
+            <ia:InvokeCommandAction Command="{Binding InitializedCommand}" />
+        </ia:EventTriggerBehavior>
+    </i:Interaction.Behaviors>
+
+
+    <Grid RowDefinitions="9*,0.5*,0.5*">
+
+        <DataGrid
+            Grid.Row="0"
+            HorizontalAlignment="Center"
+            AutoGenerateColumns="False"
+            Background="#88eeecc6"
+            CanUserReorderColumns="True"
+            CanUserResizeColumns="True"
+            CanUserSortColumns="False"
+            ColumnWidth="200"
+            GridLinesVisibility="All"
+            ItemsSource="{Binding Obc}"
+            SelectedItem="{Binding SelectItem}">
+
+            <Interaction.Behaviors>
+                <EventTriggerBehavior EventName="CellEditEnded">
+                    <InvokeCommandAction Command="{Binding AlterDataCommand}" />
+                </EventTriggerBehavior>
+
+            </Interaction.Behaviors>
+            <DataGrid.Columns>
+                <DataGridTextColumn Binding="{Binding Id}" Header="Id" />
+                <DataGridTextColumn Binding="{Binding Name}" Header="姓名" />
+                <DataGridTextColumn Binding="{Binding BanJi}" Header="班级" />
+                <DataGridTextColumn Binding="{Binding Age}" Header="年龄" />
+            </DataGrid.Columns>
+
+        </DataGrid>
+
+        <Grid Grid.Row="1" ColumnDefinitions="2*,2*,2*,2*,2*,2*,2*,2*,2*,2*,2*">
+            <Label Grid.Column="0" Content="学号:" />
+            <TextBox Grid.Column="1" Text="{Binding Id}" />
+
+            <Label Grid.Column="2" Content="姓名:" />
+            <TextBox Grid.Column="3" Text="{Binding Name}" />
+
+            <Label Grid.Column="4" Content="年龄:" />
+            <TextBox Grid.Column="5" Text="{Binding Age}" />
+
+            <Label Grid.Column="6" Content="班级:" />
+            <TextBox Grid.Column="7" Text="{Binding BanJi}" />
+
+            <Button
+                Grid.Column="8"
+                Command="{Binding AddDataCommand}"
+                Content="添加" />
+
+            <Button
+                Grid.Column="9"
+                Command="{Binding DeleteDataCommand}"
+                Content="删除" />
+        </Grid>
+
+        <Label Grid.Row="2" Content="{Binding ViewText}" />
+
+    </Grid>
+
+</UserControl>

@@ -50,6 +50,7 @@ object jisuan01 {
               |on yx.province = yf.province
               |
               |""".stripMargin)
+
         val config = new Properties()
         config.put("user","default")
         config.put("password","123456")

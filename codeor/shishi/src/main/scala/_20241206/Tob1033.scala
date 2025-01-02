@@ -41,7 +41,7 @@ object Tob1033 {
               |     modified_time double
               | >) with (
               | 'connector'='hbase-2.2',
-              | 'table-name'='ods:product_browse',
+              | 'table-name'='product_browse',
               | 'zookeeper.quorum'='192.168.45.13:2181'
               | )
               |

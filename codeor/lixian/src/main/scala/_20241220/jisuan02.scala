@@ -62,7 +62,9 @@ object jisuan02 {
               |select product_id,sales_amount,product_totalcnt,sales_rank
               |from wwwww
               |""".stripMargin)
-                .write.mode(SaveMode.Append).jdbc("jdbc:clickhouse://192.168.45.20:8123/ds_result","sales_amount_rank",config)
+                .write
+                .mode(SaveMode.Append)
+                .jdbc("jdbc:clickhouse://192.168.45.20:8123/ds_result","sales_amount_rank",config)
 
 
 

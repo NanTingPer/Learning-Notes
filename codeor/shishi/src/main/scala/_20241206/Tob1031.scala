@@ -75,7 +75,7 @@ object Tob1031 {
               |     modified_time string
               | >) with (
               |     'connector'='hbase-2.2',
-              |     'table-name'='ods:order_master',
+              |     'table-name'='order_master',
               |     'zookeeper.quorum'='192.168.45.13:2181'
               | )
               |

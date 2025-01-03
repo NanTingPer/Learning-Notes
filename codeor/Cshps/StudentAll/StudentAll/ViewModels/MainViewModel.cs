@@ -1,4 +1,9 @@
-﻿using CommunityToolkit.Mvvm.Input;
+﻿#pragma warning disable CS8602
+#pragma warning disable CS8618
+#pragma warning disable CS8600
+#pragma warning disable CS8601
+#pragma warning disable CS8603
+using CommunityToolkit.Mvvm.Input;
 using SQLite;
 using StudentAll.SQLite;
 using System;
@@ -43,11 +48,11 @@ namespace StudentAll.ViewModels
         public ObservableCollection<StudentInfo> Obc { get; set; } = new ObservableCollection<StudentInfo>();
         public MainViewModel(SQLiteService sQLiteService)
         {
-            AddDataCommand = new AsyncRelayCommand(AddData);
-            DeleteDataCommand = new AsyncRelayCommand(DeleteData);
-            InitializedCommand = new AsyncRelayCommand(Initialized);
-            AlterDataCommand = new AsyncRelayCommand(AlterData);
-            SelectDataCommand = new AsyncRelayCommand(SelectData);
+            AddDataCommand = new AsyncRelayCommand(AddDataAsync);
+            DeleteDataCommand = new AsyncRelayCommand(DeleteDataAsync);
+            InitializedCommand = new AsyncRelayCommand(InitializedAsync);
+            AlterDataCommand = new AsyncRelayCommand(AlterDataAsync);
+            SelectDataCommand = new AsyncRelayCommand(SelectDataAsync);
 
             _sQLiteService = sQLiteService;
 
@@ -57,8 +62,9 @@ namespace StudentAll.ViewModels
             }
         }
 
-        public async Task AddData()
+        public async Task AddDataAsync()
         {
+            ViewText = "";
             short age;
             long id;
 
@@ -83,14 +89,14 @@ namespace StudentAll.ViewModels
             }
 
             StudentInfo e = new StudentInfo() { Age = age, BanJi = BanJi, Id = id, Name = Name };
-            await _sQLiteService.AddData(DataPath, e);
-            await foreach (var item in _sQLiteService.GetData(DataPath, Obc.Count))
+            await _sQLiteService.AddDataAsync(DataPath, e);
+            await foreach (var item in _sQLiteService.GetDataAsync(DataPath, Obc.Count))
             {
                 Obc.Add(item);
             };
         }
 
-        public async Task SelectData()
+        public async Task SelectDataAsync()
         {
             short age;
             long id;
@@ -111,38 +117,33 @@ namespace StudentAll.ViewModels
             }
             
 
-            await foreach (var item in _sQLiteService.GetData(DataPath, 0, id, Name, BanJi, age))
+            await foreach (var item in _sQLiteService.GetDataAsync(DataPath, 0, id, Name, BanJi, age))
             {
                 Obc.Add(item);
             };
 
         }
 
-        public async Task DeleteData()
+        public async Task DeleteDataAsync()
         {
             if (SelectItem != null)
             {
-                await _sQLiteService.Delete(DataPath, SelectItem);
+                await _sQLiteService.DeleteAsync(DataPath, SelectItem);
                 Obc.Remove(SelectItem);
             }
         }
 
-        public async Task AlterData()
+        public async Task AlterDataAsync()
         {
-            await _sQLiteService.AlterData(DataPath, SelectItem);
+            await _sQLiteService.AlterDataAsync(DataPath, SelectItem);
         }
 
-        public async Task Initialized()
+        public async Task InitializedAsync()
         {
-            await foreach (var item in _sQLiteService.GetData(DataPath, 0))
+            await foreach (var item in _sQLiteService.GetDataAsync(DataPath, 0))
             {
                 Obc.Add(item);
             }
-        }
-
-        public void Select()
-        {
-
         }
 
     }
@@ -163,6 +164,12 @@ namespace StudentAll.ViewModels
 
         [Column("Age")]
         public short Age { get; set; } = 0;
+
+        [Column("Adder")]
+        public string Adder { get; set; } = string.Empty;
+
+        [Column("AdderToAdder")]
+        public string AdderToAdder { get; set; } = string.Empty;
     }
 
 }

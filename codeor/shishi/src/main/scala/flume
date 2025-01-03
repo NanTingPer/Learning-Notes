@@ -23,7 +23,6 @@ a2.sinks.k1.channel = c1
 存储在Kafka的topic为ods_mall_data中，使用Kafka自带的消费者消费ods_mall_data（Topic）中的数据，查看前2条数据的结果；
 
 
-
 $"order_sn",
 $"customer_id",
 $"hipping_user",

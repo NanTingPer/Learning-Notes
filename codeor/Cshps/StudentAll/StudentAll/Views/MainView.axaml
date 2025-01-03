@@ -66,6 +66,8 @@
                 <DataGridTextColumn Binding="{Binding Name}" Header="姓名" />
                 <DataGridTextColumn Binding="{Binding BanJi}" Header="班级" />
                 <DataGridTextColumn Binding="{Binding Age}" Header="年龄" />
+                <DataGridTextColumn Binding="{Binding Adder}" Header="地址" />
+                <DataGridTextColumn Binding="{Binding AdderToAdder}" Header="乘车范围" />
             </DataGrid.Columns>
 
         </DataGrid>

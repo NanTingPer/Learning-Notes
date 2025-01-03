@@ -8,11 +8,8 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <Folder Include="SQLiteService\" />
-  </ItemGroup>
-
-  <ItemGroup>
     <PackageReference Include="PuppeteerSharp" Version="20.0.5" />
+    <PackageReference Include="sqlite-net-pcl" Version="1.9.172" />
   </ItemGroup>
 
 </Project>

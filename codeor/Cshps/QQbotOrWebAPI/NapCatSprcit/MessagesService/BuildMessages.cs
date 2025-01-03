@@ -1,4 +1,5 @@
-﻿using NapCatSprcit.MessagesService.SendMessagesClass.AllMsgJsonString;
+﻿using NapCatSprcit.MessagesService.MessagesProcess;
+using NapCatSprcit.MessagesService.SendMessagesClass.AllMsgJsonString;
 using System.Text.Json;
 
 namespace NapCatSprcit.MessagesService
@@ -16,5 +17,17 @@ namespace NapCatSprcit.MessagesService
             var msg = new PriviteAndGroupMsg(user_id, text);
             return JsonSerializer.Serialize(msg.MessagesJsonObject);
         }
+
+        /// <summary>
+        /// 构建要发送的私聊纯文本 群聊也可以用
+        /// </summary>
+        /// <returns></returns>
+        public string buildMessagesText(MessagesInfo msinfo, string text)
+        {
+            var msg = new PriviteAndGroupMsg(msinfo.UserId.ToString(), text);
+            return JsonSerializer.Serialize(msg.MessagesJsonObject);
+        }
+
+
     }
 }

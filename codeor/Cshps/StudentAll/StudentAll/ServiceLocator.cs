@@ -1,4 +1,9 @@
-﻿using Avalonia;
+﻿#pragma warning disable CS8602
+#pragma warning disable CS8618
+#pragma warning disable CS8600
+#pragma warning disable CS8601
+#pragma warning disable CS8603
+using Avalonia;
 using Microsoft.Extensions.DependencyInjection;
 using StudentAll.SQLite;
 using StudentAll.ViewModels;

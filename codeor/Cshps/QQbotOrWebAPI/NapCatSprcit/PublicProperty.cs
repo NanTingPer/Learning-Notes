@@ -9,10 +9,11 @@ namespace NapCatSprcit
     /// </summary>
     public class PublicProperty
     {
-        public static string WebSocketURI = "";
-        public static string HttpURI = "";
+        public static string WebSocketURI = "ws://127.0.0.1:3001";
+        public static string HttpURI = "http://127.0.0.1:25511/";
         public static Messages? Messages;
         public static Connection? Connection;
+        public static string DatabasePath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory,"message.db");
     }
 
 }

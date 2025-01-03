@@ -1,7 +1,10 @@
 ﻿using NapCatSprcit.MessagesService.SendMessagesClass;
 using NapCatSprcit.MessagesService.SendMessagesClass.AllMsgJsonString;
+using NapCatSprcit.SQLiteService;
 using PuppeteerSharp;
+using PuppeteerSharp.Input;
 using System;
+using System.Reflection.Metadata;
 using System.Text;
 using System.Text.Json;
 using static System.Net.WebRequestMethods;
@@ -75,10 +78,8 @@ namespace NapCatSprcit.MessagesService.MessagesProcess
 
         /// <summary>
         /// 给JsonRoot 返回
-        /// <para> Item1 => 用户ID </para>
-        /// <para> Item2 => 实际消息 </para>
         /// </summary>
-        /// <param name="root"></param>
+        /// <param name="root"> Json的主对象 </param>
         /// <returns></returns>
         private static MessagesInfo? GetMessageInfo(JsonElement root)
         {
@@ -103,22 +104,50 @@ namespace NapCatSprcit.MessagesService.MessagesProcess
         /// </summary>
         public static async Task SendMessageAsync(MessagesInfo message)
         {
+            var msgSend = PublicProperty.Messages;
+            var content = message.MessageContent;
             Console.WriteLine("NapCatSprcit.MessagesService.MessagesProcess.ProcessClass : 开始检查并发送消息");
-
-            if(message.MessageContent.Contains("网页截图") && (message.MessageType == "private" || message.MessageType == "group"))
+            if((content.Contains("添加:") || content.Contains("添加：")) && 
+               (content.Contains("回答:") || content.Contains("回答：")))
             {
-                Console.WriteLine("消息进入了网页截图");
-                PrivateImage(message);
+                await SQLAddData(message);
             }
-            else if(message.MessageContent.Contains("原版查询") && (message.MessageType == "private" || message.MessageType == "group"))
+            else
             {
-                Console.WriteLine("消息进入了原版查询");
-                TerrariaWikiImage(message);
+                DataModel r = await Service.GetAsync(content);
+                if(r != null)
+                {
+                    Console.WriteLine("正在获取数据");
+                    string messageSendText = msgSend.buildMessagesText(message, r.Value); //构建消息体
+                    string URL = GetMsgURL(message);    //获取发送消息的API
+
+                    Console.WriteLine("目标URL: " + URL);
+
+                    Console.WriteLine("目标回复: " + await msgSend.SendPostMessagesAsync(URL, messageSendText, Encoding.UTF8));
+                }
             }
 
         }
 
-        #region 私聊 或者 群聊链接
+        #region 浏览器截图 不可用
+        #region 网页截图 不可用
+        /*
+        if (message.MessageContent.Contains("网页截图") && (message.MessageType == "private" || message.MessageType == "group"))
+        {
+            Console.WriteLine("消息进入了网页截图");
+            Console.WriteLine(message);
+            await PrivateImage(message);
+        }
+        else if(message.MessageContent.Contains("原版查询") && (message.MessageType == "private" || message.MessageType == "group"))
+        {
+            Console.WriteLine("消息进入了原版查询");
+            await TerrariaWikiImage(message);
+        }
+        */
+        #endregion 网页截图 不可用
+
+        #region 私聊 或者 群聊链接 发送图片 不可用
+        /*
         public static async Task PrivateImage(MessagesInfo message)
         {
             Messages? mes = PublicProperty.Messages;
@@ -136,11 +165,11 @@ namespace NapCatSprcit.MessagesService.MessagesProcess
             await mes.SendPostMessagesAsync(URI, messages, Encoding.UTF8);
             System.IO.File.Delete(fileTempPath);
         }
+        */
         #endregion
 
-
-
         #region 原版Wiki
+        /*
         public static async Task TerrariaWikiImage(MessagesInfo message)
         {
             Messages? mes = PublicProperty.Messages;
@@ -161,15 +190,23 @@ namespace NapCatSprcit.MessagesService.MessagesProcess
             await mes.SendPostMessagesAsync(URI, messages, Encoding.UTF8);
             System.IO.File.Delete(fileTempPath);
         }
+        */
         #endregion
 
-
-        public static async Task Browser(string url,string fileTempPath)
+        /// <summary>
+        /// 浏览器截图
+        /// </summary>
+        /// <param name="url"> 目标URL </param>
+        /// <param name="fileTempPath"> 保存到哪里 </param>
+        /// <returns></returns>
+        /*public static async Task Browser(string url,string fileTempPath)
         {
             var bf = new BrowserFetcher();
             //下载浏览器
             await bf.DownloadAsync();
+            Console.WriteLine("正在下载浏览器");
             var browser = await Puppeteer.LaunchAsync(new LaunchOptions { Headless = true });
+            Console.WriteLine("下载完成");
             var page = await browser.NewPageAsync();
             Console.WriteLine("打开了浏览器页面");
 
@@ -184,9 +221,14 @@ namespace NapCatSprcit.MessagesService.MessagesProcess
 
             await page.CloseAsync();
             await browser.CloseAsync();
-        }
+        }*/
+        #endregion
 
-        public static string GetImageMessagesURL(MessagesInfo message)
+
+        ///<summary>
+        ///获取Msg消息URL 基本消息
+        ///</summary>
+        public static string GetMsgURL(MessagesInfo message)
         {
             if (message.MessageType == "group")
             {
@@ -216,8 +258,43 @@ namespace NapCatSprcit.MessagesService.MessagesProcess
             return "";
         }
 
+        /// <summary>
+        /// 往数据库添加自定义回答信息
+        /// </summary>
+        /// <param name="message"> 消息信息 判断内容 </param>
+        /// <returns></returns>
+        public static async Task SQLAddData(MessagesInfo message)
+        {
+            var content = message.MessageContent;
+            var str = "";
+            var key = "";
+            var value = "";
+            string[] constr = new string[] { "回答:", "回答：" };
+
+            str = content.Replace("添加:", "").Replace("添加：", "");
+
+            foreach (var c in constr)
+            {
+                if (str.Contains(c))
+                {
+                    var sssss = str.Split(c);
+                    key = sssss[0].Trim();
+                    value = sssss[1].Trim();
+                    break;
+                }
+            }
+
+            if (!string.IsNullOrWhiteSpace(key) && !string.IsNullOrWhiteSpace(value))
+            {
+                Console.WriteLine($"向数据库添加数据：{key}=> {value}");
+                await Service.SetAsync(new DataModel() { Key = key, Value = value });
+            }
+        }
     }
 
+    /// <summary>
+    /// 数据信息
+    /// </summary>
     public class MessagesInfo()
     {
         /// <summary>

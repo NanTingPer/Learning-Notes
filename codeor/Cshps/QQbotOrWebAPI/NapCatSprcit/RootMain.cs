@@ -11,41 +11,41 @@ namespace NapCatSprcit
         private static List<string> messagesList = new List<string>();
         static void Main(string[] args)
         {
-            if(args.Count() > 0)
-            {
-                PublicProperty.WebSocketURI = args[0];
-                PublicProperty.HttpURI = args[1];
-            }
-            else
-            {
-                do
-                {
-                    #region 测试放开
+            //if (args.Count() > 0)
+            //{
+            //    PublicProperty.WebSocketURI = args[0];
+            //    PublicProperty.HttpURI = args[1];
+            //}
+            //else
+            //{
+            //    do
+            //    {
+            //        #region 测试放开
 
-                    Console.WriteLine("请输入WebSocketURI");
-                    string? w = Console.ReadLine();
-                    if (w == null)
-                    {
-                        continue;
-                    }
-                    PublicProperty.WebSocketURI = w;
+            //        Console.WriteLine("请输入WebSocketURI");
+            //        string? w = Console.ReadLine();
+            //        if (w == null)
+            //        {
+            //            continue;
+            //        }
+            //        PublicProperty.WebSocketURI = w;
 
-                    if (PublicProperty.WebSocketURI == null)
-                        continue;
+            //        if (PublicProperty.WebSocketURI == null)
+            //            continue;
 
-                    Console.WriteLine("请输入HttpURI");
-                    string? r = Console.ReadLine();
-                    if (r == null)
-                    {
-                        continue;
-                    }
-                    PublicProperty.HttpURI = r;
+            //        Console.WriteLine("请输入HttpURI");
+            //        string? r = Console.ReadLine();
+            //        if (r == null)
+            //        {
+            //            continue;
+            //        }
+            //        PublicProperty.HttpURI = r;
 
-                    #endregion
+            //        #endregion
 
-                } while (PublicProperty.HttpURI == "" || PublicProperty.WebSocketURI == "");
+            //    } while (PublicProperty.HttpURI == "" || PublicProperty.WebSocketURI == "");
 
-            }
+            //}
 
 
             PublicProperty.Connection = new Connection();

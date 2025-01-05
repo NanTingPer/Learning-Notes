@@ -14,7 +14,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("NapCatSprcit")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Release")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+b369e173ed21c23e31a065bdfbbeb2d6864e928a")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+214c94299ceaf2c4fd4e3d47c19db12efc1346f0")]
 [assembly: System.Reflection.AssemblyProductAttribute("NapCatSprcit")]
 [assembly: System.Reflection.AssemblyTitleAttribute("NapCatSprcit")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]

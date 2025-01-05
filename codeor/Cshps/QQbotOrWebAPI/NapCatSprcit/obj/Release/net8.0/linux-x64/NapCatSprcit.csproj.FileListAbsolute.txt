@@ -10,6 +10,11 @@ D:\CodeRun\Learning-Notes\codeor\Cshps\QQbotOrWebAPI\NapCatSprcit\bin\Release\ne
 D:\CodeRun\Learning-Notes\codeor\Cshps\QQbotOrWebAPI\NapCatSprcit\bin\Release\net8.0\linux-x64\Microsoft.Extensions.Options.dll
 D:\CodeRun\Learning-Notes\codeor\Cshps\QQbotOrWebAPI\NapCatSprcit\bin\Release\net8.0\linux-x64\Microsoft.Extensions.Primitives.dll
 D:\CodeRun\Learning-Notes\codeor\Cshps\QQbotOrWebAPI\NapCatSprcit\bin\Release\net8.0\linux-x64\PuppeteerSharp.dll
+D:\CodeRun\Learning-Notes\codeor\Cshps\QQbotOrWebAPI\NapCatSprcit\bin\Release\net8.0\linux-x64\SQLite-net.dll
+D:\CodeRun\Learning-Notes\codeor\Cshps\QQbotOrWebAPI\NapCatSprcit\bin\Release\net8.0\linux-x64\SQLitePCLRaw.batteries_v2.dll
+D:\CodeRun\Learning-Notes\codeor\Cshps\QQbotOrWebAPI\NapCatSprcit\bin\Release\net8.0\linux-x64\SQLitePCLRaw.core.dll
+D:\CodeRun\Learning-Notes\codeor\Cshps\QQbotOrWebAPI\NapCatSprcit\bin\Release\net8.0\linux-x64\SQLitePCLRaw.provider.e_sqlite3.dll
+D:\CodeRun\Learning-Notes\codeor\Cshps\QQbotOrWebAPI\NapCatSprcit\bin\Release\net8.0\linux-x64\libe_sqlite3.so
 D:\CodeRun\Learning-Notes\codeor\Cshps\QQbotOrWebAPI\NapCatSprcit\bin\Release\net8.0\linux-x64\Microsoft.CSharp.dll
 D:\CodeRun\Learning-Notes\codeor\Cshps\QQbotOrWebAPI\NapCatSprcit\bin\Release\net8.0\linux-x64\Microsoft.VisualBasic.Core.dll
 D:\CodeRun\Learning-Notes\codeor\Cshps\QQbotOrWebAPI\NapCatSprcit\bin\Release\net8.0\linux-x64\Microsoft.VisualBasic.dll
@@ -204,8 +209,3 @@ D:\CodeRun\Learning-Notes\codeor\Cshps\QQbotOrWebAPI\NapCatSprcit\obj\Release\ne
 D:\CodeRun\Learning-Notes\codeor\Cshps\QQbotOrWebAPI\NapCatSprcit\obj\Release\net8.0\linux-x64\NapCatSprcit.pdb
 D:\CodeRun\Learning-Notes\codeor\Cshps\QQbotOrWebAPI\NapCatSprcit\obj\Release\net8.0\linux-x64\NapCatSprcit.genruntimeconfig.cache
 D:\CodeRun\Learning-Notes\codeor\Cshps\QQbotOrWebAPI\NapCatSprcit\obj\Release\net8.0\linux-x64\ref\NapCatSprcit.dll
-D:\CodeRun\Learning-Notes\codeor\Cshps\QQbotOrWebAPI\NapCatSprcit\bin\Release\net8.0\linux-x64\SQLite-net.dll
-D:\CodeRun\Learning-Notes\codeor\Cshps\QQbotOrWebAPI\NapCatSprcit\bin\Release\net8.0\linux-x64\SQLitePCLRaw.batteries_v2.dll
-D:\CodeRun\Learning-Notes\codeor\Cshps\QQbotOrWebAPI\NapCatSprcit\bin\Release\net8.0\linux-x64\SQLitePCLRaw.core.dll
-D:\CodeRun\Learning-Notes\codeor\Cshps\QQbotOrWebAPI\NapCatSprcit\bin\Release\net8.0\linux-x64\SQLitePCLRaw.provider.e_sqlite3.dll
-D:\CodeRun\Learning-Notes\codeor\Cshps\QQbotOrWebAPI\NapCatSprcit\bin\Release\net8.0\linux-x64\libe_sqlite3.so

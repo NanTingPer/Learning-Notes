@@ -1,0 +1,3 @@
+D:\All\NapCatSprcit\NapCatSprcit.pdb
+D:\All\NapCatSprcit\e_sqlite3.dll
+D:\All\NapCatSprcit\NapCatSprcit.exe

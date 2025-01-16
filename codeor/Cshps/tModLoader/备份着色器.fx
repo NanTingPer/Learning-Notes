@@ -53,7 +53,14 @@ float4 PixelShaderFunction() : COLOR0
 //SV_Target0 语义 => 直接将颜色输出到屏幕
 float4 PixelShaderFunction2() : SV_Target0
 {
-    return float4(0.2, 0.5, 0.5, 0.2);
+    float r = sin(0.1 * 8f + uTime) / 8f;
+    r = 0.02 / r;
+    float3 col = (1f, 2f, 3f);
+    
+    col *= r;
+    //变色
+    //return float4(sin(uTime), cos(uTime), sin(uTime), sin(uTime));
+    return float4(col, r);
 }
 
 technique Technique1

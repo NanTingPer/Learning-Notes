@@ -334,8 +334,9 @@ export default defineConfig({
 
 ## 4.5 基本类型响应式数据
 
-1. 从 `vue` 引入 `ref`
+1. 从 `vue` 引入 `ref` 
 2. 将值放入`ref`方法，需要变化的内容赋给`ref` 我们需要的值在`value` 模板调用不需要 `.value`, `ts`代码更改必须`.value`
+3. 可以定义基本类型，对象类型的响应式数据
 
 ```vue
 <script setup lang="ts" name="Person">
@@ -360,7 +361,7 @@ export default defineConfig({
 
 ## 4.6 对象类型的响应式数据
 
-1. 引入 `reactive` 与 `ref` 一样 将数据传入方法
+1. 引入 `reactive` 与 `ref` 一样 将数据传入方法，只能定义对象类型，可以传入泛型`reactive<Person>`
 
 ```vue
 <template>
@@ -404,4 +405,411 @@ export default defineConfig({
 </style>
 ```
 
-p13 [012.reactive创建_对象类型的响应式数据_哔哩哔哩_bilibili](https://www.bilibili.com/video/BV1Za4y1r7KE?spm_id_from=333.788.videopod.episodes&vd_source=6cfabdd9118b8397a529eb6df87378b6&p=12)
+p13 [012.reactive创建_对象类型的响应式数据_哔哩哔哩_bilibili](https://www.bilibili.com/video/BV1Za4y1r7KE)
+
+- ref响应式对象
+
+- ref对象可以直接重新复制，reactive对象不能重新赋值新对象
+- 当对象层级深的时候可以使用 reactive
+- 梭哈ref
+
+```typescript
+import { ref } from 'vue'
+//创建对象
+let Cat = ref({Lift:64, Nmae:"小猫"})
+//创建数组
+let CatArray = ref([
+    {Name:"Steam",Age :24},
+    {Name:"Epic",Age:31}
+])
+function SetCatName(){
+    Cat.value.Nmae = "小狗"
+}
+function SetArrayOne(){
+    CatArray.value[0].Name = "腾讯"
+}
+```
+
+
+
+## 4.7  toRefs toRef
+
+​	接收由`reactive`定义的对象，解构后的更改影响原来的对象，解构后属于 `ref(type)`
+
+```typescript
+let person = reactive({name:"张三",age:18})
+let {name,age} = toRefs(person)
+
+//当name.value += 1 时，person的name也会更改
+```
+
+- toRef取出单个 `toRef(peron,'age')`
+
+
+
+## 4.8 计算属性
+
+- 其实就一方法，`computed` ，里面写返回逻辑，多次使用也只调一次，有缓存，属性变化一次 计算一次。只读的
+
+这样写可以避免只读
+
+```ts
+//只读
+let fullName = computed(() => {
+    return firstName.value.slice(0,1)
+})
+
+let fullName = computed({
+    get(){
+    	return firstName.value.slice(0,1)    
+    }
+    set(re){
+    	firstName.value = re;
+	}
+})
+
+//其实更改的是firstName
+function changeFullName(){
+    fullName.value = 'awd'
+}
+```
+
+
+
+## 4.9 Watch监视
+
+不过是一个函数 `watch`需要引入，数据变了调用函数
+
+​	Watch只能监视以下四种数据
+
+- ref定义的数据
+- reactive定义的数据
+- 函数返回的值(`getter`)
+- 一个包含上述内容的数组
+
+```ts
+let sum = ref(1)
+function changeSum(){
+    sum.value += 1
+}
+
+watch(sum, (newvalue,oldvalue) => {
+    console.log('sum变了',newvalue,oldvalue)
+})
+```
+
+`watch`带有返回值，调用返回值可以停止监视
+
+```ts
+const stopWatch = watch(sum, (newvalue,oldvalue) => {
+    console.log('sum变了',newvalue,oldvalue)
+    if(newValue >= 10){
+        stopWatch()
+    }
+})
+```
+
+​	如果直接监视对象，只监视对象地址变化，否则开启深度监视，第三个参数输入 `{deep:true}`，大多数情况下不管旧值，传入`value`就行，而且更改内容两个其实是同一个对象
+
+
+
+## 5.0 watchEffect
+
+​	无需指定监视对象，直接写个回调，需要从`vue`中引入，页面一加载就会运行一次
+
+
+
+## 5.1 标签的ref属性
+
+​	放在HTML标签返回DOM，放在组件标签返回实例
+
+```vue
+<template>
+    <div class="div1">
+        <h1 ref="h1One">内容</h1>
+        <button @click="ViewH1One"> 输出h1内容 </button>
+    </div>
+</template>
+
+<script lang="ts" setup name="Person">
+import {ref } from 'vue'
+let h1One = ref()
+function ViewH1One(){
+    console.log(h1One)
+}
+</script>
+```
+
+​	使用`defineExpoe`可以对父组件公开属性，这样父组件打上`ref`时就可以访问子组件的公开数据
+
+```ts
+import {ref,defineExpose} from 'vue'
+let h1One = ref()
+let a = ref(0)
+let b = ref(1)
+let c = ref(2)
+function ViewH1One(){
+    console.log(h1One)
+}
+defineExpose({a,b,c})
+```
+
+```vue
+<template>
+    <Person ref="ren"/>
+    <button @click="ShowProper"></button>
+</template>
+
+<script lang="ts" setup name="App">
+    //引入组件
+    import { ref } from 'vue';
+    import Person from './components/Person.vue';
+    
+    let ren = ref()
+
+    function ShowProper(){
+        console.log(ren)
+    }
+</script>
+```
+
+
+
+## 5.2 defineProps 数据接收
+
+- 父组件给子组件发数据
+
+```vue
+<template>
+	<Person a="哈哈"/>
+</template>
+```
+
+- 子组件接收
+
+```ts
+import {defineProps} from 'vue'
+let a = defineProps(['a'])
+```
+
+
+
+- 传对象 前面加 `:` 跟内插字符串差不多
+
+```vue
+<template>
+	<Person :list="脚本中的数据"/>
+</template>
+```
+
+```cs
+import {defineProps} from 'vue'
+let list = defineProps(['list'])
+```
+
+
+
+- 子组件限制接收类型
+
+```ts
+import {type Persons} from '@/types/Person'
+import {defineProps} from 'vue'
+
+//必须给
+defineProps<{list:Persons}>()
+
+//可有可无 可以不给 加个?
+defineProps<{list?:Persons}>()
+
+//可有可无 + 默认值
+//引入 withDefaults
+withDefaults(defineProps<{list?:Persons}>(),{
+    list:()=>[{xxx:"xxx",xxx:"xxx"}]
+})
+```
+
+
+
+## 5.3  组件的生命周期
+
+钩子就是生命周期函数
+
+---
+
+Vue2
+
+| 时刻           | 调用特定的函数 之前,完毕  |
+| -------------- | ------------------------- |
+| 创建           | beforeCreate , created    |
+| 挂载(放入页面) | beforeMount , mounted     |
+| 更新           | beforeUpdate , updated    |
+| 销毁           | beforeDestroy , destroyed |
+
+---
+
+Vue3
+
+| 时刻           | 调用特定的函数 之前,完毕      |
+| -------------- | ----------------------------- |
+| 创建           | setup                         |
+| 挂载(放入页面) | onBeforeMount , onMounted     |
+| 更新           | onBeforeUpdate , onUpdated    |
+| 卸载           | onBeforeUnmount , onUnmounted |
+
+
+
+## 5.4 自定义Hooks 
+
+​	就是将方法 / 属性封装到一个`js` / `ts` ，也可以一上来就调用一次生命周期钩子/函数
+
+```ts
+import { ref, type Ref } from "vue";
+
+export default function() {
+    let sum : Ref<number,number> = ref(0);
+
+    function AddSum(){
+        sum.value += 1;
+    }
+
+    return {sum,AddSum};
+};
+```
+
+```vue
+<template>
+    <div class="div1">
+        <h1>{{ sum }}</h1>
+        <button @click="AddSum"> 点我+1 </button>
+    </div>
+</template>
+
+<script setup lang="ts" name="Person">
+    import getDog from './getDog';
+    const {sum,AddSum} = getDog();
+</script>
+```
+
+
+
+# 5 路由
+
+​	路由就是对应关系，单页面想要实现切换效果 就用到路由了
+
+## 5.1 基本路由
+
+- 导航区，展示区
+- 请来路由器
+- 指定路由规则 (什么路径对应什么组件)
+- 形成一个一个的vue
+
+路由组件通常放在`pages`文件夹或`views`文件夹，一般组件通常存放在`components`文件夹
+
+通过点击导航，视觉效果上"消失"了的组件，默认是被卸载了。需要的时候再去挂载
+
+​	安装路由器`npm i vue-router`
+
+1. 在`src`文件夹下创建`router`文件夹 ， 创建一个路由器`index.ts`
+
+```ts
+import createRouter from 'vue-router'
+//模式
+import createWebHistory from 'vue-router'
+import Home from '@/com/Home.vue'
+import r from '@/com/r.vue'
+import e from '@/com/e.vue'
+
+//创建路由器 传入配置项
+const router = createRouter({
+    history:createWebHistory(), //路由器的工作模式
+    routes:[//路由规则
+        {
+            //路径
+        	path:'/h',
+            component:Home
+    	},
+        {
+            //路径
+        	path:'/i',
+            component:r
+    	},
+        {
+            //路径
+        	path:'/m',
+            component:e
+    	},
+    ]
+})
+
+//暴露
+export default router
+```
+
+- 在`main.ts` 引入路由
+
+```ts
+import router from '@xxxx'
+//使用路由器 先将 createApp拆开
+let app = createApp(App)
+//使用路由器
+app.use(router)
+//挂载App
+app.mount('#app')
+```
+
+- 在`App.vue` 中标记内容显示区域
+
+- 将`RouterView`组件放在展示区域
+
+```ts
+import {RouterView, RouterLink} from 'vue-router'
+```
+
+- RouterLink用来指向路由页面，设置 `active-class`可以指定激活时的样式类
+
+```html
+<RouterLink to="/home">首页</RouterLink>
+
+<!--展示区-->
+<RouterView></RouterView>
+```
+
+
+
+
+
+
+
+# 6 TypeScript
+
+1. 在src下新建文件夹 `types`
+2. 在新文件夹下创建文件 `Person.ts`
+
+## 6.1 接口
+
+- 定义并暴露，用来约束对象
+
+```ts
+export interface Person{
+    age : number,
+    name : string,
+    id : string,
+    //可选
+    x? : number
+}
+```
+
+- 在`Person.vue`中引入并创建对象 , 引入类型需要添加 `type`
+
+```ts
+import {type Person } from "@/types/Person"
+let ren:Person = {name:"ren",id:"1",age:12}
+```
+
+- 定义数组
+
+```ts
+import {type Person } from "@/types/Person"
+let ren:Array<Person> = {name:"ren",id:"1",age:12}
+```
+

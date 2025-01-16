@@ -111,6 +111,168 @@ float4 PixelShaderFunction2() : SV_Target0
 }
 ```
 
+在输入结构体中，语义负责告诉CPU往里面传参数
+
+在输出结构体中，语义负责告诉CPU参数传入哪个通道
+
+- 高光色乘以纹理色的不透明度就可以利用alpha通道实现高光遮罩(Mask)
+
+# 用户参数传递
+
+```cs
+//加载shader
+Effect eff = Content.Load<Effect>("xxx/xxx/xxxx");
+//设置值
+eff.Parameters["参数名称"].SetValue(值);
+```
+
+```c
+float4 参数名称;
+```
+
+
+
+# 配置着色器
+
+`technique`
+
+```CS
+technique 着色器名称
+{
+    pass 阶段名称
+    {
+        //VertexShader / PixelShader = compile 版本 方法名称(传参)
+    	PixelShader = compile ps_2_0 TestShader();
+    }
+}
+```
+
+
+
+`pass`
+
+​	每个pass 数据都会走一遍渲染管线，如果数据一次无法计算到指定效果，可以把结果送入缓冲区再进行下一个阶段，而且下一次阶段可以选择性的混合两次结果
+
+```c
+//compile要求程序将HLSL编译成二进制指令 然后指定语言模型(编译方法，也指明了最低配置要求)
+pass one
+{
+	VertexShader = compile vs_1_1 TestVertexShader();
+    PixelShader = compile ps_2_0 TestPixelShader();
+}
+```
+
+​	一些配置
+
+| 配置项           | 类型                                          | 说明                                                         |
+| ---------------- | --------------------------------------------- | ------------------------------------------------------------ |
+| ZEnable          | bool                                          | 深度，控制后面绘制覆盖前面绘制<br>绘制顺序 数字越大，越先画  |
+| ZWriteEnable     | bool                                          | 启用写深度<br>这个阶段渲染的物体会把深度写入Z-Buffer         |
+| CullMode         | None 不剔除<br>CW 剔除顺时针<br>CWW剔除逆时针 | 剔除，就是不渲染<br>按照顶点顺序的旋转方向<br>CW就是摄像机后面，CWW就是摄像机正面<br>设置为CW看到的物体的正面被渲染 |
+| AlphaBlendEnable | bool                                          | 允许透明度混合                                               |
+
+
+
+## 使用两个阶段的配置
+
+```c
+technique TwoShader
+{
+    pass one
+    {
+        VertexShader = compile vs_1_1 TestVertexShader();
+        ZEnable = true;
+        ZWriteEnable = true;
+        CullMode = CW;
+        AlphaBlendEnable = false;
+        PixelShader = compile ps_2_0 TestPixelShader();
+    }
+    pass two
+    {
+        VertexShader = compile vs_1_1 Test2VertexShader();
+        ZEnable = true;
+        ZWriteEnable = true;
+        CullMode = CW;
+        AlphaBlendEnable = false;
+        PixelShader = compile ps_2_0 Test2PixelShader();
+    }
+}
+```
+
+如果是上面这么写 只能看到`two`的效果，因为我们没有让两个阶段能够混合
+
+我们将阶段`two`的`ZWriteEnable` 设置为 `false` 因为`one` 与 `two`渲染深度一致，可以节省性能。
+
+将阶段`two`的`AlphaBlendEnable`设置为`true`让他可以进行透明度混合
+
+在阶段`two`中设置 `SrcBlend` 可以设置源混合权重
+
+在阶段`two`中设置 `DestBlend` 可以设置目标混合权重
+
+```c
+technique TwoShader
+{
+    pass one
+    {
+        VertexShader = compile vs_1_1 TestVertexShader();
+        ZEnable = true;
+        ZWriteEnable = true;
+        CullMode = CW;
+        AlphaBlendEnable = false;
+        PixelShader = compile ps_2_0 TestPixelShader();
+    }
+    pass two
+    {
+        VertexShader = compile vs_1_1 Test2VertexShader();
+        ZEnable = true;
+        ZWriteEnable = true;
+        CullMode = CW;
+        AlphaBlendEnable = false;
+        SrcBlend = one;
+        DestBlend = one;
+        PixelShader = compile ps_2_0 Test2PixelShader();
+    }
+}
+```
+
+
+
+
+
+在`XNA`中设置 `SrcBlend` 和 `DestBlend`
+
+```cs
+GraphicsDevice.BlendState = new BlendState()
+{
+    //SrcBlend
+ 	AlphaSourceBlend = Blend.SrcAlpha,  //透明度混合
+    ColorSourceBlend = Blend.SrcAlpha,	//颜色混合
+    
+    //DstBlend
+    AlphaDestinationBlend = Blend.DestAlpha, 
+    ColorDestinationBlend = Blend.DestAlpha
+};
+```
+
+对于`Blend`的几个选项
+
+| 选          | 说                    |
+| ----------- | --------------------- |
+| Zero        | 使用0用作源颜色       |
+| One         | 使用源颜色            |
+| SrcColor    | 使用源颜色的颜色值    |
+| InvSrcColor | 使用反色(源颜色)      |
+| SrcAlpha    | 使用源颜色的A(透明度) |
+| InvSrcAlpha | 使用反A               |
+
+
+
+# 法线贴图
+
+
+
+
+
 
 
 

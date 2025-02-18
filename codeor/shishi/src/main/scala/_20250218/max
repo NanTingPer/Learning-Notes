@@ -1,0 +1,35 @@
+Create Topic
+Current Mkdir kafka
+cd ./bin
+./kafka-topic --bootstrap-server xxx.xxx.xxx.xxx:xxx --topic xxx --create --partitions 2
+
+
+mx :
+mysql user => root
+mysql pass => 123456
+
+New Line
+kafka_tipic => xxx
+
+
+cd etc/my.conf
+New Line
+b?glog-do-db=databaseName
+
+systemctl stop mysqld
+systemctl start myslqd
+
+Current Mkdir Mx
+cd /bin
+./mx --config ../config.prxxxx
+
+
+Current Mkdir #
+mysql -uroot -p123456
+use databaseName
+create table NewTableName as select * from OldTableName
+create table NewTableName as select * from OldTableName
+
+Current Mkdir Kafka
+cd /bin
+./kafka-console-consumer --bootstrap-server xxx.xxx.xxx.xxx:xxxx --topic xxxx --max-messages 1 --from-beginning

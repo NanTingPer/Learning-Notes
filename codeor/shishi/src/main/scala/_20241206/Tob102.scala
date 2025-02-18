@@ -38,6 +38,7 @@ object Tob102 {
                     val strs = f.replaceAll("数据发送开始:", "").split("product_browse:\\(")(1).replaceAll("[':;)]", "").split("\\|")
                     val log_id = new Random().nextInt(10) + new SimpleDateFormat("MMddHHmmssSSS").format(new Date(System.currentTimeMillis()))
                     val gson = new Gson()
+//                    println(strs(0),strs(1),strs(2),strs(3),strs(4))
                     gson.toJson(tableinfo(log_id.toLong,strs(0),strs(1).toInt,strs(2).toInt,strs(3),strs(4)))
                 }).sinkTo(kk)
 
@@ -47,8 +48,8 @@ object Tob102 {
 
     case class tableinfo(log_id:Long,
                          product_id:String,
-                         customer_id : Int,
-                         gen_order : Int,
+                         customer_id : Long,
+                         gen_order : Long,
                          order_sn : String,
                          modified_time : String)
 }

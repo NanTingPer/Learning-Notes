@@ -43,5 +43,4 @@ object qinxi02 {
                 .sinkTo(ksink);
         env.execute()
     }
-
 }

@@ -64,7 +64,7 @@ object 离线清洗 {
                 .withColumn("dwd_modify_time", max("dwd_modify_time").over(window2))
                 .createTempView("runtable")
 
-        spark.sqlContext.sql("select * from runtable where num = 1").drop("num").show
+//        spark.sqlContext.sql("select * from runtable where num = 1").drop("num").show
 
         spark.sqlContext.sql("select * from runtable where num = 1")
                 .drop(col("num"))

@@ -16,29 +16,30 @@ import java.time.LocalTime
 import java.util
 
 object 离线清洗04 {
-    case class table_info(order_id : String,
-                          order_sn : String,
-                          customer_id :String,
-                          shipping_user : String,
-                          province:String,
-                          city:String,
-                          address:String,
-                          order_source :String,
-                          payment_method :String,
-                          order_money : String,
-                          district_money :String,
-                          shipping_money :String,
-                          payment_money :String,
-                          shipping_comp_name :String,
-                          shipping_sn :String,
-                          create_time :String,
-                          shipping_time :String,
-                          pay_time :String,
-                          receive_time : String,
-                          order_status:String,
-                          order_point : String,
-                          invoice_title :String,
-                          modified_time :String)
+    case class table_info(order_id              :String,
+                          order_sn              :String,
+                          customer_id           :String,
+                          shipping_user         :String,
+                          province              :String,
+                          city                  :String,
+                          address               :String,
+                          order_source          :String,
+                          payment_method        :String,
+                          order_money           :String,
+                          district_money        :String,
+                          shipping_money        :String,
+                          payment_money         :String,
+                          shipping_comp_name    :String,
+                          shipping_sn           :String,
+                          create_time           :String,
+                          shipping_time         :String,
+                          pay_time              :String,
+                          receive_time          :String,
+                          order_status          :String,
+                          order_point           :String,
+                          invoice_title         :String,
+                          modified_time         :String
+                         )
 
 
     def main(args: Array[String]): Unit = {
@@ -61,10 +62,11 @@ object 离线清洗04 {
         config.set(TableInputFormat.INPUT_TABLE,"ods:order_master")
         config.set(TableInputFormat.SCAN,TableMapReduceUtil.convertScanToString(GetScan))
 
-        val rdd = spark.sparkContext.newAPIHadoopRDD(config,
-            classOf[TableInputFormat],
-            classOf[ImmutableBytesWritable],
-            classOf[Result])
+        val rdd = spark.sparkContext.newAPIHadoopRDD(
+            config,
+            classOf[TableInputFormat],//hbase.map
+            classOf[ImmutableBytesWritable], //hbase.io
+            classOf[Result])//hbase.客户端
 
         //TODO 过滤并转换
         import spark.implicits._

@@ -1,6 +1,6 @@
 package Test01
 
-import com.google.gson.{Gson, JsonParser}
+import com.google.gson.JsonParser
 import org.apache.flink.api.common.eventtime.WatermarkStrategy
 import org.apache.flink.api.common.serialization.SimpleStringSchema
 import org.apache.flink.api.scala.createTypeInformation
@@ -10,8 +10,6 @@ import org.apache.flink.streaming.api.scala.function.ProcessWindowFunction
 import org.apache.flink.streaming.api.windowing.assigners.TumblingProcessingTimeWindows
 import org.apache.flink.streaming.api.windowing.time.Time
 import org.apache.flink.streaming.api.windowing.windows.TimeWindow
-import org.apache.flink.streaming.runtime.watermarkstatus.WatermarkStatus
-import org.apache.flink.table.api.{AnyWithOperations, FieldExpression}
 import org.apache.flink.table.api.bridge.scala.StreamTableEnvironment
 import org.apache.flink.table.api._
 import org.apache.flink.util.Collector

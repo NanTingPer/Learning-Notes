@@ -47,12 +47,14 @@ object 清洗03_3 {
 
         envt
         //该字段使用logid 进行拆分，
-        // 将log_id 拆分为随机数和MMddHHmmssSSS 两块， 60218 153008682
+        // 将log_id 拆分为随机数和MMddHHmmssSSS 两块， 6 0218153008682
         // 在其中插入yyyy（date 的格式）
         //最终格式为：随机数（0-9）+yyyy+MMddHHmmssSSS
                 .from("kt")
-                .select(concat(randInteger(10).cast(DataTypes.STRING()), "2025", $"log_id".cast(DataTypes.STRING()).substring(2)) as "row_key",
-                    row(concat(randInteger(10).cast(DataTypes.STRING()),dateFormat(currentTimestamp(),"MMddHHmmssSSS") as "log_id"),
+                //randInteger(10).cast(DataTypes.STRING())
+                //concat(randInteger(10).cast(DataTypes.STRING()),dateFormat(currentTimestamp(),"MMddHHmmssSSS") as "log_id")
+                .select(concat($"log_id".cast(DataTypes.STRING()).substring(1,1), "2025", $"log_id".cast(DataTypes.STRING()).substring(2)) as "row_key",
+                    row($"log_id",
                         $"order_sn",
                         $"product_id",
                         $"customer_id",

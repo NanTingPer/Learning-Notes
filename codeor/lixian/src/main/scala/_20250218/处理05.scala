@@ -25,24 +25,33 @@ object 处理05{
             .enableHiveSupport()
             .getOrCreate()
 
+        //TODO 获取最大时间和表全部行，用于Hbase表对齐
         val maxtime = spark.sql("select max(etl_date) from ods.order_detail").first()(0)
         val hiveData = spark.sql(s"select * from ods.order_detail where etl_date='${maxtime}'").drop("etl_date")
         val cols = hiveData.columns.map(col)
+
+
         val config = HBaseConfiguration.create()
         config.set(TableInputFormat.INPUT_TABLE,"ods:order_detail_offline")
         config.set(TableInputFormat.SCAN, TableMapReduceUtil.convertScanToString(new Scan().setFilter(new RowFilter(CompareOperator.EQUAL, new RegexStringComparator("20221001")))))
 
+        //TODO 创建一个窗口 用于截取新的一条数据
         val win = Window.partitionBy("order_detail_id").orderBy(lit("modified_time").desc)
         import spark.implicits._
         spark.sparkContext.newAPIHadoopRDD(config,
             classOf[TableInputFormat],
             classOf[ImmutableBytesWritable],
             classOf[Result])
-        .map(f => {
+        .map(f =>
+        {
             val map = new util.HashMap[String,String]()
-            f._2.rawCells().foreach(f => {
+            f._2.rawCells().foreach(f =>
+            {
                 val info = Bytes.toString(CellUtil.cloneQualifier(f))
-                val value = info match {
+
+                //TODO 将二进制数据 按照表字段类型 进行相应的转换
+                val value = info match
+                {
                     case
                         "order_detail_id"
                     ||  "product_id"
@@ -76,6 +85,7 @@ object 处理05{
             )
         })
         .toDF()
+        //TODO Hbase处理时，全部转为了String 这里进行数据类型转换
         .withColumn("product_name",round(lit("product_name").cast(DataTypes.DoubleType),2))
         .withColumn("product_price",round(lit("product_price").cast(DataTypes.DoubleType),2))
         .withColumn("average_cost",round(lit("average_cost").cast(DataTypes.DoubleType),2))
@@ -85,8 +95,10 @@ object 处理05{
         .withColumn("product_id",lit("product_id").cast(DataTypes.IntegerType))
         .withColumn("product_cnt",lit("product_cnt").cast(DataTypes.IntegerType))
         .withColumn("w_id",lit("w_id").cast(DataTypes.IntegerType))
+        //TODO 字段对齐 不然un会报错
         .select(cols:_*)
         .union(hiveData)
+        //TODO 只截取最新的一条
         .withColumn("coltemp",row_number().over(win))
         .where(col("coltemp")===1)
         .drop("coltemp")
@@ -103,19 +115,19 @@ object 处理05{
     }
 
     case class tableInfo(
-                            order_detail_id : String,
-                            product_id : String,
-                            product_name : String,
-                            product_cnt : String,
-                            product_price : String,
-                            average_cost : String,
-                            weight : String,
-                            fee_money : String,
-                            w_id : String,
-                            create_time : String,
-                            modified_time : String
+        order_detail_id : String,
+        product_id : String,
+        product_name : String,
+        product_cnt : String,
+        product_price : String,
+        average_cost : String,
+        weight : String,
+        fee_money : String,
+        w_id : String,
+        create_time : String,
+        modified_time : String
 
-                        )
+    )
 }
 
 

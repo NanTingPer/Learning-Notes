@@ -1,0 +1,3 @@
+module DomeTwo {
+    requires DomeNeo;
+}

@@ -17,7 +17,7 @@ object LXCL01 {
         //也叫新数据
         val odsData = spark.sql(s"select * from ods.customer_inf where etl_date = '${maxtime}'")
 
-        val maxtime2 = spark.sql("select max(etl_date) from dwd.dim_customer_inf").first(0)()
+        val maxtime2 = spark.sql("select max(etl_date) from dwd.dim_customer_inf").first()(0)
         val dwdDate = spark.sql(s"select * from dwd.dim_customer where etl_date ='${maxtime2}'")
         //用于对齐
         val cols = dwdDate.columns.map(col)

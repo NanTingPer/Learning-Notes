@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="ProjectModuleManager">
+    <modules>
+      <module fileurl="file://$PROJECT_DIR$/DomeNeo/DomeNeo.iml" filepath="$PROJECT_DIR$/DomeNeo/DomeNeo.iml" />
+      <module fileurl="file://$PROJECT_DIR$/DomeTwo/DomeTwo.iml" filepath="$PROJECT_DIR$/DomeTwo/DomeTwo.iml" />
+      <module fileurl="file://$PROJECT_DIR$/InterCline/InterCline.iml" filepath="$PROJECT_DIR$/InterCline/InterCline.iml" />
+      <module fileurl="file://$PROJECT_DIR$/InterServer/InterServer.iml" filepath="$PROJECT_DIR$/InterServer/InterServer.iml" />
+      <module fileurl="file://$PROJECT_DIR$/StringDomePx.iml" filepath="$PROJECT_DIR$/StringDomePx.iml" />
+    </modules>
+  </component>
+</project>

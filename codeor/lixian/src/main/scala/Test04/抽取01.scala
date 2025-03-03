@@ -1,5 +1,6 @@
 package Test04
 
+import org.apache.spark.sql.SaveMode
 import org.apache.spark.sql.functions._
 
 object 抽取01 {
@@ -25,6 +26,12 @@ object 抽取01 {
         println("Hive最大时间: " + maxtime)       //Hive最大时间: 2020-04-26 18:57:55.0
         val sqlmaxtime = mySQLData.select(greatest(max("operate_time"), max("create_time"))).first()(0)
         println("myql最大时间: " + sqlmaxtime)  //mySql最大时间: 2020-04-26 23:54:52.0
-        mySQLData.where(greatest(col("operate_time"),col("create_time")) > maxtime).show
+        mySQLData.where(greatest(col("operate_time"),col("create_time")) > maxtime)
+            .withColumn("etl_date",lit("20250304"))
+            .write
+            .mode(SaveMode.Append)
+            .format("hive")
+            .partitionBy("etl_date")
+            .saveAsTable(Hdatabases)
     }
 }

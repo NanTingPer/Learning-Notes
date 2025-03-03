@@ -1,0 +1,149 @@
+1. 参考方法`LocalizationLoader.LoadModTranslations(culture)`
+
+   如果要更改值，那就 `lang.GetText(Key).SetValue(value);`
+
+```cs
+var lang = LanguageManager.Instance;
+foreach (var mod in ModLoader.Mods) {
+	foreach (var (key, value) in LoadTranslations(mod, culture)) {
+        //lang.GetText(Key)返的是LocalizatText
+		lang.GetText(key).SetValue(value); // can only set the value of existing keys. Cannot register new keys.
+	}
+}
+```
+
+2. 参考方法`LocalizationLoader.LoadTranslations`这里是解析`hjson`的逻辑，我们无法直接调用此方法，因为`GameCulture`是当前语言，并不包含`繁体中文`，并且使用编译时就确定的`枚举值`，如果使用`Unknown`，那么只支持一种外部语言
+
+```cs
+private static List<(string key, string value)> LoadTranslations(Mod mod, GameCulture culture){}
+
+//下面是GameCulture
+public enum CultureName
+{
+	English = 1,
+	German = 2,
+	Italian = 3,
+	French = 4,
+	Spanish = 5,
+	Russian = 6,
+	Chinese = 7,
+	Portuguese = 8,
+	Polish = 9,
+	Unknown = 9999
+}
+static GameCulture()
+{
+	_NamedCultures = new Dictionary<CultureName, GameCulture> {
+		{ CultureName.English, new GameCulture("en-US", 1) },
+		{ CultureName.German, new GameCulture("de-DE", 2) },
+		{ CultureName.Italian, new GameCulture("it-IT", 3) },
+		{ CultureName.French, new GameCulture("fr-FR", 4) },
+		{ CultureName.Spanish, new GameCulture("es-ES", 5) },
+		{ CultureName.Russian, new GameCulture("ru-RU", 6) },
+		{ CultureName.Chinese, new GameCulture("zh-Hans", 7) },
+		{ CultureName.Portuguese, new GameCulture("pt-BR", 8) },
+		{ CultureName.Polish, new GameCulture("pl-PL", 9) }
+	};
+
+	DefaultCulture = _NamedCultures[CultureName.English];
+}
+```
+
+3. 如果是本就有本地化的模组，只需要保存另外语言的`Hjson`副本，然后读取内容，使用`LocalizationLoader.LoadTranslations`中解析的方法
+
+   `lang`是`LanguageManager`实例，其在`LanguageManager`中存储
+
+   ```cs
+   public static LanguageManager Instance = new LanguageManager();
+   ```
+
+   `SetValue方法`是非`public`的，需要特殊手段
+
+   ```cs
+   internal void SetValue(string text)
+   {
+   	Value = text;
+   }
+   ```
+
+   但其实`LocalizedText`的`Value`是一个
+
+   ```cs
+   public string Value {
+   	get => _value;
+   	private set {
+   		_value = value;
+   		_hasPlurals = null;
+   		BoundArgs = null;
+   	}
+   }
+   ```
+
+   至于`GetText`是公共的 在`LanguageManager`下
+
+   ```cs
+   public LocalizedText GetText(string key)
+   {
+   	return _localizedTexts.TryGetValue(key, out var text) ? text : new LocalizedText(key, key);
+   }
+   ```
+
+   
+
+```cs
+//1. 读取Hjson为文本，这是tModLoader使用的方法
+using var stream = mod.File.GetStream(translationFile);
+using var streamReader = new StreamReader(stream, Encoding.UTF8, detectEncodingFromByteOrderMarks: true);
+string translationFileContents = streamReader.ReadToEnd();
+//2. 解析为文本后执行 // Parse HJSON and convert to standard JSON注释下的代码
+//此注释在 LocalizationLoader.LoadTranslations(Mod mod, GameCulture culture) 方法中
+//结果会返回一个 二元组？ 键是key 值是value，该键对应本地化键，然后遍历lang.GetText(Key).SetValue(value);
+```
+
+4. 另一种方法是不使用`lang.GetText(Key).SetValue(value)`
+   - 获取`LanguageManager`实例
+
+```cs
+public static object LanguageManager;
+public override void Load(){
+    Type GameCulture = typeof(LanguageManager);
+	//在LanguageManager类下有个Instance字段，是自己的实例 公共的
+	FieldInfo Instance = GameCulture.GetField("Instance", BindingFlags.Public | BindingFlags.Static);
+	LanguageManager = Instance.GetValue(null);
+}
+```
+
+- 其实在`LanguageManager`类中有一个字段存放着全部的本地化键和值，只需要获取他的实例，然后得到`LocalizedText`的`Value`属性的`Set`方法，就可以随意取值修改内容
+
+  ```cs
+  internal readonly Dictionary<string, LocalizedText> _localizedTexts = new Dictionary<string, LocalizedText>();
+  ```
+
+```cs
+public static Dictionary<string, LocalizedText> LocalizedTexts;
+public static MethodInfo LocalizedTextSet;
+public override void Load(){
+	Type LocalizedText = typeof(LocalizedText);
+	//全部字段
+	FieldInfo Field = GameCulture.GetField("_localizedTexts", BindingFlags.NonPublic | BindingFlags.Instance);
+    //获取实例
+	LocalizedTexts = (Dictionary<string, LocalizedText>)Field.GetValue(LanguageManager);
+    //Set方法
+	LocalizedTextSet = LocalizedText.GetProperty("Value").GetSetMethod(true);
+}
+```
+
+5. 修改
+
+```cs
+LocalizedText Text = LocalizedTexts["ItemName.CopperShortsword"];
+LocalizedTextSet.Invoke(Text, ["非常好的铜短剑令我脑袋飞转"]);
+```
+
+6. 对于硬编码，可以使用`GetOrRegister`注册键然后使用`IL`钩子，将原本字符串替换为
+
+```cs
+Emit(OpCodes.Ldstr, "Key");
+Emit(OpCodes.Call, Language.GetTextValue);
+```
+

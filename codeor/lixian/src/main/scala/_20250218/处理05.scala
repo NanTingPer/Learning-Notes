@@ -17,11 +17,11 @@ import java.util
 object 处理05{
     def main(args: Array[String]): Unit = {
         System.setProperty("HADOOP_USER_NAME","root")
-
         val spark = SparkSession
             .builder()
             .master("local[*]")
             .appName("dawf")
+            .config("hive.exec.scratchdir","hdfs://192.168.45.13:9000/user/temp/hive")
             .enableHiveSupport()
             .getOrCreate()
 
@@ -53,18 +53,10 @@ object 处理05{
                 val value = info match
                 {
                     case
-                        "order_detail_id"
-                    ||  "product_id"
-                    ||  "product_cnt"
-                    ||  "w_id"
-                    => Bytes.toLong(CellUtil.cloneValue(f)).toString
-                    case
-                        "product_name"
-                    ||  "product_price"
-                    ||  "average_cost"
-                    ||  "weight"
-                    ||  "fee_money"
-                    => Bytes.toDouble(CellUtil.cloneValue(f)).toString
+                        "order_detail_id" | "product_id" | "product_cnt" | "w_id"
+                        => Bytes.toLong(CellUtil.cloneValue(f)).toString
+                    case "product_name" | "product_price" | "average_cost" | "weight" | "fee_money"
+                        => Bytes.toDouble(CellUtil.cloneValue(f)).toString
                     case _ => Bytes.toString(CellUtil.cloneValue(f))
                 }
                 map.put(info, value)

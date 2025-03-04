@@ -1,0 +1,3 @@
+displayName = 特性
+author = d
+version = 0.1

@@ -49,6 +49,7 @@ object Util {
         val CentCount = sparkSession.sql("select count(*) from mysql").first()(0)
         sparkSession.sql("select * from mysql").orderBy(col(s"${表内字段}")).limit(CentCount.toString.toInt / 2)
             .withColumn("etl_date", lit("20250303"))
+//            .withColumn("create_time", date_format(current_timestamp(), "yyyy-MM-dd HH-mm-ss")) //比赛时根据原始行进行格式化
             .write
             .partitionBy("etl_date")
             .mode(SaveMode.Overwrite)

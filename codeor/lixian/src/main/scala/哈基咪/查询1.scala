@@ -1,18 +1,17 @@
-import org.apache.spark.sql.SparkSession
-
 object 查询1 {
-  def main(args: Array[String]): Unit = {
-    //    // 创建SparkSession实例
-    val spark = SparkSession.builder()
-      .master("local[*]")
-      .appName("ETL Job")
-      .config("SPARK_MASTER_HOST","192.168.45.10")
+
+def main(args:Array[String]):Unit ={
+//    // 创建SparkSession实例
+val spark = SparkSession.builder()
+    .master("local[*]")
+    .appName("ETL Job")
+    .config("SPARK_MASTER_HOST", "192.168.45.10")
 //      .config("hive.exec.dynamic.partition", "true")//启用Hive的动态分区功能
 //      .config("hive.exec.dynamic.partition.mode", "nonstrict")//动态分区模式设置为“非严格”模式
 //      .config("spark.sql.sources.partitionOverwriteMode", "dynamic")//设置dynamic模式Spark将只覆盖那些与新数据对应的分区
 //      .config("spark.sql.parquet.writeLegacyFormat", "true")//与旧版本的Spark或Hadoop兼
-      .enableHiveSupport()//使SparkSession能够使用Hive的功能
-      .getOrCreate()//创建一个新的SparkSession实例
+    .enableHiveSupport()//使SparkSession能够使用Hive的功能
+    .getOrCreate()//创建一个新的SparkSession实例
 
 
 //    val sql1 = "select * from order_master where modified_time <= '2022-03-17 23:59:59'"//查询的条件语句
@@ -24,20 +23,28 @@ object 查询1 {
 //          "password" -> "123456" // mysql密码
 //        )
 //    spark.sql("create table order_master_copy as select * from order_master;").show()
-    val t1 = spark.sql("""
-    SELECT
-      concat(date_format(current_timestamp(), 'yyyyMMddHHmmssSSS'), '-', product_id) AS row_key,
-      product_id,
-      count(DISTINCT customer_id) AS uv,
-      count(*) AS pv
-    FROM ads.product_browse
-    GROUP BY
-      product_id
-""")
+val t1 = spark.sql("""
+        SELECT
+          concat(date_format(current_timestamp(), 'yyyyMMddHHmmssSSS'), '-', product_id) AS row_key,
+          product_id,
+          count(DISTINCT customer_id) AS uv,
+          count(*) AS pv
+        FROM ads.product_browse
+        GROUP BY
+          product_id
+    """)
     t1.write
-      .format("hive")
-      .mode("overwrite") // 覆盖
-      .saveAsTable("ads.online_uv_pv1") // 用的是自己命名的ods名称
-    spark.table("ads.online_uv_pv1")
+        .
+
+format("hive")
+      .
+
+mode("overwrite") // 覆盖
+      .
+
+saveAsTable("ads.online_uv_pv1") // 用的是自己命名的ods名称
+    spark.
+
+table("ads.online_uv_pv1")
   }
-}
+      }

@@ -21,9 +21,9 @@ object 计算04 {
 
 //        val OnePrTable = dim_user_info.join(fact_order_info, dim_user_info.col("id") === fact_order_info("user_id")).select("user_id", "user_name", "fact_order_info.create_time", "final_total_amount").withColumnRenamed("fact_order_info.create_time", "create_time")
 //        OnePrTable.createTempView("onePrTable")
-
-
-
+//
+//
+//
 //        val win1 = Window.partitionBy("user_id").orderBy("create_time")
 //        val win2 = Window.partitionBy("user_id", "tempTime").orderBy("tempTime")
 //        val win3 = Window.partitionBy("user_id");
@@ -39,13 +39,13 @@ object 计算04 {
 //            .distinct()
 //            .withColumn("day", concat(date_add(col("tempTime"), 1).cast(DataTypes.StringType), lit("_"), date_add(col("tempTime"), 2).cast(DataTypes.StringType)))
 //            .show()
-
+//
 //        timeAndUser.createTempView("timeAndUser")
-
+//
 //        spark.sql("select * from onePrTable").show()
 //        spark.sql("select * from timeAndUser").show()
-
-
+//
+//
 //        val win3 = Window.partitionBy("user_id")
 //        val 总金额和单数 = OnePrTable/*.join(timeAndUser, timeAndUser.col("user_id") === OnePrTable.col("user_id"))*/
 //            .where(
@@ -54,7 +54,7 @@ object 计算04 {
 //                (date_add(OnePrTable.col("create_time"), 0) === date_add(timeAndUser.col("tempTime"), 2))
 //            )
 //            .drop("timeAndUser.create_time", "timeAndUser.final_total_amount", "timeAndUser.user_id", "timeAndUser.user_name")
-
+//
 //            .withColumn("总金额", sum(col("final_total_amount").cast(DataTypes.DoubleType)).over(win3))
 //            .withColumn("单数", count("*").over(win3)).show
 

@@ -1,0 +1,3 @@
+displayName = 刀光教程
+author = d
+version = 0.1

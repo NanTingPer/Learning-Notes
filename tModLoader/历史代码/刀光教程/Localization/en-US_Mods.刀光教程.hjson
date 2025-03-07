@@ -1,0 +1,8 @@
+Items: {
+	武器: {
+		DisplayName: 武器
+		Tooltip: ""
+	}
+}
+
+Projectiles.弹幕.DisplayName: 弹幕

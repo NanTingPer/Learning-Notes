@@ -5,6 +5,8 @@ import org.apache.spark.sql.functions._
 import org.apache.spark.sql.expressions._
 import org.apache.spark.sql.types.DataTypes
 
+import java.util.Properties
+
 object Sum41 {
     def main(args: Array[String]): Unit = {
         System.setProperty("HADOOP_USER_NAME","root")
@@ -38,28 +40,36 @@ object Sum41 {
 
         //过滤窗口(过滤多个两天的)
         val win4 = Window.partitionBy("user_id")
-        twoDay
+        val AllData = twoDay
             //lead取出給定偏移的指定列數據，是一個窗口函數
             //lag是上一行，lead是下一行
-            .withColumn("downTotalconSumPtion", lead(col("totalconsumption"),1).over(win3))
+            .withColumn("downTotalconSumPtion", lead(col("totalconsumption"), 1).over(win3))
             //
-            .withColumn("downTotalorder", lead(col("totalorder"),1).over(win3))
-            .withColumn("downCreate_time", lead(col("create_time"),1).over(win3))
+            .withColumn("downTotalorder", lead(col("totalorder"), 1).over(win3))
+            .withColumn("downCreate_time", lead(col("create_time"), 1).over(win3))
             .where(col("downTotalorder").cast(DataTypes.StringType) =!= lit("null") and (col("totalconsumption") - col("downTotalconSumPtion") < 0))
             .orderBy("user_id")
             //多个连续两天处理，将前一天的消费与当前日的消费相减，取最大
-            .select("user_id", "create_time","downCreate_time", "totalconsumption", "downTotalconSumPtion", "totalorder", "downTotalorder")
+            .select("user_id", "create_time", "downCreate_time", "totalconsumption", "downTotalconSumPtion", "totalorder", "downTotalorder")
             .withColumn("subTotalconsumption", col("downTotalconSumPtion") - col("totalconsumption"))
             .withColumn("maxtol", max("subTotalconsumption").over(win4)) //用于后面取最大差值的那条数据(增长最高)
-            .where(col("subTotalconsumption") === col("maxtol"))                //取最大差值的数据(增长最高)
-            .drop("maxtol", "subTotalconsumption")//删除计算列，保留数据列
-            .withColumn("totalconsumption", col("totalconsumption") + col("downTotalconSumPtion"))//总消费金额
+            .where(col("subTotalconsumption") === col("maxtol")) //取最大差值的数据(增长最高)
+            .drop("maxtol", "subTotalconsumption") //删除计算列，保留数据列
+            .withColumn("totalconsumption", col("totalconsumption") + col("downTotalconSumPtion")) //总消费金额
             .drop("downTotalconSumPtion")
-            .withColumn("totalorder", col("totalorder") + col("downTotalorder"))//消费单数
+            .withColumn("totalorder", col("totalorder") + col("downTotalorder")) //消费单数
             .drop("downTotalorder")
-            .withColumn("day", concat(col("create_time"), lit("_"),col("downCreate_time"))) //day
+            .withColumn("day", concat(col("create_time"), lit("_"), col("downCreate_time"))) //day
             .drop("create_time", "downCreate_time")
-            .show()
-
+//        13 18 181 182 268
+        val conf = new Properties()
+            conf.put("user","root")
+            conf.put("password","123456")
+        val user_info = spark.sql("select id, name from dwd.dim_user_info")
+        AllData.join(user_info, AllData("user_id") === user_info("id"))
+            .withColumnRenamed("name", "username")
+            .select("user_id", "username", "day", "totalconsumption", "totalorder")
+            .write
+            .jdbc("jdbc:mysql://192.168.45.13/shtd_result?useSSL=false", "provinceavgcmp",conf)
     }
 }

@@ -16,47 +16,47 @@ object 清洗05 {
         val odstable = "ods.order_info"
         val dwdtable = "dwd.fact_order_info"
 
-        val odsdata =    spark.sql(s"select *,coalesce(operate_time, create_time) as tem from ${odstable} where etl_date = '20250305'")
-            .drop("operate_time")
-            .withColumnRenamed("tem", "operate_time")
-            .withColumn("etl_date", coalesce(date_format(col("create_time"), "yyyyMMdd"), lit("20250305")))
-            .withColumn("dim_insert_user", lit("user1"))
-            .withColumn("dim_insert_time", date_format(current_timestamp(),"yyyy-MM-dd HH:mm:ss"))
-            .withColumn("dim_modify_user", lit("user1"))
-            .withColumn("dim_modify_time", date_format(current_timestamp(),"yyyy-MM-dd HH:mm:ss"))
-            .write
-            .mode(SaveMode.Append)
-            .partitionBy("etl_date")
-            .format("hive")
-            .saveAsTable(dwdtable)
-
-        //        var odsdata = spark.sql(s"select *, coalesce(operate_time, create_time) as temp from ${odstable} where etl_date='20250305'")
+//        val odsdata =    spark.sql(s"select *,coalesce(operate_time, create_time) as tem from ${odstable} where etl_date = '20250305'")
 //            .drop("operate_time")
-//            .withColumnRenamed("temp", "operate_time")
-//        val maxtime = spark.sql(s"select max(etl_date) from ${dwdtable}")
-//        val dwddata = spark.sql(s"select * from ${dwdtable} where etl_date='${maxtime}'")
-//        val allcol = dwddata.columns.map(col)
-//
-//        val win1 = Window.partitionBy("id").orderBy("operate_time")
-//        odsdata = odsdata
-//                    .withColumn("dim_insert_user", lit("user1"))
-//                    .withColumn("dim_insert_time", date_format(current_timestamp(),"yyyy-MM-dd HH:mm:ss"))
-//                    .withColumn("dim_modify_user", lit("user1"))
-//                    .withColumn("dim_modify_time", date_format(current_timestamp(),"yyyy-MM-dd HH:mm:ss"))
-//                    .select(allcol:_*)
-//
-//        odsdata.union(dwddata)
-//            .withColumn("tempcol", row_number().over(win1))
-//            .withColumn("dim_insert_time", min(col("dim_insert_time")).over(win1))
-//            .withColumn("dim_modify_time", max(col("dim_modify_time")).over(win1))
-//            .where(col("tempcol") === 1)
-//            .drop("tempcol")
-//            .withColumn("etl_date", lit("20250305"))
+//            .withColumnRenamed("tem", "operate_time")
+//            .withColumn("etl_date", coalesce(date_format(col("create_time"), "yyyyMMdd"), lit("20250305")))
+//            .withColumn("dim_insert_user", lit("user1"))
+//            .withColumn("dim_insert_time", date_format(current_timestamp(),"yyyy-MM-dd HH:mm:ss"))
+//            .withColumn("dim_modify_user", lit("user1"))
+//            .withColumn("dim_modify_time", date_format(current_timestamp(),"yyyy-MM-dd HH:mm:ss"))
 //            .write
 //            .mode(SaveMode.Append)
 //            .partitionBy("etl_date")
 //            .format("hive")
 //            .saveAsTable(dwdtable)
+
+        var odsdata = spark.sql(s"select *, coalesce(operate_time, create_time) as temp from ${odstable} where etl_date='20250305'")
+            .drop("operate_time")
+            .withColumnRenamed("temp", "operate_time")
+//        val maxtime = spark.sql(s"select max(etl_date) from ${dwdtable}")
+//        val dwddata = spark.sql(s"select * from ${dwdtable} where etl_date='${maxtime}'")
+//        val allcol = dwddata.columns.map(col)
+
+        val win1 = Window.partitionBy("id").orderBy("operate_time")
+        odsdata = odsdata
+                    .withColumn("dim_insert_user", lit("user1"))
+                    .withColumn("dim_insert_time", date_format(current_timestamp(),"yyyy-MM-dd HH:mm:ss"))
+                    .withColumn("dim_modify_user", lit("user1"))
+                    .withColumn("dim_modify_time", date_format(current_timestamp(),"yyyy-MM-dd HH:mm:ss"))
+//                    .select(allcol:_*)
+
+        odsdata/*.union(dwddata)*/
+            .withColumn("tempcol", row_number().over(win1))
+            .withColumn("dim_insert_time", min(col("dim_insert_time")).over(win1))
+            .withColumn("dim_modify_time", max(col("dim_modify_time")).over(win1))
+            .where(col("tempcol") === 1)
+            .drop("tempcol")
+            .withColumn("etl_date", lit("20250305"))
+            .write
+            .mode(SaveMode.Overwrite)
+            .partitionBy("etl_date")
+            .format("hive")
+            .saveAsTable(dwdtable)
 
         //导入数据
 //        spark.sql(s"select * from ${odstable} limit 10")

@@ -17,17 +17,17 @@ object 抽取02 {
         val hivetable = "ods.sku_info"
         val tablename = "sku_info"
         val addfield = "create_time"
-        Util.MySQlToHive(spark, mysqltable, hivetable, addfield)
+//        Util.MySQlToHive(spark, mysqltable, hivetable, addfield)
 
-        val odsmaxtime = spark.sql("select max(create_time) from ods.user_info").first()(0)
+//        val odsmaxtime = spark.sql("select max(create_time) from ods.user_info").first()(0)
         val conf = new Properties()
         conf.put("user","root")
         conf.put("password","123456")
         spark.read.jdbc("jdbc:mysql://192.168.45.13:3306/shtd_store?useSSL=false", tablename, conf)
-            .where(col("create_time") > odsmaxtime)
+//            .where(col("create_time") > odsmaxtime)
             .withColumn("etl_date",lit("20250305"))
             .write
-            .mode(SaveMode.Append)
+            .mode(SaveMode.Overwrite)
             .format("hive")
             .partitionBy("etl_date")
             .saveAsTable(hivetable)

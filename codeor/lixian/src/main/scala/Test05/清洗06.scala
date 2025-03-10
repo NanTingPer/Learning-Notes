@@ -24,7 +24,7 @@ object 清洗06 {
             .withColumn("dim_modify_user", lit("user1"))
             .withColumn("dim_modify_time", date_format(current_timestamp(),"yyyy-MM-dd HH:mm:ss"))
             .write
-            .mode(SaveMode.Append)
+            .mode(SaveMode.Overwrite)
             .partitionBy("etl_date")
             .format("hive")
             .saveAsTable(dwdtable)

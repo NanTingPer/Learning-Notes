@@ -17,9 +17,9 @@ object 清洗02 {
         val dwdtable = "dwd.dim_sku_info"
 
         var odsdata = spark.sql(s"select * from ${odstable} where etl_date='20250305'")
-        val maxtime = spark.sql(s"select max(etl_date) from ${dwdtable}")
-        val dwddata = spark.sql(s"select * from ${dwdtable} where etl_date='${maxtime}'")
-        val allcol = dwddata.columns.map(col)
+//        val maxtime = spark.sql(s"select max(etl_date) from ${dwdtable}")
+//        val dwddata = spark.sql(s"select * from ${dwdtable} where etl_date='${maxtime}'")
+//        val allcol = dwddata.columns.map(col)
 
         val win1 = Window.partitionBy("id").orderBy("create_time")
         odsdata = odsdata
@@ -27,9 +27,9 @@ object 清洗02 {
                     .withColumn("dwd_insert_time", date_format(current_timestamp(),"yyyy-MM-dd HH:mm:ss"))
                     .withColumn("dwd_modify_user", lit("user1"))
                     .withColumn("dwd_modify_time", date_format(current_timestamp(),"yyyy-MM-dd HH:mm:ss"))
-                    .select(allcol:_*)
+//                    .select(allcol:_*)
 
-        odsdata.union(dwddata)
+        odsdata/*.union(dwddata)*/
             .withColumn("tempcol", row_number().over(win1))
             .withColumn("dwd_insert_time", min(col("dwd_insert_time")).over(win1))
             .withColumn("dwd_modify_time", max(col("dwd_modify_time")).over(win1))
@@ -41,7 +41,7 @@ object 清洗02 {
             .drop("tempcol")
             .withColumn("etl_date", lit("20250305"))
             .write
-            .mode(SaveMode.Append)
+            .mode(SaveMode.Overwrite)
             .partitionBy("etl_date")
             .format("hive")
             .saveAsTable(dwdtable)

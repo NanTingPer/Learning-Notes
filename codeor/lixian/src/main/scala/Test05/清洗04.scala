@@ -16,23 +16,23 @@ object 清洗04 {
         val odstable = "ods.base_region"
         val dwdtable = "dwd.dim_region"
         //导入数据
-        spark.sql(s"select * from ${odstable} limit 10")
-            .withColumn("dwd_insert_user", lit("user1"))
-            .withColumn("dwd_insert_time", date_format(current_timestamp(),"yyyy-MM-dd HH:mm:ss"))
-            .withColumn("dwd_modify_user", lit("user1"))
-            .withColumn("dwd_modify_time", date_format(current_timestamp(),"yyyy-MM-dd HH:mm:ss"))
-            .withColumn("etl_date", lit("20250303"))
-            .write
-            .mode(SaveMode.Append)
-            .partitionBy("etl_date")
-            .format("hive")
-            .saveAsTable(dwdtable)
+//        spark.sql(s"select * from ${odstable} limit 10")
+//            .withColumn("dwd_insert_user", lit("user1"))
+//            .withColumn("dwd_insert_time", date_format(current_timestamp(),"yyyy-MM-dd HH:mm:ss"))
+//            .withColumn("dwd_modify_user", lit("user1"))
+//            .withColumn("dwd_modify_time", date_format(current_timestamp(),"yyyy-MM-dd HH:mm:ss"))
+//            .withColumn("etl_date", lit("20250303"))
+//            .write
+//            .mode(SaveMode.Append)
+//            .partitionBy("etl_date")
+//            .format("hive")
+//            .saveAsTable(dwdtable)
         //导入数据
 
         var odsdata = spark.sql(s"select * from ${odstable} where etl_date='20250305'")
-        val maxtime = spark.sql(s"select max(etl_date) from ${dwdtable}")
-        val dwddata = spark.sql(s"select * from ${dwdtable} where etl_date='${maxtime}'")
-        val allcol = dwddata.columns.map(col)
+//        val maxtime = spark.sql(s"select max(etl_date) from ${dwdtable}")
+//        val dwddata = spark.sql(s"select * from ${dwdtable} where etl_date='${maxtime}'")
+//        val allcol = dwddata.columns.map(col)
 
         val win1 = Window.partitionBy("id").orderBy("create_time")
         odsdata = odsdata
@@ -40,9 +40,9 @@ object 清洗04 {
                     .withColumn("dwd_insert_time", date_format(current_timestamp(),"yyyy-MM-dd HH:mm:ss"))
                     .withColumn("dwd_modify_user", lit("user1"))
                     .withColumn("dwd_modify_time", date_format(current_timestamp(),"yyyy-MM-dd HH:mm:ss"))
-                    .select(allcol:_*)
+//                    .select(allcol:_*)
 
-        odsdata.union(dwddata)
+        odsdata/*.union(dwddata)*/
             .withColumn("tempcol", row_number().over(win1))
             .withColumn("dwd_insert_time", min(col("dwd_insert_time")).over(win1))
             .withColumn("dwd_modify_time", max(col("dwd_modify_time")).over(win1))
@@ -54,7 +54,7 @@ object 清洗04 {
             .drop("tempcol")
             .withColumn("etl_date", lit("20250305"))
             .write
-            .mode(SaveMode.Append)
+            .mode(SaveMode.Overwrite)
             .partitionBy("etl_date")
             .format("hive")
             .saveAsTable(dwdtable)

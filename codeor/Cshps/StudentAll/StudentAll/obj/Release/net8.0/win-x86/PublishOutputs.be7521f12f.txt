@@ -1,6 +1,0 @@
-C:\Users\23759\Desktop\新建文件夹\StudentAll\StudentAll.pdb
-C:\Users\23759\Desktop\新建文件夹\StudentAll\av_libglesv2.dll
-C:\Users\23759\Desktop\新建文件夹\StudentAll\libHarfBuzzSharp.dll
-C:\Users\23759\Desktop\新建文件夹\StudentAll\libSkiaSharp.dll
-C:\Users\23759\Desktop\新建文件夹\StudentAll\e_sqlite3.dll
-C:\Users\23759\Desktop\新建文件夹\StudentAll\StudentAll.exe

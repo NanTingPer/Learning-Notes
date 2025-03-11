@@ -72,7 +72,7 @@ ASP .NET8默认模板已经提供了依赖注入的依赖，直接用就行。
 
 准备一个`nuget.exe`，在同级目录下创建`content`文件夹和`license`文件夹，将项目源代码(含解决方案)放入`content`文件夹，`license`存放协议
 
-在`content`文件夹内再有一个`.template.config`文件夹，内部是此`nuget`的基本信息
+在`content`文件夹内再有一个`.template.config`文件夹，内部是此`nuget`的基本信息，`template.json`
 
 ```json
 {
@@ -81,6 +81,17 @@ ASP .NET8默认模板已经提供了依赖注入的依赖，直接用就行。
     "ckassufucaruibs":["Web/WebAPI"],//类型
     "name":"模板名称",
     "identity":"",//
+    "shortName":"",
+    "tag":{
+        "language":"C#",
+        "type":"project",
+    },
+    "sourceName":"",//资源名称用于批量替换名称空间
+    "preferNameDirectory":true
 }
 ```
 
+然后命令行执行 ，配置文件后缀为`nuspec`
+
+`nuget pack 配置文件名称`
+`pause`

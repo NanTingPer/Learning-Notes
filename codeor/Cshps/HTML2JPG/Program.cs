@@ -14,7 +14,10 @@ public class Program
     public const string tk3 = "验证您是真人";
     static async Task Main(string[] args)
     {
-        ItemName = ItemName.Distinct().ToList();
+        ItemName = ItemName.Distinct().Select(f => {
+            if (f.Contains("染料")) return "染料";
+            return f;
+        }).Distinct().ToList();
         NPCName = NPCName.Distinct().ToList();
         //var r = await Puppeteer.CreateBrowserFetcher(new BrowserFetcherOptions() { Browser = SupportedBrowser.Chrome })
         //    .DownloadAsync();

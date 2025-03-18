@@ -12,7 +12,10 @@ object CQ1 {
         val spark = SparkSession.builder()
             .master("local[*]")
             .appName("d")
+//            .config("hive.exec.dynamic.partition","true")
             .config("hive.exec.dynamic.partition.mode","nonstrict")
+            .config("spark.sql.source.partitionOverwriteMode","dynamic")
+//            .config("spark.sql.parquet.writeLegacyFormat","true")
             .enableHiveSupport()
             .getOrCreate()
         spark
@@ -40,20 +43,19 @@ object CQ1 {
         val sqltable = "user_info"
         val sqldata = "shtd_store"
         val spark = getSpark
-        ETLOneData(spark, hivetable, sqldata, sqltable)
+//        ETLOneData(spark, hivetable, sqldata, sqltable)
 
-        val hivedata = spark.table(hivetable)
+//        val hivedata = spark.table(hivetable)
         val mysqldata = spark.read.jdbc(s"jdbc:mysql://192.168.45.13:3306/${sqldata}?useSSL=false", sqltable, getsqlConf())
 
-        val maxtime = hivedata.select(greatest(max("operate_time"), max("create_time"))).first()(0)
+//        val maxtime = hivedata.select(greatest(max("operate_time"), max("create_time"))).first()(0)
 
-        mysqldata.where(greatest("operate_time", "create_time") > maxtime)
+        mysqldata/*.where(greatest("operate_time", "create_time") > maxtime)*/
             .withColumn("etl_date", lit("20250316"))
             .write
             .format("hive")
-            .mode(SaveMode.Append)
+            .mode(SaveMode.Overwrite)
             .partitionBy("etl_date")
             .saveAsTable(hivetable)
-
     }
 }

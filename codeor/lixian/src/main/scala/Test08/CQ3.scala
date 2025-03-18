@@ -41,17 +41,17 @@ object CQ3 {
         val spark = getSpark
         ETLOneData(spark, hivetable, sqldata, sqltable)
 
-        val hivedata = spark.table(hivetable)
+//        val hivedata = spark.table(hivetable)
         val mysqldata = spark.read.jdbc(s"jdbc:mysql://192.168.45.13:3306/${sqldata}?useSSL=false", sqltable, getsqlConf())
 
-        val maxtime = hivedata.select(max("id")).first()(0)
+//        val maxtime = hivedata.select(max("id")).first()(0)
 
-        mysqldata.where(col("id") > maxtime)
+        mysqldata/*.where(col("id") > maxtime)*/
             .withColumn("etl_date", lit("20250316"))
             .withColumn("create_time", date_format(current_timestamp(), "yyyy-MM-dd HH:mm:ss"))
             .write
             .format("hive")
-            .mode(SaveMode.Append)
+            .mode(SaveMode.Overwrite)
             .partitionBy("etl_date")
             .saveAsTable(hivetable)
 

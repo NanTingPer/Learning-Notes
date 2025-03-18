@@ -30,6 +30,8 @@ object QX4 {
             .withColumn("dwd_insert_time", date_format(current_timestamp(), "yyyy-MM-dd HH:mm:ss"))
             .withColumn("dwd_modify_user", lit("user1"))
             .withColumn("dwd_modify_time", date_format(current_timestamp(), "yyyy-MM-dd HH:mm:ss"))
+            .withColumn("etl_date", lit("20250315"))
+            .limit(10)
             .write
             .mode(SaveMode.Overwrite)
             .format("hive")

@@ -25,11 +25,13 @@ object QX1 {
     }
 
     def dataToHive(spark : SparkSession, odsHive : String, dwdHive : String) ={
-        spark.table(odsHive).where(col("etl_date") === "20250315")
+        spark.table(odsHive).where(col("etl_date") === "20250316")
             .withColumn("dwd_insert_user", lit("user1"))
             .withColumn("dwd_insert_time", date_format(current_timestamp(), "yyyy-MM-dd HH:mm:ss"))
             .withColumn("dwd_modify_user", lit("user1"))
             .withColumn("dwd_modify_time", date_format(current_timestamp(), "yyyy-MM-dd HH:mm:ss"))
+            .withColumn("etl_date", lit("20250315"))
+            .limit(10)
             .write
             .mode(SaveMode.Overwrite)
             .format("hive")

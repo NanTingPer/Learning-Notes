@@ -1,7 +1,9 @@
 package Test08
 
+import org.apache.spark.sql.catalyst.expressions.objects.AssertNotNull
 import org.apache.spark.sql.functions._
-import org.apache.spark.sql.{SaveMode, SparkSession}
+import org.apache.spark.sql.types.DataTypes
+import org.apache.spark.sql.{Column, SaveMode, SparkSession}
 
 import java.util.Properties
 
@@ -28,6 +30,8 @@ object QX6 {
             .withColumn("dwd_insert_time", date_format(current_timestamp(), "yyyy-MM-dd HH:mm:ss"))
             .withColumn("dwd_modify_user", lit("user1"))
             .withColumn("dwd_modify_time", date_format(current_timestamp(), "yyyy-MM-dd HH:mm:ss"))
+            .withColumn("etl_date", lit("20250315"))
+            .limit(10)
             .write
             .mode(SaveMode.Overwrite)
             .format("hive")
@@ -55,8 +59,8 @@ object QX6 {
             .withColumn("dwd_modify_user", lit("user1"))
             .withColumn("dwd_modify_time", date_format(current_timestamp(), "yyyy-MM-dd HH:mm:ss"))
             .select(cols:_*)
-
-
+//            .where(col("etl_date").cast(DataTypes.StringType) =!= lit("null").cast(DataTypes.StringType))
+            .withColumn("etl_date", new Column(AssertNotNull(col("etl_date").expr)))
             .write
             .mode(SaveMode.Append)
             .format("hive")

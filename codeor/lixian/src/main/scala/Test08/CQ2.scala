@@ -38,18 +38,18 @@ object CQ2 {
         val sqltable = "sku_info"
         val sqldata = "shtd_store"
         val spark = getSpark
-        ETLOneData(spark, hivetable, sqldata, sqltable)
+//        ETLOneData(spark, hivetable, sqldata, sqltable)
 
-        val hivedata = spark.table(hivetable)
+//        val hivedata = spark.table(hivetable)
         val mysqldata = spark.read.jdbc(s"jdbc:mysql://192.168.45.13:3306/${sqldata}?useSSL=false", sqltable, getsqlConf())
 
-        val maxtime = hivedata.select(max("create_time")).first()(0)
+//        val maxtime = hivedata.select(max("create_time")).first()(0)
 
-        mysqldata.where(col("create_time") > maxtime)
+        mysqldata/*.where(col("create_time") > maxtime)*/
             .withColumn("etl_date", lit("20250316"))
             .write
             .format("hive")
-            .mode(SaveMode.Append)
+            .mode(SaveMode.Overwrite)
             .partitionBy("etl_date")
             .saveAsTable(hivetable)
 

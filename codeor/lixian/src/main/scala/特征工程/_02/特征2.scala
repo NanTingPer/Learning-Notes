@@ -32,6 +32,7 @@ object 特征2 {
         // 统计指定列的摘要信息（只包含均值mean和标准差stddev）,然后分别提取各个特征值的均值和标准差
         //计算平均值和标准差，mean在summary的介绍中是计算均值
         val sku_info_summary = sku_info_data.select("price","weight").summary("mean","stddev")
+
         //提取price的均值并拿出数据，后面几段同理
         val mean_price = sku_info_summary
             .where(col("summary")==="mean")

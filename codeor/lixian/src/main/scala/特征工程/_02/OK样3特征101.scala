@@ -1,11 +1,11 @@
 package 特征工程._02
 
-import org.apache.spark.sql.SparkSession
-import org.apache.spark.sql.functions._
+    import org.apache.spark.sql.SparkSession
+    import org.apache.spark.sql.functions._
 
 import java.util.Properties
 
-object 样3特征101 {
+object OK样3特征101 {
     def main(args: Array[String]): Unit = {
         val spark = SparkSession.builder()
             .appName("UserSkuMapping")
@@ -63,7 +63,5 @@ object 样3特征101 {
 
         // 输出结果
         resultDF.show()
-
-        spark.stop()
     }
 }

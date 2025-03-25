@@ -30,9 +30,6 @@ object 任务二 {
         // （若该商品属于该品牌则置为1，否则置为0）,
         // 并按照id 进行升序排序，
         // 在集群中输出第一条数据前10 列（无需展示字段名）
-//        val spu_id = mysql_table.select("spu_id").distinct().rdd.collect()
-//        val tm_id = mysql_table.select("tm_id").distinct().rdd.collect()
-//        val category3_id = mysql_table.select("category3_id").distinct().rdd.collect()
         val spuIdSpaces = sku_info_data_1.select("spu_id").distinct().rdd.map(r => r(0)).collect()
         val tmIdSpaces = sku_info_data_1.select("tm_id").distinct().rdd.map(r => r(0)).collect()
         val category3IdSpaces = sku_info_data_1.select("category3_id").distinct().rdd.map(r => r(0)).collect()

@@ -18,45 +18,6 @@ object 任务一 {
 //    ----------
 //    1,2,901,4,5,21,32,91,14,52
 
-    /*
-     desc order_detail
-+-------------+---------------+------+-----+---------+----------------+
-| Field       | Type                | Null |     Key | Default | Extra          |
-+-------------+---------------+------+-----+---------+----------------+
-| id          | bigint(20)             | NO   | PRI | NULL    | auto_increment |
-| order_id    | bigint(20)         | YES  |        | NULL    |                |
-| sku_id      | bigint(20)          | YES  |        | NULL    |                |
-| sku_name    | varchar(200)  | YES  |        | NULL    |                |
-| img_url     | varchar(200)     | YES  |        | NULL    |                |
-| order_price | decimal(10,2) | YES  |        | NULL    |                |
-| sku_num     | varchar(200)  | YES  |        | NULL    |                |
-| create_time | datetime        | YES  |        | NULL    |                |
-| source_type | varchar(20)   | YES  |        | NULL    |                |
-| source_id   | bigint(20)       | YES  |        | NULL    |                |
-+-------------+---------------+------+-----+---------+----------------+
-
-     */
-
-    /*
-    sku_info
-+-----------------+---------------+------+-----+---------+----------------+
-| Field                 | Type                 | Null | Key | Default | Extra          |
-+-----------------+---------------+------+-----+---------+----------------+
-| id                      | bigint(20)         | NO   | PRI  | NULL    | auto_increment |
-| spu_id               | bigint(20)         | YES  |         | NULL    |                |
-| price                 | decimal(10,0)    | YES  |         | NULL    |                |
-| sku_name         | varchar(200)     | YES  |          | NULL    |                |
-| sku_desc           | varchar(2000)   | YES  |         | NULL    |                |
-| weight              | decimal(10,2)   | YES  |         | NULL    |                |
-| tm_id                | bigint(20)         | YES  |         | NULL    |                |
-| category3_id    | bigint(20)         | YES  |          | NULL    |                |
-| sku_default_img | varchar(200)  | YES  |          | NULL    |                |
-| create_time      | datetime           | YES  |          | NULL    |                |
-+-----------------+---------------+------+-----+---------+----------------+
-
-
-     */
-
     /**
      *  SPU 商品名称 128G的手机和256G的手机共用一个SPU
      *  SKU 一类商品

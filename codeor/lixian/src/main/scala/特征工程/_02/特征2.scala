@@ -68,7 +68,6 @@ object 特征2 {
             .distinct().rdd.map(r => r(0))
             .collect()
 
-
         val tmIdSpaces = sku_info_data_1//全部的tm_id (去重后)
             .select("tm_id")
             .distinct().rdd.map(r => r(0))

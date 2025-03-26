@@ -1,6 +1,6 @@
 package 样卷2
 
-import org.apache.hudi.DataSourceWriteOptions.{PARTITIONPATH_FIELD, PRECOMBINE_FIELD, RECORDKEY_FIELD}
+import org.apache.hudi.DataSourceWriteOptions.{HIVE_STYLE_PARTITIONING, PARTITIONPATH_FIELD, PRECOMBINE_FIELD, RECORDKEY_FIELD, SQL_ENABLE_BULK_INSERT}
 import org.apache.hudi.QuickstartUtils.getQuickstartWriteConfigs
 import org.apache.hudi.config.HoodieWriteConfig
 import org.apache.spark.sql.{SaveMode, SparkSession}
@@ -14,7 +14,7 @@ object 清洗01 {
             .master("local[*]")
             .appName("chouqu01")
             .enableHiveSupport()
-            .config("spark.serializer", "org.apache.spark.serializer.KyreSerializer")
+            .config("spark.serializer", "org.apache.spark.serializer.KryoSerializer")
             .config("spark.sql.extension", "org.apache.spark.sql.hudi.HoodieSparkSessionExtension")
             .getOrCreate()
 //        ods_ds_hudi库中user_info
@@ -59,6 +59,8 @@ object 清洗01 {
             .option(PRECOMBINE_FIELD.key,"operate_time")
             .option(PARTITIONPATH_FIELD.key, "etl_date")
             .option(RECORDKEY_FIELD.key, "id")
+            .option(HIVE_STYLE_PARTITIONING.key, "true")
+            .option(SQL_ENABLE_BULK_INSERT.key, "true")
             .option(HoodieWriteConfig.TBL_NAME.key,"dim_user_info")
             .mode(SaveMode.Append)
             .save("hdfs:///user/hive/warehouse/dwd_ds_hudi.db/dim_user_info")

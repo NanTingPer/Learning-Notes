@@ -15,7 +15,7 @@ object 抽取05 {
             .master("local[*]")
             .appName("chouqu01")
             .enableHiveSupport()
-            .config("spark.serializer", "org.apache.spark.serializer.KyreSerializer")
+            .config("spark.serializer", "org.apache.spark.serializer.KryoSerializer")
             .config("spark.sql.extension", "org.apache.spark.sql.hudi.HoodieSparkSessionExtension")
             .getOrCreate()
 
@@ -48,6 +48,8 @@ object 抽取05 {
             .option(RECORDKEY_FIELD.key,"id")
             .option(PARTITIONPATH_FIELD.key, "etl_date")
             .option(PRECOMBINE_FIELD.key, "create_time")
+            .option(HIVE_STYLE_PARTITIONING.key, "true")
+            .option(SQL_ENABLE_BULK_INSERT.key, "true")
             .option(HoodieWriteConfig.TBL_NAME.key,"order_detail")
             .mode(SaveMode.Overwrite)
             .save("hdfs:///user/hive/warehouse/ods_ds_hudi.db/order_detail")

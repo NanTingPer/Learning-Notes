@@ -1,14 +1,16 @@
-package 样卷2Thre
+package yg2Thre
 
 import org.apache.spark.sql.SparkSession
 
 import java.util.Properties
 
-object 计算04 {
+object js04 {
     def main(args: Array[String]): Unit = {
         import org.apache.spark.sql.{SaveMode, SparkSession}
         import org.apache.spark.sql.functions._
         import org.apache.spark.sql.expressions._
+        import java.util.Properties
+
         val spark = SparkSession.builder()
             .enableHiveSupport()
             .config("spark.serializer", "org.apache.spark.serializer.KryoSerializer")
@@ -23,7 +25,7 @@ object 计算04 {
 
         val conf = new Properties()
         conf.put("user","default")
-        conf.put("password","123456")
+//        conf.put("password","123456")
         val table = spark.read.format("hudi").load("hdfs:///user/hive/warehouse/dws_ds_hudi.db/province_consumption_day_aggr")
             .where(col("year") === 2020)
             .where(col("month") === 4)
@@ -37,7 +39,7 @@ object 计算04 {
             .withColumn("comparison", udf111(col("provinceavgconsumption"), col("regionavgconsumption")))
             .write
             .mode(SaveMode.Append)
-            .jdbc("jdbc:clickhouse://192.168.45.13:8123/shtd_result", "provinceavgcmpregion", conf)
+            .jdbc("jdbc:clickhouse://192.168.45.10:8123/shtd_result", "provinceavgcmpregion", conf)
 
     }
 }

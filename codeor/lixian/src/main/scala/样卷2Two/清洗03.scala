@@ -49,7 +49,7 @@ object 清洗03 {
             .option(HIVE_STYLE_PARTITIONING.key,"true")
             .option(SQL_ENABLE_BULK_INSERT.key,"true")
             .option(TBL_NAME.key, "dim_province")
-            .mode(SaveMode.Overwrite)
+            .mode(SaveMode.Append)
             .save("hdfs:///user/hive/warehouse/dwd_ds_hudi.db/dim_province")
     }
 }

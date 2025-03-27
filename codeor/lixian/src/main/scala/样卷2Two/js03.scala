@@ -1,4 +1,4 @@
-package yg2
+package 样卷2Two
 
 import org.apache.spark.sql.SaveMode
 object js03 {
@@ -6,6 +6,7 @@ object js03 {
         import org.apache.spark.sql.SparkSession
         import org.apache.spark.sql.expressions._
         import org.apache.spark.sql.functions._
+
         import java.util.Properties
 
         val spark = SparkSession.builder()

@@ -25,7 +25,8 @@ object 清洗01 {
         val newPartition = dimdata.select(max("etl_date")).first()(0)
         dimdata = dimdata.where(col("etl_date") === newPartition)
             .drop("_hoodie_commit_time","_hoodie_commit_seqno","_hoodie_record_key","_hoodie_partition_path","_hoodie_file_name")
-
+//        hudidata.show()
+//        dimdata.show()
         val cols = dimdata.columns.map(col)
 
         hudidata = hudidata
@@ -34,14 +35,19 @@ object 清洗01 {
             .withColumn("dwd_modify_user", lit("user1"))
             .withColumn("dwd_modify_time", date_format(current_timestamp(), "yyyy-MM-dd HH:mm:ss"))
             .select(cols: _*)
+        hudidata.show()
 
         val win1 = Window.partitionBy("id").orderBy(col("operate_time").desc)
         val win2 = Window.partitionBy("id")
-        hudidata.union(dimdata)
+        hudidata = hudidata.union(dimdata)
             .withColumn("temp", row_number().over(win1))
             .withColumn("dwd_insert_time", min(col("dwd_insert_time")).over(win2))
             .withColumn("dwd_modify_time", max(col("dwd_modify_time")).over(win2))
             .withColumn("etl_date",lit("20250325"))
+            .where(col("temp") === 1)
+            .drop("temp")
+        hudidata.show()
+        hudidata
             .write
             .format("hudi")
             .options(getQuickstartWriteConfigs)
@@ -53,6 +59,5 @@ object 清洗01 {
             .option(TBL_NAME.key, "dim_user_info")
             .mode(SaveMode.Append)
             .save("hdfs:///user/hive/warehouse/dwd_ds_hudi.db/dim_user_info")
-
     }
 }

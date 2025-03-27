@@ -11,9 +11,8 @@ object 采集03 {
         import java.util.Properties
         val spark = SparkSession
             .builder()
-            .master("local[*]")
             .config("spark.serializer", "org.apache.spark.serializer.KryoSerializer")
-            .config("spark.sql.extension", "org.apache.spark.sql.hudi.HoodieSparkSessionExtension")
+            .config("spark.sql.extensions", "org.apache.spark.sql.hudi.HoodieSparkSessionExtension")
             .enableHiveSupport()
             .getOrCreate()
         val conf = new Properties()
@@ -23,7 +22,7 @@ object 采集03 {
         val hudidata = spark.read.format("hudi").load("hdfs:///user/hive/warehouse/ods_ds_hudi.db/base_province")
 
         val maxid = hudidata.select(max(col("id"))).first()(0)
-        val updata = mysqldata
+        mysqldata
             .where(col("id") > maxid)
             .withColumn("etl_date", lit("20250325"))
             .withColumn("create_time", date_format(current_timestamp(), "yyyy-MM-dd HH-mm-ss"))

@@ -5,7 +5,7 @@
 ```sh
 spark-sql \
 --conf 'spark.serializer=org.apache.spark.serializer.KryoSerializer' \
---conf 'spark.sql.extension=org.apache.spark.hudi.HoodieSparkSessionExtension' \
+--conf 'spark.sql.extensions=org.apache.spark.sql.hudi.HoodieSparkSessionExtension' \
 --jars hudi.jar
 ```
 
@@ -13,11 +13,32 @@ spark-sql \
 ```sh
 spark-sql \
 --conf 'spark.serializer=org.apache.spark.serializer.KryoSerializer' \
---conf 'spark.sql.extension=org.apache.spark.hudi.HoodieSparkSessionExtension' \
+--conf 'spark.sql.extensions=org.apache.spark.sql.hudi.HoodieSparkSessionExtension' \
 --jars /opt/module/spark/jars/hudi-spark3.1-bundle_2.12-0.12.0.jar
+
+spark-sql \ 
+--master yarn \
+--conf 'spark.serializer=org.apache.spark.serializer.KryoSerializer' \
+--conf 'spark.sql.extensions=org.apache.spark.sql.hudi.HoodieSparkSessionExtension' \
+--jars /opt/module/spark-3.1.1-yarn/jars/hudi-spark3.1-bundle_2.12-0.12.0.jar
+
 ```
 
 对于`spark-shell` 把 `spark-sql` 换掉就行了
+```sh
+spark-shell \
+--master yarn \
+--conf 'spark.serializer=org.apache.spark.serializer.KryoSerializer' \
+--conf 'spark.sql.extensions=org.apache.spark.sql.hudi.HoodieSparkSessionExtension' \
+--jars /opt/module/spark-3.1.1-yarn/jars/hudi-spark3.1-bundle_2.12-0.12.0.jar
+
+spark-shell \
+--conf 'spark.serializer=org.apache.spark.serializer.KryoSerializer' \
+--conf 'spark.sql.extensions=org.apache.spark.sql.hudi.HoodieSparkSessionExtension' \
+--jars /opt/module/spark/jars/hudi-spark3.1-bundle_2.12-0.12.0.jar
+```
+
+
 
 
 

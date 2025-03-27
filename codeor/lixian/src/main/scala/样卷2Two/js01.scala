@@ -1,12 +1,10 @@
-package yg2
+package 样卷2Two
 
 import org.apache.hudi.DataSourceWriteOptions._
-import org.apache.hudi.config.HoodieWriteConfig._
 import org.apache.hudi.QuickstartUtils._
-import org.apache.spark.sql.{SaveMode, SparkSession}
+import org.apache.hudi.config.HoodieWriteConfig._
 import org.apache.spark.sql.functions._
-
-import java.util.UUID
+import org.apache.spark.sql.{SaveMode, SparkSession}
 
 
 object js01 {

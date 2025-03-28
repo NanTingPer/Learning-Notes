@@ -16,8 +16,7 @@ spark-sql \
 --conf 'spark.sql.extensions=org.apache.spark.sql.hudi.HoodieSparkSessionExtension' \
 --jars /opt/module/spark/jars/hudi-spark3.1-bundle_2.12-0.12.0.jar
 
-spark-sql \ 
---master yarn \
+spark-sql --master yarn \
 --conf 'spark.serializer=org.apache.spark.serializer.KryoSerializer' \
 --conf 'spark.sql.extensions=org.apache.spark.sql.hudi.HoodieSparkSessionExtension' \
 --jars /opt/module/spark-3.1.1-yarn/jars/hudi-spark3.1-bundle_2.12-0.12.0.jar

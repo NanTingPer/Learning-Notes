@@ -1,27 +1,36 @@
 package Test07
 
-import org.apache.spark.sql.SparkSession
-import org.apache.spark.sql.api.java.UDF2
-import org.apache.spark.sql.functions._
-import org.apache.spark.sql.expressions._
-import org.apache.spark.sql.types.DataTypes
 
-import java.util.Properties
 
 object L04 {
     def main(args: Array[String]): Unit = {
         System.setProperty("HADOOP_USER_NAME","root")
+        import org.apache.spark.sql.SparkSession
+        import org.apache.spark.sql.api.java.UDF2
+        import org.apache.spark.sql.functions._
+        import org.apache.spark.sql.expressions._
+        import org.apache.spark.sql.types.DataTypes
+
+        import java.util.Properties
         val spark = SparkSession.builder()
             .appName("hive")
             .enableHiveSupport()
             .config("hive.exec.dynamic.partition.mode","nonstrict")
+            .config("spark.serializer", "org.apache.spark.serializer.KryoSerializer")
+            .config("spark.sql.extensions", "org.apache.spark.sql.hudi.HoodieSparkSessionExtension")
             .master("local[*]")
             .getOrCreate()
 
-        val province = spark.sql("select * from dwd.dim_base_province")
-        val order_info = spark.sql("select * from dwd.fact_order_info")
-        val region = spark.sql("select * from dwd.dim_region")
-        val user_info = spark.sql("select * from dwd.dim_user_info")
+//        val province = spark.sql("select * from dwd.dim_base_province")
+//        val order_info = spark.sql("select * from dwd.fact_order_info")
+//        val region = spark.sql("select * from dwd.dim_region")
+//        val user_info = spark.sql("select * from dwd.dim_user_info")
+
+        val order_info = spark.read.format("hudi").load("hdfs:///user/hive/warehouse/dwd_ds_hudi.db/fact_order_info")
+        val province = spark.read.format("hudi").load("hdfs:///user/hive/warehouse/dwd_ds_hudi.db/dim_province").where(col("etl_date") === "20250326")
+        val region = spark.read.format("hudi").load("hdfs:///user/hive/warehouse/dwd_ds_hudi.db/dim_region").where(col("etl_date") === "20250326")
+        val user_info = spark.read.format("hudi").load("hdfs:///user/hive/warehouse/dwd_ds_hudi.db/dim_user_info").where(col("etl_date") === "20250326")
+
 
         val conf = new Properties()
         conf.put("user","root")
@@ -40,6 +49,9 @@ object L04 {
             .withColumn("counttempDate", count("*").over(Window.partitionBy("user_id", "tempDate")))
             .drop("tempnum", "tempDate")
             .where(col("counttempDate") === 2)
+
+        agggg.orderBy("user_id")
+            .show
 
         val aggggg = agggg
             .withColumn("downCreateTime", lead(col("create_time"), 1).over(Window.partitionBy("user_id").orderBy("create_time")))

@@ -122,3 +122,13 @@ ORDER BY provinceid, regionid;
 
 CREATE TABLE shtd_result.nationmedian (provinceid Int32,provincename String,regionid Int32,regionname String,provincemedian Float64,regionmedian Float64 ) ENGINE = MergeTree() ORDER BY provinceid, regionid;
 select * from shtd_result.nationmedian order by regionid, provinceid limit 5;
+select * from shtd_result.userrepurchasedrate;
+
+
+
+select province_id,province_name,region_id,region_name,cast(total_amount as bigint),total_count,sequence,year,month from province_consumption_day_aggr order by total_count desc, total_amount desc,province_id desc limit 5;
+select * from provinceavgcmpregion order by province_id desc,provinceavgconsumption desc,regionavgconsumption desc limit 5;
+select * from regiontopthree order by region_id limit 5;
+select * from shtd_result.provinceavgcmp order by provinceid desc, provinceavgconsumption desc limit 5;
+select * from shtd_result.provinceeverymonth order by totalorder desc, totalconsumption desc, provinceid desc limit 5;
+select * from shtd_result.provinceavgcmpregion order by provinceid desc, provinceavgconsumption desc, regionavgconsumption desc

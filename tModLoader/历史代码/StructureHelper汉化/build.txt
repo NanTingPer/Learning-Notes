@@ -1,0 +1,6 @@
+displayName = StructureHelper汉化
+author = 你猜
+version = 0.1
+translationMod = StructureHelper
+sortAfter = StructureHelper
+modReferences = StructureHelper

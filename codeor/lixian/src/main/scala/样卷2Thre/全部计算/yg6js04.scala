@@ -12,6 +12,8 @@ object yg6js04 {
         import org.apache.spark.sql.functions._
 
         import java.util.Properties
+        import org.apache.spark.sql.SaveMode
+        import org.apache.spark.sql.types.DataTypes
         val spark = SparkSession.builder().enableHiveSupport().appName("wfawfawf")
             .config("spark.serializer", "org.apache.spark.serializer.KryoSerializer")
             .config("spark.sql.extensions", "org.apache.spark.sql.hudi.HoodieSparkSessionExtension")
@@ -20,6 +22,10 @@ object yg6js04 {
         val order_info = spark.read.format("hudi").load("hdfs:///user/hive/warehouse/dwd_ds_hudi.db/fact_order_info")
         val province = spark.read.format("hudi").load("hdfs:///user/hive/warehouse/dwd_ds_hudi.db/dim_province").where(col("etl_date") === "20250326")
         val region = spark.read.format("hudi").load("hdfs:///user/hive/warehouse/dwd_ds_hudi.db/dim_region").where(col("etl_date") === "20250326")
+        order_info.createOrReplaceTempView("order_info")
+        province.createOrReplaceTempView("base_province")
+        region.createOrReplaceTempView("base_region")
+
 
         val win1 = Window.partitionBy("provinceid")
         val win2 = Window.partitionBy("provinceid").orderBy("final_total_amount")

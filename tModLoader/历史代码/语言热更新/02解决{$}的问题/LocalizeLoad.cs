@@ -2,20 +2,16 @@
 using System.Collections.Generic;
 using System.Reflection;
 using System.Text.RegularExpressions;
+using Terraria.Localization;
 using Terraria.ModLoader;
 using Terraria.ModLoader.Config;
 using Terraria.ModLoader.Core;
+using static ThoriumModzhcn.Systems.LocalizeUtil;
 
 namespace ThoriumModzhcn.Systems
 {
     public class LocalizeLoad : ModSystem
     {
-        public override void PostSetupContent()
-        {
-            LocalizeUtil.CutLanguage(LocalizeUtil.Language.Chinese);
-            base.PostSetupContent();
-        }
-
         public static List<string> HKHJson { get; } =
          [
             "Localization/zh-HK/zh-hk.hjson",
@@ -61,9 +57,9 @@ namespace ThoriumModzhcn.Systems
             //    var file = item;
             //}
 
-            Load(HKHJson, LocalizeUtil.Language.HongKong);
-            Load(TWHJson, LocalizeUtil.Language.TaiWan);
-            Load(ZHHJson, LocalizeUtil.Language.Chinese);
+            Load(HKHJson, LocalizeUtil.Language.香港繁体);
+            Load(TWHJson, LocalizeUtil.Language.台湾繁体);
+            Load(ZHHJson, LocalizeUtil.Language.简体中文);
             base.Load();
         }
 
@@ -79,15 +75,23 @@ namespace ThoriumModzhcn.Systems
             Dictionary<string, string> localizeTests = LocalizeUtil.GetLocalizationDictionary(language);
             string regex = @"\{\$(.*?)\}";
             foreach (var kv in localizeTests) {
+
                 MatchCollection matchs = Regex.Matches(kv.Value, regex);
+                //调试代码
+                if (kv.Value.Contains("发光的野兽在泰拉大陆的地底梭巡,把沿途搅得一团糟。{$NPCs.GildedBat.DisplayName},{$NPCs.GildedLycan.DisplayName}和{$NPCs.GildedSlime.DisplayName}会发光,它们看着相当显眼。这些生物的数量应该尽可能少,能少一点是一点。")) {
+                    int a = 1;
+                }
+
                 foreach (Match item in matchs) {
-                    string @waibu = item.Groups[0].Value; //0是原始值，1是内部值
+                    string @waibu = item.Groups[0].Value; //0是原始值(${NPC.Tim})，1是内部值(NPC.Tim)
                     string @neibu = item.Groups[1].Value;
                     string[] start = kv.Key.Split(".");
                     string keyStart = start[0] + "." + start[1] + "."; //Key的开头
                     string key = keyStart + neibu;       //父字符串的本地化Key
                     if (localizeTests.TryGetValue(key, out string frstring)) {//父字符串({$})的值
-                        localizeTests[kv.Key] = kv.Value.Replace("." + waibu, frstring);
+                        localizeTests[kv.Key] = localizeTests[kv.Key].Replace(waibu, frstring);
+                    } else if (LocalizedTexts.TryGetValue(neibu, out var vstring)) {
+                        localizeTests[kv.Key] = localizeTests[kv.Key].Replace(waibu, vstring.Value);
                     }
                 }
             }

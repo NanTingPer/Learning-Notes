@@ -1,4 +1,5 @@
 ﻿using Hjson;
+using Microsoft.Xna.Framework;
 using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
@@ -17,9 +18,9 @@ namespace ThoriumModzhcn.Systems
     {
         public enum Language
         {
-            TaiWan,
-            HongKong,
-            Chinese
+            简体中文,
+            台湾繁体,
+            香港繁体
         }
 
         static LocalizeUtil()
@@ -27,9 +28,9 @@ namespace ThoriumModzhcn.Systems
             Init();
         }
 
-        private static Dictionary<string, string> TaiWan { get; } = [];
-        private static Dictionary<string, string> HongKong { get; } = [];
-        private static Dictionary<string, string> Chinese { get; } = [];
+        private static Dictionary<string, string> 台湾繁体 { get; } = [];
+        private static Dictionary<string, string> 香港繁体 { get; } = [];
+        private static Dictionary<string, string> 简体中文 { get; } = [];
         //private static Dictionary<string, LocalizedText> TaiWan { get; } = [];
         //private static Dictionary<string, LocalizedText> HongKong { get; } = [];
         //private static Dictionary<string, LocalizedText> Chinese { get; } = [];
@@ -65,19 +66,6 @@ namespace ThoriumModzhcn.Systems
         }
 
         /// <summary>
-        /// 最后阶段进行自己键值的插入
-        /// </summary>
-        public override void PostSetupContent()
-        {
-            foreach (var kv in Chinese) {
-                if(!LocalizedTexts.ContainsKey(kv.Key)) {
-                    LocalizedTexts.Add(kv.Key, CreateLocalizedText(kv.Key, kv.Value));
-                }
-            }
-            base.PostSetupContent();
-        }
-
-        /// <summary>
         /// 创建一个LocalizedText，其构造方法是私有的
         /// </summary>
         public static LocalizedText CreateLocalizedText(string Key, string Value)
@@ -103,8 +91,8 @@ namespace ThoriumModzhcn.Systems
             foreach (var item in OneStepToGo(fileName, startChar)) {
                 if (!keyValue.ContainsKey(item.Item1)) {
                     keyValue.Add(item.Item1, /*CreateLocalizedText(item.Item1, item.Item2)*/item.Item2);
-                    //if (!LocalizedTexts.ContainsKey(item.Item1))
-                    //    LocalizedTexts.Add(item.Item1, CreateLocalizedText(item.Item1, item.Item2));
+                    if (!LocalizedTexts.ContainsKey(item.Item1))
+                        LocalizedTexts.Add(item.Item1, CreateLocalizedText(item.Item1, item.Item2));
                 }
             }
         }
@@ -115,15 +103,15 @@ namespace ThoriumModzhcn.Systems
         public static void CutLanguage(Language language)
         {
             switch (language) {
-                case Language.TaiWan:
-                    GoToDictionary(TaiWan);
+                case Language.台湾繁体:
+                    GoToDictionary(台湾繁体);
                     break;
-                case Language.HongKong:
-                    GoToDictionary(HongKong);
+                case Language.香港繁体:
+                    GoToDictionary(香港繁体);
                     break;
-                case Language.Chinese:
+                case Language.简体中文:
                     GoToChinese();
-                    GoToDictionary(Chinese);
+                    GoToDictionary(简体中文);
                     break;
             }
         }
@@ -132,15 +120,21 @@ namespace ThoriumModzhcn.Systems
         /// 将现在使用的本地化值切换为传入字典的值
         /// </summary>
         //private static void GoToDictionary(Dictionary<string, LocalizedText> localizedTexts)
-        private static void GoToDictionary(Dictionary<string, string> localizedTexts)
+        private static async void GoToDictionary(Dictionary<string, string> localizedTexts)
         {
-            foreach (var kv in localizedTexts) {
-                if (LocalizedTexts.ContainsKey(kv.Key)) {
-                    //LocalizedTexts[kv.Key] = kv.Value;
-                    var xg = LocalizedTexts[kv.Key];
-                    LocalizedTextSetValue.Invoke(xg, [kv.Value]);
+            //CombatText.NewText(new Rectangle(Main.player[Main.myPlayer]));
+            await Task.Run(() => 
+            {
+                Main.NewText("正在更改文本内容");
+                foreach (var kv in localizedTexts) {
+                    if (LocalizedTexts.ContainsKey(kv.Key)) {
+                        //LocalizedTexts[kv.Key] = kv.Value;
+                        var xg = LocalizedTexts[kv.Key];
+                        LocalizedTextSetValue.Invoke(xg, [kv.Value]);
+                    }
                 }
-            }
+                Main.NewText("文本内容更改完成");
+            });
         }
 
         /// <summary>
@@ -157,12 +151,12 @@ namespace ThoriumModzhcn.Systems
         //private static Dictionary<string, LocalizedText> GetLocalizationDictionary(Language language)
         public static Dictionary<string, string> GetLocalizationDictionary(Language language)
         {
-            if (language == Language.TaiWan)
-                return TaiWan;
-            else if (language == Language.HongKong)
-                return HongKong;
+            if (language == Language.台湾繁体)
+                return 台湾繁体;
+            else if (language == Language.香港繁体)
+                return 香港繁体;
             else
-                return Chinese;
+                return 简体中文;
         }
 
         /// <summary>
@@ -276,5 +270,6 @@ namespace ThoriumModzhcn.Systems
 
             return flattened;
         }
+
     }
 }

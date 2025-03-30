@@ -1,0 +1,1 @@
+global using static InfiniteL.TestUI.TestUI_allUI;

@@ -1,0 +1,25 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.13.35825.156
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "InfiniteL", "InfiniteL.csproj", "{640BA2A2-6560-2C12-6122-48E5BC788004}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{640BA2A2-6560-2C12-6122-48E5BC788004}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{640BA2A2-6560-2C12-6122-48E5BC788004}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{640BA2A2-6560-2C12-6122-48E5BC788004}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{640BA2A2-6560-2C12-6122-48E5BC788004}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {6F520725-1D6B-424D-9104-29893C80F910}
+	EndGlobalSection
+EndGlobal

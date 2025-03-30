@@ -1,0 +1,29 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+	<!-- Import tModLoader mod properties -->
+	<Import Project="..\tModLoader.targets" />
+
+	<!-- General -->
+	<PropertyGroup>
+		
+	</PropertyGroup>
+	<ItemGroup>
+	  <AdditionalFiles Remove="Items\_1InspirationIncrease.png" />
+	  <AdditionalFiles Remove="Items\_2InspirationIncrease.png" />
+	  <AdditionalFiles Remove="Items\_3InspirationIncrease.png" />
+	  <AdditionalFiles Remove="Items\_4InspirationIncrease.png" />
+	  <AdditionalFiles Remove="UI\Infinite.png" />
+	  <AdditionalFiles Remove="UI\_long.png" />
+	  <AdditionalFiles Remove="UI\_nvwu.png" />
+	  <AdditionalFiles Remove="UI\_sanzai.png" />
+	  <AdditionalFiles Remove="UI\_shen.png" />
+	</ItemGroup>
+	<ItemGroup>
+	  <Reference Include="ThoriumMod">
+	    <HintPath>lib\ThoriumMod.dll</HintPath>
+	  </Reference>
+	</ItemGroup>
+
+	<!-- References -->
+
+</Project>

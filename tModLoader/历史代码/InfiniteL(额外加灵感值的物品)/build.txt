@@ -1,0 +1,4 @@
+displayName = 无限灵感
+author = d
+version = 0.1
+modReferences = ThoriumMod

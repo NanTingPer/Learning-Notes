@@ -33,42 +33,43 @@ object ERRO01 {
         val win1 = Window.orderBy(col("topquantity").desc)
         val xsltop10 = data
             .groupBy("sku_id", "sku_name")
-            .agg(sum("sku_num") as "topquantity")
+            .agg(count("*") as "topquantity")
             .withColumn("sequence", row_number().over(win1))
             .withColumnRenamed("sku_id", "topquantityid")
             .withColumnRenamed("sku_name", "topquantityname")
-
+        xsltop10.show()
 
         //todo 销售额前10
-        val win2 = Window.orderBy(col("topprice").desc)
-        val xshtop10 = data
-            .withColumn("pprice", col("sku_num") * col("order_price"))
-            .groupBy("sku_id", "sku_name")
-            .agg(sum("pprice") as "topprice")
-//            .withColumn("topprice", col("topprice").cast(DataTypes.createDecimalType(32, 8)))
-            .withColumn("sequence", row_number().over(win2))
-            .withColumnRenamed("sku_id","toppriceid")
-
-            .withColumnRenamed("sku_name","toppricename")
-            .orderBy("sequence")
-        xshtop10.show()
+//        val win2 = Window.orderBy(col("topprice").desc)
+//        val xshtop10 = data
+//            .withColumn("pprice", col("sku_num") * col("order_price"))
+//            .groupBy("sku_id", "sku_name")
+//            .agg(sum("pprice") as "topprice")
+////            .withColumn("topprice", col("topprice").cast(DataTypes.createDecimalType(32, 8)))
+//            .withColumn("sequence", row_number().over(win2))
+//            .withColumnRenamed("sku_id","toppriceid")
 //
+//            .withColumnRenamed("sku_name","toppricename")
+//            .orderBy("sequence")
+//        xshtop10.show()
+////
+////
+//        val fin = xsltop10.join(xshtop10, xshtop10("sequence") === xsltop10("sequence"))
+//            .select(
+//                col("topquantityid"),
+//                col("topquantityname"),
+//                col("topquantity"),
+//                col("toppriceid"),
+//                col("toppricename"),
+//                col("topprice").cast(DataTypes.createDecimalType(20, 8)),
+//                xsltop10("sequence"))
 //
-        val fin = xsltop10.join(xshtop10, xshtop10("sequence") === xsltop10("sequence"))
-            .select(
-                col("topquantityid"),
-                col("topquantityname"),
-                col("topquantity"),
-                col("toppriceid"),
-                col("toppricename"),
-                col("topprice").cast(DataTypes.createDecimalType(20, 8)),
-                xsltop10("sequence"))
-
-        val conf1 = new Properties()
-        fin
-            .write
-            .mode(SaveMode.Append)
-            .jdbc("jdbc:clickhouse://192.168.45.10:8123/shtd_result","topten", conf1)
+//        val conf1 = new Properties()
+//
+//        fin
+//            .write
+//            .mode(SaveMode.Append)
+//            .jdbc("jdbc:clickhouse://192.168.45.10:8123/shtd_result","topten", conf1)
 
     }
 }

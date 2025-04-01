@@ -1,33 +1,42 @@
+import org.apache.spark.sql.SaveMode
 import org.apache.spark.sql.types.DataTypes
 
 object ERRO03 {
     def main(args: Array[String]): Unit = {
+        System.setProperty("HADOOP_USER_NAME","root")
         import org.apache.spark.sql.SparkSession
         import org.apache.spark.sql.functions._
         import org.apache.spark.sql.expressions._
         import java.util.Properties
         val spark = SparkSession
             .builder()
+            .master("local[*]")
             .enableHiveSupport()
             .appName("hive")
             .getOrCreate()
 
+
+        val conf1 = new Properties()
+        conf1.put("user","root")
+        conf1.put("password","123456")
         //todo 获取order_info表信息 并过滤
-        val order_info = spark.read.format("hudi").load("hdfs:///user/hive/warehouse/dwd_ds_hudi.db/fact_order_info")
-            .where(year(col("create_time")) === 2020)
-            .where(month(col("create_time")) === 4)
+//        val order_info = spark.read.format("hudi").load("hdfs:///user/hive/warehouse/dwd_ds_hudi.db/fact_order_info")
+        val order_info = spark.read.jdbc("jdbc:mysql://192.168.45.13:3306/shtd_store?useSSL=false","order_info",conf1)
+            .where(year(col("create_time")) === 2020 )
+            .where(month(col("create_time")) === 4 )
             .select("final_total_amount", "province_id")
 
         //todo 计算平均金额
         val win1 = Window.partitionBy()
         val avgsum = order_info
-            .groupBy("province_id")
+            .withColumn("allprovinceavgconsumption", sum("final_total_amount").over(win1) / count("*").over(win1))
+            .groupBy("province_id","allprovinceavgconsumption")
             .agg(count("*") as "shuliang", sum("final_total_amount") as "je")
             .withColumn("provinceavgconsumption", col("je") / col("shuliang"))
-            .withColumn("allprovinceavgconsumption", sum("provinceavgconsumption").over(win1) / count("*").over(win1))
-
+            .orderBy("province_id")
+        avgsum.show()
         //todo join 地区省份表
-        val province = spark.read.format("hudi").load("hdfs:///user/hive/warehouse/dwd_ds_hudi.db/dim_province")
+        val province = spark.read.jdbc("jdbc:mysql://192.168.45.13:3306/shtd_store?useSSL=false","base_province",conf1)
             .withColumnRenamed("id", "provinceid")
             .withColumnRenamed("name", "provincename")
         val avgSumJoin = avgsum
@@ -45,6 +54,7 @@ object ERRO03 {
             .withColumn("provinceavgconsumption",col("provinceavgconsumption").cast(DataTypes.DoubleType))
             .withColumn("allprovinceavgconsumption",col("allprovinceavgconsumption").cast(DataTypes.DoubleType))
             .write
+            .mode(SaveMode.Overwrite)
             .jdbc("jdbc:mysql://192.168.45.13:3306/shtd_result?useSSL=false","provinceavgcmp",conf)
     }
 }

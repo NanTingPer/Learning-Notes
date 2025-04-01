@@ -1,8 +1,5 @@
 package 样卷2Thre
 
-
-
-
 object ERRO05 {
     def main(args: Array[String]): Unit = {
         import org.apache.spark.sql.SparkSession

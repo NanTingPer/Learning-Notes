@@ -16,18 +16,23 @@ object ERRO02 {
 
         val spark = SparkSession
             .builder()
+            .master("local[*]")
             .enableHiveSupport()
             .appName("hive")
             .getOrCreate()
 
         //todo 取出订单表并过滤
-        val order_info = spark.read.format("hudi").load("hdfs:///user/hive/warehouse/dwd_ds_hudi.db/fact_order_info")
+        val conf1 = new Properties();conf1.put("user","root");conf1.put("password","123456")
+//        val order_info = spark.read.format("hudi").load("hdfs:///user/hive/warehouse/dwd_ds_hudi.db/fact_order_info")
+        val order_info = spark.read.jdbc("jdbc:mysql://192.168.45.13:3306/shtd_store?useSSL=false", "order_info", conf1)
             .where(year(col("create_time")) === 2020)
             .select("final_total_amount", "province_id", "id")
 
         //todo 取出地区表与城市表并Join
-        val region = spark.read.format("hudi").load("hdfs:///user/hive/warehouse/dwd_ds_hudi.db/dim_region").where(col("etl_date") === "20250326")
-        val province = spark.read.format("hudi").load("hdfs:///user/hive/warehouse/dwd_ds_hudi.db/dim_province").where(col("etl_date") === "20250326")
+//        val region = spark.read.format("hudi").load("hdfs:///user/hive/warehouse/dwd_ds_hudi.db/dim_region").where(col("etl_date") === "20250326")
+//        val province = spark.read.format("hudi").load("hdfs:///user/hive/warehouse/dwd_ds_hudi.db/dim_province").where(col("etl_date") === "20250326")
+        val region = spark.read.jdbc("jdbc:mysql://192.168.45.13:3306/shtd_store?useSSL=false", "base_region", conf1)
+        val province = spark.read.jdbc("jdbc:mysql://192.168.45.13:3306/shtd_store?useSSL=false", "base_province", conf1)
         val regionJoinProvince = province.join(region, province("region_id") === region("id"))
             .select(province("id") as "provinceid", province("name") as "provincename", region("id") as "regionid", region("region_name") as "regionname")
         val finTable = order_info
@@ -37,7 +42,8 @@ object ERRO02 {
         //todo 使用函数计算中位数
         val zws_sf = finTable
             .groupBy("provinceid", "provincename", "regionid")
-            .agg(percentile_approx(col("final_total_amount"), lit(0.5), lit(50000)) as "provincemedian")
+            .agg(expr("PERCENTILE(final_total_amount, 0.5)") as "provincemedian")
+//            .agg(percentile_approx(col("final_total_amount"), lit(0.5), lit(50000)) as "provincemedian")
             .withColumnRenamed("provinceid", "sfprovinceid")
             .withColumnRenamed("provincename", "sfprovincename")
             .withColumnRenamed("regionid", "sfregionid")
@@ -45,13 +51,15 @@ object ERRO02 {
 
         val zws_dq = finTable
             .groupBy("regionid", "regionname")
-            .agg(percentile_approx(col("final_total_amount"), lit(0.5), lit(50000)) as "regionmedian")
+            .agg(expr("PERCENTILE(final_total_amount, 0.5)") as "regionmedian")
+//            .agg(percentile_approx(col("final_total_amount"), lit(0.5), lit(50000)) as "regionmedian")
             .withColumnRenamed("regionid","dqregionid")
             .withColumnRenamed("regionname","dqregionname")
 //        zws_dq.show
 
         val fintable = zws_sf.join(zws_dq, zws_sf("sfregionid") === zws_dq("dqregionid"), "left")
-//        fintable.show
+            .orderBy("sfprovinceid")
+        fintable.show
 
         val conf = new Properties()
         fintable

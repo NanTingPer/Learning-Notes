@@ -1,14 +1,14 @@
 package 特征工程
 
-import org.apache.spark.sql.SparkSession
-import org.apache.spark.sql.functions._
-
-import java.util.Properties
 
 object 规范化与OneHit {
     def main(args: Array[String]): Unit = {
+        import org.apache.spark.sql.SparkSession
+        import org.apache.spark.sql.functions._
+
+        import java.util.Properties
         val spark = SparkSession
-            .builder()
+        .builder()
             .appName("awf")
             .master("local[*]")
             .enableHiveSupport()

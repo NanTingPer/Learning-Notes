@@ -1,7 +1,7 @@
-import org.apache.spark.sql.SaveMode
 
 object ERRO04 {
     def main(args: Array[String]): Unit = {
+        import org.apache.spark.sql.SaveMode
         import org.apache.spark.sql.SparkSession
         import org.apache.spark.sql.functions._
         import org.apache.spark.sql.expressions._

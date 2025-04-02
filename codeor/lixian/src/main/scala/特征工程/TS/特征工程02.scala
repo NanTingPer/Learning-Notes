@@ -1,5 +1,6 @@
 package 特征工程.TS
 
+import org.apache.spark.sql.SaveMode
 import org.apache.spark.sql.types.DataTypes
 
 import java.util
@@ -12,7 +13,7 @@ object 特征工程02 {
         import org.apache.spark.sql.api.java.UDF2
         import org.apache.spark.sql.functions._
         import java.util.Properties
-//        System.setProperty("HADOOP_USER_NAME","root")
+        System.setProperty("HADOOP_USER_NAME","root")
         val spark = SparkSession.builder()
             .master("local[*]")
             .appName("qwe")
@@ -57,15 +58,19 @@ object 特征工程02 {
         val end_tab = tab1
             .drop("spu_id","tm_id","category3_id")
             .withColumn("id",col("id").cast(DataTypes.DoubleType))
-            .limit(1)
-            .first()
-
-        println()
-        println("--------------------第一条数据前10列结果展示为：---------------------2")
-
-        for (i <- 0 to 9)
-            if(i != 9) print(end_tab.get(i)+",") else print(end_tab.get(i))
-        println()
-        println()
+            .write
+            .mode(SaveMode.Overwrite)
+            .format("hive")
+            .saveAsTable("dwd.sku_info_cleaned")
+//            .limit(1)
+//            .first()
+//
+//        println()
+//        println("--------------------第一条数据前10列结果展示为：---------------------2")
+//
+//        for (i <- 0 to 9)
+//            if(i != 9) print(end_tab.get(i)+",") else print(end_tab.get(i))
+//        println()
+//        println()
     }
 }

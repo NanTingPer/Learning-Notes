@@ -1,7 +1,7 @@
 
 package 特征工程.TS
 
-import org.apache.spark.sql.SparkSession
+import org.apache.spark.sql.{SaveMode, SparkSession}
 import org.apache.spark.sql.functions._
 import org.apache.spark.sql.types.DataTypes
 
@@ -60,11 +60,15 @@ object 特征工程04 {
         val row = end
             .withColumn("user_id", col("user_id").cast(DataTypes.DoubleType))
             .drop("sku_id")
-            .limit(1)
-            .first()
-        println("---------------第一行前5列结果展示为---------------")
-        print(row.toSeq.take(5).mkString(","))
-        println()
+            .write
+            .mode(SaveMode.Overwrite)
+            .format("hive")
+            .saveAsTable("dwd.sku_info_cleaned")
+//            .limit(1)
+//            .first()
+//        println("---------------第一行前5列结果展示为---------------")
+//        print(row.toSeq.take(5).mkString(","))
+//        println()
 
     }
 }

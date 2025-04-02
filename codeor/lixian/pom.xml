@@ -126,7 +126,13 @@
             <artifactId>hbase-client</artifactId>
             <version>${hbase.version}</version>
         </dependency>
-
+        <!--<dependency>
+            <groupId>org.apache.spark</groupId>
+            <artifactId>spark-mllib_${scala.version}</artifactId>
+            <version>${spark.version}</version>
+            <scope>provided</scope>
+        </dependency>
+-->
 <!--        clickhouse-->
 <!--         连接ClickHouse需要驱动包-->
         <dependency>

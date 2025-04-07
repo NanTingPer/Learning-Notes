@@ -11,11 +11,6 @@ spark-sql \
 
 完整示例，这边只是将`hudi`的`jar`包放到了这个目录下
 ```sh
-spark-sql \
---conf 'spark.serializer=org.apache.spark.serializer.KryoSerializer' \
---conf 'spark.sql.extensions=org.apache.spark.sql.hudi.HoodieSparkSessionExtension' \
---jars /opt/module/spark/jars/hudi-spark3.1-bundle_2.12-0.12.0.jar
-
 spark-sql --master yarn \
 --conf 'spark.serializer=org.apache.spark.serializer.KryoSerializer' \
 --conf 'spark.sql.extensions=org.apache.spark.sql.hudi.HoodieSparkSessionExtension' \
@@ -30,11 +25,6 @@ spark-shell \
 --conf 'spark.serializer=org.apache.spark.serializer.KryoSerializer' \
 --conf 'spark.sql.extensions=org.apache.spark.sql.hudi.HoodieSparkSessionExtension' \
 --jars /opt/module/spark-3.1.1-yarn/jars/hudi-spark3.1-bundle_2.12-0.12.0.jar
-
-spark-shell \
---conf 'spark.serializer=org.apache.spark.serializer.KryoSerializer' \
---conf 'spark.sql.extensions=org.apache.spark.sql.hudi.HoodieSparkSessionExtension' \
---jars /opt/module/spark/jars/hudi-spark3.1-bundle_2.12-0.12.0.jar
 ```
 
 

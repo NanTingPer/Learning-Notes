@@ -11,11 +11,6 @@ object 推荐系统01 {
     }
 
     def recommendTask(spark: SparkSession): Unit = {
-//        三表连接，获取用户所购买商品信息
-//        val order_info = spark.table("ds_dwd.fact_order_info")
-//        val order_detail = spark.table("ds_dwd.fact_order_detail")
-//        val sku_info = spark.table("ds_dwd.dim_sku_info")
-
         val conf = new Properties()
         conf.put("user","root")
         conf.put("password","123456")
@@ -33,7 +28,7 @@ object 推荐系统01 {
             .select($"user_id", $"sku_id", order_detail.col("sku_name"))
 
         // 获取1605用户已购买的商品
-        val sku_1605 = joined.where($"user_id" === 1605).select("sku_id").distinct
+        val sku_1605 = joined.where($"user_id" === 6708).select("sku_id").distinct
 
         // 获取相似top10用户已购买的商品（排除1605购买过的）
         val top10_user_id = Array(5, 10, 18, 20, 22, 23, 29, 30, 39, 44)

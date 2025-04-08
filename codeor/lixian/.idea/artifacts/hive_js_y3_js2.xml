@@ -1,0 +1,8 @@
+<component name="ArtifactManager">
+  <artifact type="jar" name="hive.js.y3.js2">
+    <output-path>$PROJECT_DIR$/out/artifacts/hive_js_y3_js2</output-path>
+    <root id="archive" name="hive.js.y3.js2.jar">
+      <element id="module-output" name="MallDW" />
+    </root>
+  </artifact>
+</component>

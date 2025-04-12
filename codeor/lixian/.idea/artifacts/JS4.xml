@@ -1,0 +1,8 @@
+<component name="ArtifactManager">
+  <artifact type="jar" name="JS4">
+    <output-path>$PROJECT_DIR$/out/artifacts/JS4</output-path>
+    <root id="archive" name="_2025Two.JS.JS4.jar">
+      <element id="module-output" name="MallDW" />
+    </root>
+  </artifact>
+</component>

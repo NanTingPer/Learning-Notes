@@ -15,6 +15,8 @@ object js2 {
             .appName("hudi")
             .getOrCreate()
 
+        val rr = spark.read.format("hudi").load(s"hdfs:///user/hive/warehouse/dws_ds_hudi.db/province_consumption_day_aggr")
+            .show(1)
         val region = spark.read.format("hudi").load("hdfs:///user/hive/warehouse/dwd_ds_hudi.db/dim_region").where(col("etl_date") === "20250409")
         val province = spark.read.format("hudi").load("hdfs:///user/hive/warehouse/dwd_ds_hudi.db/dim_province").where(col("etl_date") === "20250409")
         val order_info = spark.read.format("hudi").load("hdfs:///user/hive/warehouse/dwd_ds_hudi.db/fact_order_info")
@@ -33,7 +35,7 @@ object js2 {
             .withColumnRenamed("name", "province_name")
             .write
             .format("hudi")
-            .mode(SaveMode.Append)
+            .mode(SaveMode.Overwrite)
             .options(getQuickstartWriteConfigs)
             .option(SQL_ENABLE_BULK_INSERT.key, "true")
             .option(HIVE_STYLE_PARTITIONING.key, "true")

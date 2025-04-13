@@ -69,18 +69,28 @@ namespace ThoriumModzhcn.Systems
 
         private static void Load(List<string> paths, LocalizeUtil.Language language)
         {
-            foreach (var hjson in paths) {
-                LocalizeUtil.LoadLocalizedKey(hjson, language, GetStartChars(hjson));
-            }
+            foreach (var hjson in paths) LocalizeUtil.LoadLocalizedKey(hjson, language, GetStartChars(hjson));
+        }
+
+
+        public override void PostSetupRecipes()
+        {
+            LoadFatherKey(LocalizeUtil.Language.香港繁体);
+            LoadFatherKey(LocalizeUtil.Language.台湾繁体);
+            LoadFatherKey(LocalizeUtil.Language.简体中文);
+            base.PostSetupRecipes();
+        }
+        private static void LoadFatherKey(LocalizeUtil.Language language)
+        {
             Dictionary<string, string> localizeTests = LocalizeUtil.GetLocalizationDictionary(language);
             string regex = @"\{\$(.*?)\}";
             foreach (var kv in localizeTests) {
 
                 MatchCollection matchs = Regex.Matches(kv.Value, regex);
                 //调试代码
-                if (kv.Value.Contains("发光的野兽在泰拉大陆的地底梭巡,把沿途搅得一团糟。{$NPCs.GildedBat.DisplayName},{$NPCs.GildedLycan.DisplayName}和{$NPCs.GildedSlime.DisplayName}会发光,它们看着相当显眼。这些生物的数量应该尽可能少,能少一点是一点。")) {
-                    int a = 1;
-                }
+                //if (kv.Value.Contains("发光的野兽在泰拉大陆的地底梭巡,把沿途搅得一团糟。{$NPCs.GildedBat.DisplayName},{$NPCs.GildedLycan.DisplayName}和{$NPCs.GildedSlime.DisplayName}会发光,它们看着相当显眼。这些生物的数量应该尽可能少,能少一点是一点。")) {
+                //    int a = 1;
+                //}
 
                 foreach (Match item in matchs) {
                     string @waibu = item.Groups[0].Value; //0是原始值(${NPC.Tim})，1是内部值(NPC.Tim)
@@ -95,6 +105,7 @@ namespace ThoriumModzhcn.Systems
                     }
                 }
             }
+
         }
 
         private static string GetStartChars(string fileName)

@@ -1,6 +1,6 @@
 # C#
 
-# 1.0 事件
+## 1.0 事件
 
 > ### 事件模型的五个组成部分
 
@@ -42,7 +42,7 @@
 
 > ##### sender => 事件的拥有者 谁触发这个事件 谁就是事件的拥有者
 
-# 2.0 依赖关系
+## 2.0 依赖关系
 
 > #### Car就依赖上Engine了 紧耦合了
 
@@ -165,7 +165,7 @@ public class Gix : IPhone
 }
 ```
 
-# 2.1 依赖反转
+## 2.1 依赖反转
 
 > ##### 依赖
 > 
@@ -179,7 +179,7 @@ public class Gix : IPhone
 - 抽象方法到virtual方法需要overrider
 - virtual 到 override方法 需要加 override
 
-# 2.2 单一职责原则
+## 2.2 单一职责原则
 
 > #### 一个类应该只做一件事，或者一组相关的事
 > 
@@ -189,7 +189,7 @@ public class Gix : IPhone
 
 - ##### 过犹不及，在使用接口隔离原则和单一职责原则的时候，如果玩的过火的话，就会产生很多只有一个方法的接口和类，接口和类的颗粒度很小 需要把握接口和类的大小
 
-# 2.3 显示接口实现
+## 2.3 显示接口实现
 
 > ##### 接口.方法()
 > 
@@ -216,7 +216,7 @@ main(){
 }
 ```
 
-# 2.4 反射
+## 2.4 反射
 
 > #### 镜像 / 映像
 
@@ -361,7 +361,7 @@ object Generic = Activator.CreateInstance(makeType);
 
 
 
-# 5.0 接口实现隔离
+## 5.0 接口实现隔离
 
 > ## 依赖关系
 
@@ -381,7 +381,7 @@ object Generic = Activator.CreateInstance(makeType);
 
 
 
-# 6.0  表达式树与Func
+## 6.0  表达式树与Func
 
 - 表达式树`Expression`可以使用`.Compile`转换为Func
 
@@ -396,7 +396,7 @@ object Generic = Activator.CreateInstance(makeType);
 
  
 
-# 7.0 IL
+## 7.0 IL
 
 | 指令 | 效果                   |                                                    |
 | ---- | ---------------------- | -------------------------------------------------- |
@@ -602,7 +602,7 @@ namespace CecilDemo
 
 
 
-# 8.0 Regex正则表达式
+## 8.0 Regex正则表达式
 
 | 方法              | 作用             | 例子                                |
 | ----------------- | ---------------- | ----------------------------------- |
@@ -611,7 +611,7 @@ namespace CecilDemo
 
 
 
-# 9.0 C# SQL Lite
+## 9.0 C# SQL Lite
 
 1. 安装 nuget 包 => `System.Data.SQLite.Core`
 
@@ -647,9 +647,9 @@ while (Data.Read())
 
 
 
-# 2.5 杨中科 .NET
+## 2.5 杨中科 .NET
 
-# 1.0 .NET Standard
+### 1.0 .NET Standard
 
 1. .NET Framework -> Windows程序
 2. .NET Core -> 跨平台程序
@@ -671,7 +671,7 @@ while (Data.Read())
 
 - .NET5 后 默认.NET指的是.NET Core
 
-# 1.1 .NET Core 的项目文件
+### 1.1 .NET Core 的项目文件
 
 - 其项目文件只显示被排除的文件 而 Framework显示被包含的文件
 
@@ -679,7 +679,7 @@ while (Data.Read())
 
 - 目标运行时选择独立时，所选架构的，无需.NET运行时环境
 
-# 1.2 NetGe包管理
+### 1.2 NetGe包管理
 
 - Install-Package 包名 Version 指定版本 / 不指定就是最新稳定版
 
@@ -687,7 +687,7 @@ while (Data.Read())
 
 - Update-Package 包名 / 更新
 
-# 1.3 异步编程
+## 1.3 异步编程
 
 - 异步不能提高单个任务的运行速度
 
@@ -751,7 +751,7 @@ class Program
 - 如果方法**不支持async**，内部调用带有返回值的异步方法时，可以不使用await **直接使用.Result，如果不带返回值可以调用.Wait**
   - 尽量不要这要使用，会造成线程阻塞
 
-## Lambda内的异步方法
+### Lambda内的异步方法
 
 - 加上 async 修饰 因为Lambda本质是匿名方法
 
@@ -761,7 +761,7 @@ MethonName(async () => {
 });
 ```
 
-## 异步方法实现
+### 异步方法实现
 
 ```csharp
 public async Task<int> HttpDown(string url,string filePath)
@@ -790,7 +790,7 @@ int len = await method.HttpDown("https://www.baidu.com",
 Console.WriteLine(len);
 ```
 
-## async、await原理揭秘
+### async、await原理揭秘
 
     async方法会被编译器编译成一个类，然后里面使用状态机模型(switch语句),根据await切成多个case,然后这个类会被反复调用,每次调用num的值都会改变(case条件使用该值)
 
@@ -798,13 +798,13 @@ Console.WriteLine(len);
 
 - await调用的等待期间 .NET会把当前的线程返回给线程池，等待异步方法调用完成后，再从线程池取出一个新线程供后续代码继续执行
 
-## 异步方法不等于多线程
+### 异步方法不等于多线程
 
         调用.NET的内置库的异步方法 线程ID会变是因为方法内部使用了类型Task.run类似的方法，开辟了新的线程。
 
         实际上不手动给异步方法丢到其他线程，其线程是不变的
 
-## 异步方法不使用async修饰
+### 异步方法不使用async修饰
 
         异步方法内直接将Task<T>返回回去，让调用者取出值
 
@@ -818,11 +818,11 @@ Console.WriteLine(len);
 
          **如果一个异步方法只是对其他异步方法的调用，并没有其他太复杂的逻辑**，例如 等待A的返回结果再调用B，然后把A的返回结果拿到内部处理再返回。**那么就可以不使用async修饰**
 
-## 异步编程不要使用Sleep()
+### 异步编程不要使用Sleep()
 
         如果想在异步方法中暂停一段时间，应该使用await Task.Delay()。使用Thread.Sleep()会造成线程阻塞
 
-## CancellationToken
+### CancellationToken
 
 > 有时需要提前终止任务，比如：请求超时、用户取消请求
 > 
@@ -880,7 +880,7 @@ await CancellationToken_.Run("https://www.baidu.com/", 100, token);
 // cts.Cancel();
 ```
 
-## 1.1 线程池
+### 1.1 线程池
 
 > - 一组预先创建的线程，可以被重复使用来执行多个任务
 > 
@@ -928,7 +928,7 @@ await CancellationToken_.Run("https://www.baidu.com/", 100, token);
 > 
 > 推荐使用锁 信号量等方式实现这一逻辑
 
-### 线程安全与同步机制
+#### 线程安全与同步机制
 
 > #### Thread-Safety
 
@@ -988,7 +988,7 @@ await CancellationToken_.Run("https://www.baidu.com/", 100, token);
 
 锁会阻塞线程更建议使用信号量
 
-### 信号量
+#### 信号量
 
         轻量，底层，看起来好像是在阻塞一个线程，但那个线程确实就该被阻塞，其无非就是在等待一个命令 比如队列又有了新的消息，其也不知道它要不要开始干活，突然信号来了告诉它要开始干活了，它就会去干一下。
 
@@ -1008,7 +1008,7 @@ await CancellationToken_.Run("https://www.baidu.com/", 100, token);
 
 
 
-## 1 LINQ简单实现
+### 1 LINQ简单实现
 
 ```csharp
     internal class Program
@@ -1042,7 +1042,7 @@ await CancellationToken_.Run("https://www.baidu.com/", 100, token);
 
 
 
-## 2 常用扩展方法1
+### 2 常用扩展方法1
 
 > 类型
 
@@ -1073,7 +1073,7 @@ list.Add(new Employee { Id = 8, Name = "jack", Age = 33, Gender = true, Salary =
 
 
 
-## 3 常用扩展方法2
+### 3 常用扩展方法2
 
 > ### 匿名类型
 
@@ -1093,7 +1093,7 @@ var obj1 = new {Name = "dddd" , Salay = 3 , AAA = "dawf"};
 
 
 
-# 1.5 依赖注入
+### 1.5 依赖注入
 
 > #### 控制反转IOC (Inversion of Control)
 
@@ -1175,3 +1175,11 @@ public class TestServiceImpl2 : ITestService
 - 配置服务器 本地环境变量 本地配置文件
 - 先从本地配置 再从环境变量 再从配置服务器
 - 本地的配置 覆盖配置服务器的配置
+
+
+
+
+
+
+
+# 设计原则

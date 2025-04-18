@@ -21,8 +21,14 @@ public class Program
         NPCName = NPCName.Distinct().ToList();
         //var r = await Puppeteer.CreateBrowserFetcher(new BrowserFetcherOptions() { Browser = SupportedBrowser.Chrome })
         //    .DownloadAsync();
-        await ExecMethod(ItemName, AwaitItem, "Items");
-        await ExecMethod(NPCName,AwaitNPC, "NPCs");
+        #region 灾厄
+        //await ExecMethod(ItemName, AwaitItem, "Items");
+        //await ExecMethod(NPCName,AwaitNPC, "NPCs");
+        //await ExecMethod(AwaitItem, AwaitItem, "Items");
+        //await ExecMethod(AwaitNPC, AwaitNPC, "NPCs");
+        #endregion 灾厄
+        await ExecMethod(ContentList.VItems, AwaitItem, "Items");
+        await ExecMethod(ContentList.VNPCs, AwaitNPC, "NPCs");
         await ExecMethod(AwaitItem, AwaitItem, "Items");
         await ExecMethod(AwaitNPC, AwaitNPC, "NPCs");
     }
@@ -37,8 +43,9 @@ public class Program
                 string pageName = ItemName[i];
                 Console.WriteLine($"当前: {pageName} \t剩余项目: {ItemName.Count}");
 
-                string url = "https://calamity.huijiwiki.com/wiki/" + pageName;
-                string filePath = "C:\\Cal\\" + fileType + "\\" + pageName + ".png";
+                //string url = "https://calamity.huijiwiki.com/wiki/" + pageName;
+                string url = "https://terraria.wiki.gg/zh/wiki/" + pageName;
+                string filePath = "D:\\1\\VAL\\" + fileType + "\\" + pageName + ".png";
                 if (File.Exists(filePath)) {
                     ItemName.Remove(pageName);
                     continue;
@@ -50,7 +57,8 @@ public class Program
                 {
                     Browser = SupportedBrowser.Chrome,
                     Headless = false,
-                    Args = new string[] { "--incognito" }
+                    Args = new string[] { "--incognito" },
+                    Timeout = 60000
                 });
                 #endregion
 
@@ -59,8 +67,10 @@ public class Program
                 try {
                     无痕上下文 = await browser.CreateBrowserContextAsync();
                     无痕页面  = await 无痕上下文.NewPageAsync();
+                    await 无痕页面.SetRequestInterceptionAsync(true); //开启请求拦截
+                    无痕页面.Request += 无痕页面_Request;
                     await 无痕页面.SetViewportAsync(new ViewPortOptions() { Width = 1080 });
-                    await 无痕页面.GoToAsync(url);
+                    await 无痕页面.GoToAsync(url, 60000);
                     await 无痕页面.ScreenshotAsync(filePath, new ScreenshotOptions() { FullPage = true });
                 } catch(Exception e) {
                     Console.WriteLine(e.Message);
@@ -93,6 +103,15 @@ public class Program
                 #endregion
             }
 
+        }
+    }
+
+    private static async void 无痕页面_Request(object? sender, RequestEventArgs e)
+    {
+        if (e.Request.Url.Contains("app.wiki.gg") || e.Request.Url.Contains("doubleclick")) {
+            await e.Request.AbortAsync();
+        } else {
+            await e.Request.ContinueAsync();
         }
     }
 

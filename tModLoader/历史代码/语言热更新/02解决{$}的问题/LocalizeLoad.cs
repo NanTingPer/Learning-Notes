@@ -12,6 +12,32 @@ namespace ThoriumModzhcn.Systems
 {
     public class LocalizeLoad : ModSystem
     {
+        public static List<string> PCRHJson { get; } =
+         [
+            "Localization/zh-Potralia/zh-Potralia.hjson",
+            "Localization/zh-Potralia/zh-Potralia_Mods.CalamityBardHealer.hjson",
+            "Localization/zh-Potralia/zh-Potralia_Mods.RedemptionBardHealer.hjson",
+            "Localization/zh-Potralia/zh-Potralia_Mods.SOTSBardHealer.hjson",
+            "Localization/zh-Potralia/zh-Potralia_Mods.SpiritBardHealer.hjson",
+            "Localization/zh-Potralia/zh-Potralia_Mods.SpookyBardHealer.hjson",
+            "Localization/zh-Potralia/zh-Potralia_Mods.TerrariumHacks.hjson",
+            "Localization/zh-Potralia/zh-Potralia_Mods.ThoriumRework.hjson",
+            "ThoriumModTranslator/IL_ThoriumModpcr.hjson"
+        ];
+
+        public static List<string> CSOWHJson { get; } =
+         [
+            "Localization/zh-CSOW/zh-CSOW.hjson",
+            "Localization/zh-CSOW/zh-CSOW_Mods.CalamityBardHealer.hjson",
+            "Localization/zh-CSOW/zh-CSOW_Mods.RedemptionBardHealer.hjson",
+            "Localization/zh-CSOW/zh-CSOW_Mods.SOTSBardHealer.hjson",
+            "Localization/zh-CSOW/zh-CSOW_Mods.SpiritBardHealer.hjson",
+            "Localization/zh-CSOW/zh-CSOW_Mods.SpookyBardHealer.hjson",
+            "Localization/zh-CSOW/zh-CSOW_Mods.TerrariumHacks.hjson",
+            "Localization/zh-CSOW/zh-CSOW_Mods.ThoriumRework.hjson",
+            "ThoriumModTranslator/IL_ThoriumModcsow.hjson"
+        ];
+
         public static List<string> HKHJson { get; } =
          [
             "Localization/zh-HK/zh-hk.hjson",
@@ -22,8 +48,9 @@ namespace ThoriumModzhcn.Systems
             "Localization/zh-HK/zh-hk_Mods.SpookyBardHealer.hjson",
             "Localization/zh-HK/zh-hk_Mods.TerrariumHacks.hjson",
             "Localization/zh-HK/zh-hk_Mods.ThoriumRework.hjson",
-            "Localization/zh-HK/zh-hk_Mods.UnlimitedBardEnergy.hjson"
+            "ThoriumModTranslator/IL_ThoriumModhk.hjson"
         ];
+
         public static List<string> TWHJson { get; } =
          [
             "Localization/zh-TW/zh-tw.hjson",
@@ -34,7 +61,7 @@ namespace ThoriumModzhcn.Systems
             "Localization/zh-TW/zh-tw_Mods.SpookyBardHealer.hjson",
             "Localization/zh-TW/zh-tw_Mods.TerrariumHacks.hjson",
             "Localization/zh-TW/zh-tw_Mods.ThoriumRework.hjson",
-            "Localization/zh-TW/zh-tw_Mods.UnlimitedBardEnergy.hjson"
+            "ThoriumModTranslator/IL_ThoriumModtw.hjson"
         ];
 
         public static List<string> ZHHJson { get; } = 
@@ -47,7 +74,7 @@ namespace ThoriumModzhcn.Systems
             "Localization/zh-Hans/zh-Hans_Mods.SpookyBardHealer.hjson",
             "Localization/zh-Hans/zh-Hans_Mods.TerrariumHacks.hjson",
             "Localization/zh-Hans/zh-Hans_Mods.ThoriumRework.hjson",
-            "Localization/zh-Hans/zh-Hans_Mods.UnlimitedBardEnergy.hjson"
+            "ThoriumModTranslator/IL_ThoriumModzh.hjson"
         ];
 
         public override void Load()
@@ -57,9 +84,11 @@ namespace ThoriumModzhcn.Systems
             //    var file = item;
             //}
 
-            Load(HKHJson, LocalizeUtil.Language.香港繁体);
+            Load(PCRHJson, LocalizeUtil.Language.Potralia的害人汉化);
             Load(TWHJson, LocalizeUtil.Language.台湾繁体);
             Load(ZHHJson, LocalizeUtil.Language.简体中文);
+            Load(CSOWHJson, LocalizeUtil.Language.文言文汉化);
+            Load(HKHJson, LocalizeUtil.Language.香港繁体废除);
             base.Load();
         }
 
@@ -75,9 +104,11 @@ namespace ThoriumModzhcn.Systems
 
         public override void PostSetupRecipes()
         {
-            LoadFatherKey(LocalizeUtil.Language.香港繁体);
+            LoadFatherKey(LocalizeUtil.Language.Potralia的害人汉化);
             LoadFatherKey(LocalizeUtil.Language.台湾繁体);
             LoadFatherKey(LocalizeUtil.Language.简体中文);
+            LoadFatherKey(LocalizeUtil.Language.文言文汉化);
+            LoadFatherKey(LocalizeUtil.Language.香港繁体废除);
             base.PostSetupRecipes();
         }
         private static void LoadFatherKey(LocalizeUtil.Language language)
@@ -112,7 +143,8 @@ namespace ThoriumModzhcn.Systems
         {
             var splitString = fileName.Split("_");
             if (splitString.Length == 1) return "";
-            if (splitString[0] == "IL") return "";
+            //if (splitString[0] == "IL") return "";
+            if (fileName.Contains("IL_")) return "";
             return splitString[1].Replace(".hjson", ".");
         }
     }

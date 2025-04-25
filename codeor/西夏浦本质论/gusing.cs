@@ -1,0 +1,1 @@
+﻿global using static 西夏浦本质论.数组.区间;

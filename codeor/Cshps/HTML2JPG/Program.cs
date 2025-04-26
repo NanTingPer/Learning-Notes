@@ -11,6 +11,7 @@ public class Program
     public static List<string> AwaitItem { get; } = [];
     public static List<string> AwaitNPC { get; } = [];
     public const string tk1 = "本页面目前没有内容";
+    public const string tk4 = "此页面目前没有内容";
     public const string tk2 = "正在验证您是否是真人";
     public const string tk3 = "验证您是真人";
     static async Task Main(string[] args)
@@ -121,7 +122,7 @@ public class Program
                     File.Delete(filePath);
                     await Task.Delay(rand.Next(30000, 60000));
                 }
-                if (str.Contains(tk1)) {
+                if (str.Contains(tk1) || str.Contains(tk4)) {
                     File.Delete(filePath);
                 }
                 #endregion
@@ -132,6 +133,7 @@ public class Program
 
     private static async void 无痕页面_Request(object? sender, RequestEventArgs e)
     {
+    //https://app.wiki.gg/public/1YjgdEoRcWM6PX7gbGrDqP3R3cdenIXoE.gif
         if (e.Request.Url.Contains("app.wiki.gg") || e.Request.Url.Contains("doubleclick")) {
             await e.Request.AbortAsync();
         } else {

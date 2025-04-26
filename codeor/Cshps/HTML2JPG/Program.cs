@@ -2,6 +2,7 @@
 using System.Security.Policy;
 using System.Text.RegularExpressions;
 using Tesseract;
+using static HTML2JPG.ContentList;
 using TesseractPage = Tesseract.Page;
 
 namespace HTML2JPG;
@@ -27,10 +28,27 @@ public class Program
         //await ExecMethod(AwaitItem, AwaitItem, "Items");
         //await ExecMethod(AwaitNPC, AwaitNPC, "NPCs");
         #endregion 灾厄
-        await ExecMethod(ContentList.VItems, AwaitItem, "Items");
-        await ExecMethod(ContentList.VNPCs, AwaitNPC, "NPCs");
-        await ExecMethod(AwaitItem, AwaitItem, "Items");
-        await ExecMethod(AwaitNPC, AwaitNPC, "NPCs");
+
+        #region 原版
+        //await ExecMethod(ContentList.VItems, AwaitItem, "Items");
+        //await ExecMethod(ContentList.VNPCs, AwaitNPC, "NPCs");
+        //await ExecMethod(AwaitItem, AwaitItem, "Items");
+        //await ExecMethod(AwaitNPC, AwaitNPC, "NPCs");
+        #endregion
+
+        #region farge
+        List<Task> list = [
+            ExecMethod(FargeItems, AwaitItem, "Items"),
+            ExecMethod(FargeNPC, AwaitNPC, "NPCs")
+        ];
+        await Task.WhenAll(list);
+
+        List<Task> reTask = [
+            ExecMethod(AwaitItem, AwaitItem, "Items"),
+            ExecMethod(AwaitNPC, AwaitNPC, "NPCs")
+        ];
+        await Task.WhenAll(reTask);
+        #endregion farge
     }
 
     static async Task ExecMethod(List<string> ItemName, List<string> filyList, string fileType)
@@ -44,8 +62,9 @@ public class Program
                 Console.WriteLine($"当前: {pageName} \t剩余项目: {ItemName.Count}");
 
                 //string url = "https://calamity.huijiwiki.com/wiki/" + pageName;
-                string url = "https://terraria.wiki.gg/zh/wiki/" + pageName;
-                string filePath = "D:\\1\\VAL\\" + fileType + "\\" + pageName + ".png";
+                //string url = "https://terraria.wiki.gg/zh/wiki/" + pageName;
+                string url = "https://fargosmods.wiki.gg/zh/" + pageName + "?variant=zh-hans";
+                string filePath = "D:\\1\\Farge\\" + fileType + "\\" + pageName + ".png";
                 if (File.Exists(filePath)) {
                     ItemName.Remove(pageName);
                     continue;
@@ -71,11 +90,16 @@ public class Program
                     无痕页面.Request += 无痕页面_Request;
                     await 无痕页面.SetViewportAsync(new ViewPortOptions() { Width = 1080 });
                     await 无痕页面.GoToAsync(url, 60000);
+                    await 无痕页面.EvaluateExpressionAsync(
+                        """
+                        document.querySelectorAll('[class*="terraria"][class*="mw-collapsible"][class*="mw-made-collapsible"]')
+                        .forEach(el => el.remove());
+                        """);
                     await 无痕页面.ScreenshotAsync(filePath, new ScreenshotOptions() { FullPage = true });
                 } catch(Exception e) {
                     Console.WriteLine(e.Message);
                     filyList.Add(pageName);
-                    Console.WriteLine($"{pageName} : 访问失败");
+                    Console.WriteLine($"{ pageName} : 访问失败");
                     continue;
                 } finally { //无论如何都关闭
                     await Task.Delay(1000);

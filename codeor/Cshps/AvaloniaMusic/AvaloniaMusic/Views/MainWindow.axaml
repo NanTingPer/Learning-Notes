@@ -18,14 +18,12 @@
         <vm:MainWindowViewModel/>
     </Design.DataContext>
 
-    <Panel>
-        <Panel Margin="40">
+    <Panel Margin="40">
             <Button
                 HorizontalAlignment="Right" 
                 VerticalAlignment="Top">
                 <PathIcon Data="{StaticResource store_microsoft_regular}" /> 
             </Button>
                 <!--水平Right 垂直Top-->
-        </Panel>
     </Panel>
 </Window>

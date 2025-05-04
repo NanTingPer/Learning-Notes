@@ -20,6 +20,7 @@
 
     <Panel Margin="40">
             <Button
+                Command="{Binding OpenStoreWindowCommand}"
                 HorizontalAlignment="Right" 
                 VerticalAlignment="Top">
                 <PathIcon Data="{StaticResource store_microsoft_regular}" /> 

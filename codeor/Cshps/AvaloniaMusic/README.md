@@ -190,3 +190,41 @@ Width="500"
 让我们梳理执行逻辑
 
 `MainWindow`按下 => 执行`MainWindowViewModel.OpenStoreWindowCommand` 此`Command`绑定`OpenStoreWindow` => 触发处理程序 等待返回值， 处理程序由`MainWindow`注册为`HandleMethod`=> 执行`HandleMethod` => `SetOutput`
+
+
+
+# 三、添加对话内容
+
+> 页面布局使用[panel](https://docs.avaloniaui.net/zh-Hans/docs/reference/controls/dockpanel) `边缘布局面板`
+
+​	本次我们将创建新的`View => MusicStoreView` 并使用`DockPanel`创建页面布局，其内部使用`StackPanel`展示唱片列表。
+
+​	在心仪的地方创建`Avalonia User Control` 命名为 `MusicStoreView` ，~~如果不在`Views`中创建的话，一会要改一下`ViewLocator`~~，主体输入如下内容
+
+```xaml
+<DockPanel>
+    <StackPanel DockPanel.Dock="Top"> <!--设置控件位于DockPanel的哪个方位-->
+        <TextBox Text="搜索唱片"/>
+        <ProgressBar IsIndeterminate="True"/> <!--指示进度-->
+    </StackPanel>
+    <Button Content="购买"
+            DockPanel.Dock="Bottom"
+            HorizontalAlignment="Center"/>
+    <ListBox/>
+</DockPanel>
+```
+
+​	随后在窗口(`MusicStoreWindow.axaml`)中引用此控件
+
+```xaml
+xmlns:views="clr-namespace:AvaloniaMusic.Views"
+```
+
+​	创建一个`Panel`并在其内部创建此控件，如果无法引用`MusicStoreView`就去`MusicStoreView.axaml.cs`中查看使用引用名称空间`Avalonia.Controls` 或直接写全 `MusicStoreView : Avalonia.Controls.UserControl`
+
+```xaml
+<Panel Margin="40">
+        <views:MusicStoreView/>
+</Panel>
+```
+

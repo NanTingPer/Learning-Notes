@@ -1,0 +1,17 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
+             x:Class="AvaloniaMusic.UserControl.MusicStoreView">
+    <DockPanel>
+        <StackPanel DockPanel.Dock="Top"> <!--设置控件位于DockPanel的哪个方位-->
+            <TextBox Text="搜索唱片"/>
+            <ProgressBar IsIndeterminate="True"/> <!--指示进度-->
+        </StackPanel>
+        <Button Content="购买"
+                DockPanel.Dock="Bottom"
+                HorizontalAlignment="Center"/>
+        <ListBox/>
+    </DockPanel>
+</UserControl>

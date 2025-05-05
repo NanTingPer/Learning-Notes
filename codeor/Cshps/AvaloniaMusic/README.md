@@ -195,6 +195,8 @@ Width="500"
 
 # 三、添加对话内容
 
+## 1. 页面布局
+
 > 页面布局使用[panel](https://docs.avaloniaui.net/zh-Hans/docs/reference/controls/dockpanel) `边缘布局面板`
 
 ​	本次我们将创建新的`View => MusicStoreView` 并使用`DockPanel`创建页面布局，其内部使用`StackPanel`展示唱片列表。
@@ -205,7 +207,7 @@ Width="500"
 <DockPanel>
     <StackPanel DockPanel.Dock="Top"> <!--设置控件位于DockPanel的哪个方位-->
         <TextBox Text="搜索唱片"/>
-        <ProgressBar IsIndeterminate="True"/> <!--指示进度-->
+        <ProgressBar IsIndeterminate="True"/> <!--指示是否在搜索-->
     </StackPanel>
     <Button Content="购买"
             DockPanel.Dock="Bottom"
@@ -228,3 +230,100 @@ xmlns:views="clr-namespace:AvaloniaMusic.Views"
 </Panel>
 ```
 
+![image-20250505125928451](C:/Users/23759/AppData/Roaming/Typora/typora-user-images/image-20250505125928451.png)
+
+
+
+## 2. 数据绑定
+
+> 这边使用的是`ReactiveUI`提供的MVVM支持，因此要进行数据绑定后的数据更新通知需要`ViewModel`从`ReactiveObject`继承，在默认模板中有一个`ViewModelBase`其就是从此类继承的，因此只需要直接继承就可以。
+>
+> 这样就有了一个`RaiseAndSetIfChanged`方法，注意这个是`IReactiveObject`的扩展方法
+
+​	现在，让我们先前创建的`MusicStoreViewModel`继承`ViewModelBase` 这样此`ViewModel`就具备了通知的能力。让我们为此类创建两个属性。
+
+- SearchText 搜索文本
+- IsBusy 是否在搜索
+
+```cs
+private string? _searchText;
+private bool _isBusy;
+    
+public string? SearchText  {get => _searchText; set => this.RaiseAndSetIfChanged(ref _searchText, value);}
+public bool IsBusy { get=> _isBusy; set => this.RaiseAndSetIfChanged(ref _isBusy, value);}
+```
+
+​	随后我们将其绑定到对应的视图上面
+
+- 找到`MusicStoreView`
+
+- 为`UserControl`标签添加如下内容
+
+  ```xaml
+  xmlns:vm="clr-namespace:AvaloniaMusic.ViewModels"
+  x:DataType="vm:MusicStoreViewModel"
+  ```
+
+- 对相应的控件进行数据绑定
+
+  ```xaml
+  <StackPanel DockPanel.Dock="Top"> <!--设置控件位于DockPanel的哪个方位-->
+      <TextBox Text="{Binding SearchText}" Watermark="搜索唱片"/>
+      <ProgressBar IsIndeterminate="True" IsVisible="{Binding IsBusy}"/> <!--指示是否在搜索-->
+  </StackPanel>
+  ```
+
+
+
+## 3. 搜索选择
+
+​	搜索页面要显示的内容我们使用`AlbumViewModel`，内容肯定不止一个，所以可以使用.NET框架提供的`ObservableCollection`，这是一个能够进行通知的集合。
+
+​	将目标转到`MusicStoreViewModel.cs`，将如下代码添加到文件中，随后将 `Albums`绑定到`MusicStoreView`的空`ListBox`上
+
+```cs
+public ObservableCollection<AlbumViewModel> Albums { get; } = new();//搜索结果
+private AlbumViewModel? _selectAlbum; //当前选择项目
+public AlbumViewModel? SelectAlbum { get => _selectAlbum; set => this.RaiseAndSetIfChanged(ref _selectAlbum, value); }
+```
+
+```xaml
+<ListBox ItemsSource="{Binding Albums}" SelectedItem="{Binding SelectAlbum}"/>
+```
+
+​	此时 `MusicStoreView`的全部内容为
+
+```xaml
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
+             xmlns:vm="clr-namespace:AvaloniaMusic.ViewModels"
+             x:DataType="vm:MusicStoreViewModel"
+             x:Class="AvaloniaMusic.UserControl.MusicStoreView">
+    <DockPanel>
+        <StackPanel DockPanel.Dock="Top"> <!--设置控件位于DockPanel的哪个方位-->
+            <TextBox Text="{Binding SearchText}" Watermark="搜索唱片"/>
+            <ProgressBar IsIndeterminate="True" IsVisible="{Binding IsBusy}"/> <!--指示进度-->
+        </StackPanel>
+        <Button Content="购买"
+                DockPanel.Dock="Bottom"
+                HorizontalAlignment="Center"/>
+        <ListBox ItemsSource="{Binding Albums}" SelectedItem="{Binding SelectAlbum}"/>
+    </DockPanel>
+</UserControl>
+```
+
+​	为了检验结果，我们在构造函数中，创建几个唱片对象并加入集合
+
+```cs
+public MusicStoreViewModel()
+{
+    for(int i = 0; i < 10; i++) {
+        Albums.Add(new AlbumViewModel());
+    }
+}
+```
+
+![image-20250505191233393](C:/Users/23759/AppData/Roaming/Typora/typora-user-images/image-20250505191233393.png)

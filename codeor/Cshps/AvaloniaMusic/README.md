@@ -64,7 +64,7 @@
 </Panel>
 ```
 
-![image-20250503164355055](./markdownImage/一1.png)
+![image-20250503164355055](./markdownImage/一1-1746443834579-1.png)
 
 
 
@@ -107,7 +107,7 @@ private void OpenStoreWindow()
 
 ​	现在按钮按下后，什么都不会发生，因为我们的方法没有内容，但是如果使用断点进行调试是可以命中的
 
-![image-20250504124750413](C:/Users/23759/AppData/Roaming/Typora/typora-user-images/image-20250504124750413.png)
+![image-20250504124750413](./markdownImage/image-20250504124750413.png)
 
 
 
@@ -123,7 +123,7 @@ private void OpenStoreWindow()
 >
 > 如果有多项目需求，可以将默认的权限修饰符`internal`更改为`public`
 
-![image-20250504125949031](C:/Users/23759/AppData/Roaming/Typora/typora-user-images/image-20250504125949031.png)
+![image-20250504125949031](./markdownImage/image-20250504125949031.png)
 
 
 
@@ -185,7 +185,7 @@ Height="500"
 Width="500"
 ```
 
-![image-20250504151646720](C:/Users/23759/AppData/Roaming/Typora/typora-user-images/image-20250504151646720.png)
+![image-20250504151646720](./markdownImage/image-20250504151646720.png)
 
 让我们梳理执行逻辑
 
@@ -230,7 +230,7 @@ xmlns:views="clr-namespace:AvaloniaMusic.Views"
 </Panel>
 ```
 
-![image-20250505125928451](C:/Users/23759/AppData/Roaming/Typora/typora-user-images/image-20250505125928451.png)
+![image-20250505125928451](./markdownImage/image-20250505125928451.png)
 
 
 
@@ -326,4 +326,8 @@ public MusicStoreViewModel()
 }
 ```
 
-![image-20250505191233393](C:/Users/23759/AppData/Roaming/Typora/typora-user-images/image-20250505191233393.png)
+![image-20250505191233393](./markdownImage/image-20250505191233393.png)
+
+
+
+# 四、为唱片进行展示

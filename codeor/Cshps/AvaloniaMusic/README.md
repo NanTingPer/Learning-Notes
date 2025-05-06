@@ -64,7 +64,7 @@
 </Panel>
 ```
 
-![image-20250503164355055](./markdownImage/一1-1746443834579-1.png)
+![image-20250503164355055](./markdownImage/一1-1746443834579-1-1746519139739-1.png)
 
 
 
@@ -107,7 +107,7 @@ private void OpenStoreWindow()
 
 ​	现在按钮按下后，什么都不会发生，因为我们的方法没有内容，但是如果使用断点进行调试是可以命中的
 
-![image-20250504124750413](./markdownImage/image-20250504124750413.png)
+![image-20250504124750413](./markdownImage/image-20250504124750413-1746519139739-2.png)
 
 
 
@@ -123,7 +123,7 @@ private void OpenStoreWindow()
 >
 > 如果有多项目需求，可以将默认的权限修饰符`internal`更改为`public`
 
-![image-20250504125949031](./markdownImage/image-20250504125949031.png)
+![image-20250504125949031](./markdownImage/image-20250504125949031-1746519139739-4.png)
 
 
 
@@ -185,7 +185,7 @@ Height="500"
 Width="500"
 ```
 
-![image-20250504151646720](./markdownImage/image-20250504151646720.png)
+![image-20250504151646720](./markdownImage/image-20250504151646720-1746519139739-3.png)
 
 让我们梳理执行逻辑
 
@@ -230,7 +230,7 @@ xmlns:views="clr-namespace:AvaloniaMusic.Views"
 </Panel>
 ```
 
-![image-20250505125928451](./markdownImage/image-20250505125928451.png)
+![image-20250505125928451](./markdownImage/image-20250505125928451-1746519139739-5.png)
 
 
 
@@ -326,7 +326,7 @@ public MusicStoreViewModel()
 }
 ```
 
-![image-20250505191233393](./markdownImage/image-20250505191233393.png)
+![image-20250505191233393](./markdownImage/image-20250505191233393-1746519139739-6.png)
 
 
 
@@ -369,7 +369,7 @@ public MusicStoreViewModel()
 </StackPanel>
 ```
 
-![image-20250506154146117](C:/Users/23759/AppData/Roaming/Typora/typora-user-images/image-20250506154146117.png)
+![image-20250506154146117](./markdownImage/image-20250506154146117.png)
 
 ## 	2. 定位视图
 
@@ -408,7 +408,7 @@ public Control? Build(object? param)
 }
 ```
 
-![image-20250506155823767](C:/Users/23759/AppData/Roaming/Typora/typora-user-images/image-20250506155823767.png)
+![image-20250506155823767](./markdownImage/image-20250506155823767.png)
 
 ​	我们为`ListBox`添加一些样式
 ```xaml
@@ -421,4 +421,4 @@ public Control? Build(object? param)
 </ListBox>
 ```
 
-![image-20250506161200787](C:/Users/23759/AppData/Roaming/Typora/typora-user-images/image-20250506161200787.png)
+![image-20250506161200787](./markdownImage/image-20250506161200787.png)

@@ -14,6 +14,12 @@
         <Button Content="购买"
                 DockPanel.Dock="Bottom"
                 HorizontalAlignment="Center"/>
-        <ListBox ItemsSource="{Binding Albums}" SelectedItem="{Binding SelectAlbum}"/>
+        <ListBox x:Name="AlbumList" ItemsSource="{Binding Albums}" SelectedItem="{Binding SelectAlbum}" Margin="0 20" Background="Transparent">
+            <ListBox.ItemsPanel>
+                <ItemsPanelTemplate>
+                    <WrapPanel/>
+                </ItemsPanelTemplate>
+            </ListBox.ItemsPanel>
+        </ListBox>
     </DockPanel>
 </UserControl>

@@ -1,0 +1,21 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
+             x:Class="AvaloniaMusic.UserControl.AlbumView">
+    <!--Spacing 设置子控件的间距-->
+    <!--CornerRadius 圆角-->
+    <!--ClipToBounds 是否裁剪控件-->
+    <!--Uniform 调整大小 适应控件-->
+    <StackPanel Spacing="5" Width="50">
+        <Border CornerRadius="0" ClipToBounds="True">
+            <Panel Background="AntiqueWhite">
+                <Image Width="50" Stretch="Uniform"></Image>
+                <Panel Height="50">
+                    <PathIcon Height="25" Width="25" Data="{StaticResource music_regular}"></PathIcon>
+                </Panel>
+            </Panel>
+        </Border>
+    </StackPanel>
+</UserControl>

@@ -1,6 +1,7 @@
 ﻿using System.Reactive.Linq;
 using System.Threading.Tasks;
 using System.Windows.Input;
+using AvaloniaMusic.MusicService;
 using ReactiveUI;
 
 namespace AvaloniaMusic.ViewModels;
@@ -19,6 +20,7 @@ public class MainWindowViewModel : ViewModelBase
     {
         //传一个MusicStoreViewModel给消息处理程序
         //其调用SetOutput后，这里就得到了一个Album
+        this.GetMusic("初音");
         var album = await ShowStoreInteraction.Handle(new MusicStoreViewModel());
     }
 }

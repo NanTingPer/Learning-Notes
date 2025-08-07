@@ -1,0 +1,12 @@
+Mods: {
+	KillLife: {
+		Items: {
+			LifeItem: {
+				DisplayName: Life Item
+				Tooltip: ""
+			}
+		}
+
+		Projectiles.LifeProjectile.DisplayName: Life Projectile
+	}
+}

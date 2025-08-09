@@ -12,7 +12,6 @@ using Terraria.Localization;
 using Terraria.ModLoader;
 
 using static KillLife.KillLife;
-using static Terraria.ModLoader.PlayerDrawLayer;
 
 namespace KillLife;
 
@@ -39,6 +38,23 @@ public class KillLife : Mod
 {
     public static Mod Mod => ModLoader.GetMod(nameof(KillLife));
 
+    /// <summary>
+    /// key是 (<see cref="NetmodeID"/>, <see cref="NetType"/>)
+    /// </summary>
+    public readonly static Dictionary<(int, NetType), Action<BinaryReader, int>> PacketHandles;
+
+    static KillLife()
+    {
+        PacketHandles = [];
+        PacketHandles.TryAdd((NetmodeID.Server, NetType.LifeProjectilePosition), ServerLifeProjectilePosition);
+        PacketHandles.TryAdd((NetmodeID.Server, NetType.LifeProjectileNetField), ServerLifeProjectileNetField);
+        PacketHandles.TryAdd((NetmodeID.Server, NetType.LifeProjectileGloexScale), ServerLifeProjectileGloexScale);
+
+        PacketHandles.TryAdd((NetmodeID.MultiplayerClient, NetType.LifeProjectilePosition), ClientLifeProjectilePosition);
+        PacketHandles.TryAdd((NetmodeID.MultiplayerClient, NetType.LifeProjectileNetField), ClientLifeProjectileNetField);
+        PacketHandles.TryAdd((NetmodeID.MultiplayerClient, NetType.LifeProjectileGloexScale), ClientLifeProjectileGloexScale);
+    }
+
     #region NetAsycn
     /// <summary>
     /// <para> 由于 <see cref="Main.projectile"/> 不保证弹幕顺序 </para> 
@@ -48,27 +64,8 @@ public class KillLife : Mod
     public override void HandlePacket(BinaryReader reader, int whoAmI)
     {
         NetType type = (NetType)reader.ReadInt32();
-        switch (type) {
-            case NetType.LifeProjectilePosition:
-                if (Main.netMode == NetmodeID.Server)
-                    ServerLifeProjectilePosition(reader, whoAmI);
-                else
-                    ClientLifeProjectilePosition(reader);
-                break;
 
-            case NetType.LifeProjectileNetField:
-                if(Main.netMode == NetmodeID.Server)
-                    ServerLifeProjectileNetField(whoAmI);
-                else
-                    ClientLifeProjectileNetField(reader);
-                break;
-
-            default:
-                var sr = new StreamReader(reader.BaseStream);
-                sr.ReadToEnd();
-                sr.Dispose();
-                break;
-        }
+        PacketHandles[(Main.netMode, type)](reader, whoAmI);
         base.HandlePacket(reader, whoAmI);
     }
 
@@ -78,7 +75,7 @@ public class KillLife : Mod
     /// <para> 包类型 <see cref="NetType"/> </para> 
     /// <para> 包值 <see cref="lifeProjectileNetField"/>  <see cref="System.Int32"/> </para>
     /// </summary>
-    private static void ServerLifeProjectileNetField(int whoAmI)
+    private static void ServerLifeProjectileNetField(BinaryReader _x, int whoAmI)
     {
         if (lifeProjectileNetField + 1 == int.MaxValue) {
             lifeProjectileNetField = 0;
@@ -89,6 +86,35 @@ public class KillLife : Mod
         packet.Write((int)NetType.LifeProjectileNetField);
         packet.Write(lifeProjectileNetField);
         packet.Send();
+    }
+
+    /// <summary>
+    /// <see cref="ClientLifeProjectileGloexScale(BinaryReader, int)"/>
+    /// <see cref="LifeProjectile.SendGloexScale(LifeProjectile)"/>
+    /// </summary>
+    /// <param name="reader"></param>
+    /// <param name="whoAmI"></param>
+    /// <exception cref="System.Exception"></exception>
+    private static void ServerLifeProjectileGloexScale(BinaryReader reader, int whoAmI)
+    {
+        if (Main.netMode != NetmodeID.Server) {
+            using var sr = new StreamReader(reader.BaseStream);
+            sr.ReadToEnd();
+            throw new System.Exception($"{nameof(ServerLifeProjectileGloexScale)}不应该在非服务端调用！");
+        }
+
+        var gloexScale = reader.ReadSingle();
+        var netField = reader.ReadInt32();
+        var projs = GetLifeProjectiles(netField);
+        foreach(var p in projs) {
+            p.gloexScale = gloexScale;
+        }
+        var modPacket = Mod.GetPacket();
+        var tp = projs.FirstOrDefault();
+        if (tp == null)
+            return;
+        LifeProjectile.WriteGloexScale(modPacket, tp);
+        modPacket.Send(ignoreClient: whoAmI);
     }
 
     /// <summary>
@@ -111,14 +137,15 @@ public class KillLife : Mod
         Vector2 position = reader.ReadVector2();
         int netfieldValue = reader.ReadInt32();
 
-        var tarProjectile =
-            from proj in Main.projectile.AsEnumerable()
-            where proj.ModProjectile != null && proj.ModProjectile is LifeProjectile
-            select proj.ModProjectile as LifeProjectile
-            into lifep
-            where lifep.netField == netfieldValue
-            select lifep;
+        //var tarProjectile =
+        //    from proj in Main.projectile
+        //    where proj.ModProjectile != null && proj.ModProjectile is LifeProjectile
+        //    select proj.ModProjectile as LifeProjectile
+        //    into lifep
+        //    where lifep.netField == netfieldValue
+        //    select lifep;
 
+        var tarProjectile = GetLifeProjectiles(netfieldValue);
         foreach(var proj in tarProjectile) {
             proj.Position = position;
         }
@@ -137,7 +164,7 @@ public class KillLife : Mod
     /// <para> <see cref="HandlePacket(BinaryReader, int)"/> 中 </para> 
     /// <para> 当<see cref="Main.netMode"/> == <see cref="NetmodeID.MultiplayerClient"/> </para>
     /// </summary>
-    private static void ClientLifeProjectileNetField(BinaryReader reader)
+    private static void ClientLifeProjectileNetField(BinaryReader reader, int _x)
     {
         _ = nameof(ServerLifeProjectileNetField);
         var netFieldValue = reader.ReadInt32();
@@ -149,22 +176,31 @@ public class KillLife : Mod
     /// <para> <see cref="HandlePacket(BinaryReader, int)"/> 中 </para> 
     /// <para> 当<see cref="Main.netMode"/> == <see cref="NetmodeID.MultiplayerClient"/> </para>
     /// </summary>
-    private static void ClientLifeProjectilePosition(BinaryReader reader)
+    private static void ClientLifeProjectilePosition(BinaryReader reader, int _x)
     {
         _ = nameof(ServerLifeProjectilePosition);
         var pos = reader.ReadVector2();
         var netField = reader.ReadInt32();
 
-        var projs =
-            from p in Main.projectile
-            where p.active == true && p.ModProjectile != null && p.ModProjectile is LifeProjectile
-            select p.ModProjectile as LifeProjectile
-            into p1
-            where p1.netField == netField
-            select p1;
-
+        var projs = GetLifeProjectiles(netField);
         foreach (var proj in projs) {
             proj.Position = pos;
+        }
+    }
+
+    /// <summary>
+    /// <see cref="LifeProjectile.SendGloexScale(LifeProjectile)"/>
+    /// </summary>
+    /// <param name="reader"></param>
+    /// <param name="_x"></param>
+    private static void ClientLifeProjectileGloexScale(BinaryReader reader, int _x)
+    {
+        var gloexScale = reader.ReadSingle();
+        var netField = reader.ReadInt32();
+
+        var projs = GetLifeProjectiles(netField);
+        foreach (var lifeProjectile in projs) {
+            lifeProjectile.gloexScale = gloexScale;
         }
     }
     #endregion
@@ -184,41 +220,69 @@ public class KillLife : Mod
         packet.Send();
     }
     #endregion
+
+    public static IEnumerable<LifeProjectile> GetLifeProjectiles(int netField)
+    {
+        return 
+            from p in Main.projectile
+            where p.active == true && p.ModProjectile != null && p.ModProjectile is LifeProjectile
+            select p.ModProjectile as LifeProjectile
+            into p1
+            where p1.netField == netField
+            select p1;
+    }
 }
 
 public class LifeProjectile : ModProjectile
 {
     public static Asset<Texture2D> LifeItemTexture { get; private set; }
+    public static Asset<Texture2D> LifeProjectileTexture { get; private set; }
 
     public override string Texture => "Terraria/Images/Projectile_" + ProjectileID.EmpressBlade;
     public Vector2 Position = Main.player[Main.myPlayer].Center;
+    /// <summary>
+    /// <see cref="netTimer"/> % 2 == 0 则对 <see cref="Position"/> 进行同步
+    /// </summary>
     public int netTimer = 0;
     public int netField => (int)Projectile.ai[0];
-    public bool isLife = false;
+    /// <summary>
+    /// 是否出于可以进行治疗阶段，如果为 false 则是蓄力
+    /// </summary>
+    public Status statu = Status.Golex;
+    /// <summary>
+    /// 蓄力大小 每 Tick + 0.1f
+    /// </summary>
+    public float gloexScale = 0f;
     public Player Owner => Main.player[Projectile.owner];
-    public Dictionary<int, Action> EffectApplay = [];
-
+    public readonly Dictionary<int, Action> EffectApply = [];
+    public readonly Dictionary<int, Action> PreDrawApply = [];
     public override void SetStaticDefaults()
     {
         LifeItemTexture = ModContent.Request<Texture2D>("KillLife/LifeItem", AssetRequestMode.ImmediateLoad);
+        LifeProjectileTexture = ModContent.Request<Texture2D>("KillLife/LifeProjectile", AssetRequestMode.ImmediateLoad);
         base.SetStaticDefaults();
     }
 
     public override void SetDefaults()
     {
-        EffectApplay.TryAdd(NetmodeID.MultiplayerClient, KillLifePlayer);
-        EffectApplay.TryAdd(NetmodeID.Server, KillLifeNPC);
-        EffectApplay.TryAdd(NetmodeID.SinglePlayer,() => { KillLifeNPC(); KillLifePlayer(); });
+        EffectApply.TryAdd(NetmodeID.MultiplayerClient, KillLifePlayer);
+        EffectApply.TryAdd(NetmodeID.Server, KillLifeNPC);
+        EffectApply.TryAdd(NetmodeID.SinglePlayer,() => { KillLifeNPC(); KillLifePlayer(); });
+
+        PreDrawApply.TryAdd((int)Status.Golex, () => { ProjectileGolexDraw(); ItemGolexDraw(); });
+       
     }
 
     public override bool PreAI()
     {
+        //Main.lightning = 100;
         if (Projectile.owner == Main.myPlayer) {
             Position = Main.MouseWorld;
+            gloexScale = Math.Clamp(gloexScale + 0.1f, 0f, 3f);
             if (netTimer % 2 == 0) {
                 SendPosition(this);
+                SendGloexScale(this);
             }
-
             if (Owner == null || Owner.channel != true) {
                 Projectile.Kill();
             }
@@ -226,20 +290,44 @@ public class LifeProjectile : ModProjectile
         Projectile.Center = Position;
         netTimer++;
         Owner.heldProj = Projectile.whoAmI;
-        EffectApplay[Main.netMode]();
+        if(statu == Status.Life)
+            EffectApply[Main.netMode]();
+
+        if (Owner.channel == false && gloexScale > 6f)
+            statu = Status.Life;
         return base.PreAI();
     }
 
     public override bool PreDraw(ref Color lightColor)
     {
-        float basicRotation = -45f;
-        #region 蓄力时的绘制行为
-        Owner.SetCompositeArmFront(true, Player.CompositeArmStretchAmount.Full, MathHelper.ToRadians(90f) * Owner.direction * -1);
-        Owner.SetCompositeArmBack(true, Player.CompositeArmStretchAmount.Full, MathHelper.ToRadians(90f) * Owner.direction * -1);
-        /*LifePlayerLayer.FrontDraw += () => */
-        Main.spriteBatch.Draw(LifeItemTexture.Value, Owner.SmoothCenter() + new Vector2(20f * Owner.direction,-15f) - Main.screenPosition, null, Color.White, MathHelper.ToRadians(basicRotation) + Owner.fullRotation, LifeItemTexture.Center(), 2f, SpriteEffects.None, 1f);
-        #endregion
+        PreDrawApply[(int)statu]();
         return false;
+    }
+
+    /// <summary>
+    /// <see cref="KillLife.ClientLifeProjectileGloexScale(BinaryReader, int)"/>
+    /// <see cref="KillLife.ServerLifeProjectileGloexScale(BinaryReader, int)"/>
+    /// </summary>
+    /// <param name="projectile"></param>
+    /// <exception cref="System.Exception"></exception>
+    public static void SendGloexScale(LifeProjectile projectile)
+    {
+        if (Main.netMode == NetmodeID.SinglePlayer)
+            return;
+        if (NetmodeID.MultiplayerClient != Main.netMode) {
+            throw new System.Exception("不能在非客户端使用" + nameof(SendGloexScale) + "方法");
+        }
+
+        var packet = projectile.Mod.GetPacket();
+        WriteGloexScale(packet, projectile);
+        packet.Send(); //客户端唯一的发送方只有服务器
+    }
+
+    public static void WriteGloexScale(ModPacket packet, LifeProjectile projectile)
+    {
+        packet.Write((int)NetType.LifeProjectileGloexScale);
+        packet.Write(projectile.gloexScale);
+        packet.Write(projectile.netField);
     }
 
     public static void SendPosition(LifeProjectile projectile)
@@ -255,7 +343,6 @@ public class LifeProjectile : ModProjectile
         packet.Write(projectile.netField);
         packet.Send(); //客户端唯一的发送方只有服务器
     }
-
     #region EffectAppaly
     /// <summary>
     /// 对弹幕碰撞箱内的npc造成治疗
@@ -309,6 +396,87 @@ public class LifeProjectile : ModProjectile
     }
     #endregion
 
+    #region PreDrawApply
+    private static SpriteBatchParams NonPremultipliedParams => new SpriteBatchParams()
+    {
+        BlendState = BlendState.NonPremultiplied,
+        SamplerState = SamplerState.PointClamp,
+        DepthStencilState = DepthStencilState.None,
+        RasterizerState = RasterizerState.CullNone,
+        Effect = null,
+        SortMode = SpriteSortMode.Immediate,
+        TransformMatrix = Main.GameViewMatrix.TransformationMatrix
+    };
+
+    private float ProjectileDrawOffsety => LifeItemTexture.Height() * itemDrawScale;
+    private float projectileDrawScale = 0f;
+    private Vector2 ProjectileDrawPositionScreen => ItemDrawPosition + new Vector2(0f, ProjectileDrawOffsety * -1).RotatedBy(Owner.fullRotation) - Main.screenPosition;
+
+    /// <summary>
+    /// 弹幕蓄力的绘制
+    /// </summary>
+    private void ProjectileGolexDraw()
+    {
+        projectileDrawScale = Math.Clamp(projectileDrawScale + gloexScale * 0.01f, 0f, 0.5f);
+        Main.spriteBatch.TakeSnapshotAndEnd(out var snapshot);
+        NonPremultipliedParams.TransformMatrix = snapshot.TransformMatrix;
+        Main.spriteBatch.Begin(NonPremultipliedParams);
+        Main.spriteBatch.Draw(LifeProjectileTexture.Value, ProjectileDrawPositionScreen, null, Color.Red, 0f, LifeProjectileTexture.Center(), projectileDrawScale, SpriteEffects.None, 1f);
+        Main.spriteBatch.Restart(snapshot);
+    }
+
+    /// <summary>
+    /// 物品绘制缩放大小
+    /// </summary>
+    private float itemDrawScale = 2f;
+    /// <summary>
+    /// 物品绘制基于玩家中心偏移的x值
+    /// </summary>
+    private float itemDrawPlayerOffsetx = 20;
+    /// <summary>
+    /// 物品绘制基于玩家中心偏移的y值
+    /// </summary>
+    private float itemDrawPlayerOffsety = -15;
+    /// <summary>
+    /// 物品绘制基于玩家中心的坐标
+    /// </summary>
+    private Vector2 ItemDrawPlayerOffset
+    {
+        get
+        {
+            return new Vector2(itemDrawPlayerOffsetx * Owner.direction, itemDrawPlayerOffsety);
+        }
+        set
+        {
+            itemDrawPlayerOffsetx = value.X;
+            itemDrawPlayerOffsety = value.Y;
+        }
+    }
+
+    /// <summary>
+    /// 物品绘制的屏幕坐标
+    /// </summary>
+    private Vector2 ItemDrawPositionScreen => ItemDrawPosition - Main.screenPosition;
+    private Vector2 ItemDrawPosition => Owner.SmoothCenter() + ItemDrawPlayerOffset;
+
+    /// <summary>
+    /// 绘制玩家手的旋转和武器
+    /// </summary>
+    private void ItemGolexDraw()
+    {
+        float basicRotation = -45f;
+        Owner.SetCompositeArmFront(true, Player.CompositeArmStretchAmount.Full, MathHelper.ToRadians(90f) * Owner.direction * -1);
+        Owner.SetCompositeArmBack(true, Player.CompositeArmStretchAmount.Full, MathHelper.ToRadians(90f) * Owner.direction * -1);
+        Main.spriteBatch.Draw(LifeItemTexture.Value, ItemDrawPositionScreen, null, Color.White, MathHelper.ToRadians(basicRotation) + Owner.fullRotation, LifeItemTexture.Center(), itemDrawScale, SpriteEffects.None, 1f);
+    }
+    #endregion
+
+    public enum Status
+    {
+        Golex,
+        Life
+    }
+
 }
 
 public class LifeItem : ModItem
@@ -355,7 +523,7 @@ public class LifeItem : ModItem
             SendNetField();
             Main.NewText("NetField: " + lifeProjectileNetField);
         }
-
+        
         return false;
     }
 }
@@ -364,8 +532,10 @@ public class LifeItem : ModItem
 public enum NetType
 {
     LifeProjectilePosition,
-    LifeProjectileNetField
+    LifeProjectileNetField,
+    LifeProjectileGloexScale
 }
+
 
 public static class EntityExtension
 {

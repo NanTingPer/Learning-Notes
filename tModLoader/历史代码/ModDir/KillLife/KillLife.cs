@@ -1,17 +1,11 @@
 using Microsoft.Xna.Framework;
-using Microsoft.Xna.Framework.Graphics;
-using ReLogic.Content;
 using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using Terraria;
-using Terraria.DataStructures;
 using Terraria.ID;
-using Terraria.Localization;
 using Terraria.ModLoader;
-
-using static KillLife.KillLife;
 
 namespace KillLife;
 
@@ -26,12 +20,14 @@ namespace KillLife;
 /// 
 /// 进度 :
 ///     1. 完成了治疗与治疗的联机同步
-/// 
+///     2. 物品使用时的绘制问题
+///     3. 弹幕蓄力才能治疗 最低1s
+///     4. 弹幕蓄力时的行为(在剑的上面)
+///     5. 弹幕蓄力完成后的行为
 /// 计划 :
-///     1. 物品使用时的绘制问题
-///     2. 弹幕蓄力才能治疗 最低1s
-///     3. 弹幕蓄力时的行为(在剑的上面)
-///     4. 弹幕蓄力完成后的行为
+///     1. 最终优化以及Bug修复
+///     
+///     
 /// </summary>
 // Please read https://github.com/tModLoader/tModLoader/wiki/Basic-tModLoader-Modding-Guide#mod-skeleton-contents for more information about the various files in a mod.
 public class KillLife : Mod
@@ -59,6 +55,7 @@ public class KillLife : Mod
     /// <summary>
     /// <para> 由于 <see cref="Main.projectile"/> 不保证弹幕顺序 </para> 
     /// <para> 此字段用于 <see cref="LifeProjectile"/> 唯一标识符 </para>
+    /// <para> 事已至此 先睡觉吧 <see cref="Projectile.identity"/> <see cref="Main.projectileIdentity"/> </para> 
     /// </summary>
     public static int lifeProjectileNetField = 0;
     public override void HandlePacket(BinaryReader reader, int whoAmI)
@@ -137,14 +134,6 @@ public class KillLife : Mod
         Vector2 position = reader.ReadVector2();
         int netfieldValue = reader.ReadInt32();
 
-        //var tarProjectile =
-        //    from proj in Main.projectile
-        //    where proj.ModProjectile != null && proj.ModProjectile is LifeProjectile
-        //    select proj.ModProjectile as LifeProjectile
-        //    into lifep
-        //    where lifep.netField == netfieldValue
-        //    select lifep;
-
         var tarProjectile = GetLifeProjectiles(netfieldValue);
         foreach(var proj in tarProjectile) {
             proj.Position = position;
@@ -156,6 +145,7 @@ public class KillLife : Mod
         packet.Write(netfieldValue);
         packet.Send(ignoreClient: whoAmI);
     }
+
     #endregion
 
     #region Client Hander
@@ -232,377 +222,3 @@ public class KillLife : Mod
             select p1;
     }
 }
-
-public class LifeProjectile : ModProjectile
-{
-    public static Asset<Texture2D> LifeItemTexture { get; private set; }
-    public static Asset<Texture2D> LifeProjectileTexture { get; private set; }
-
-    public override string Texture => "Terraria/Images/Projectile_" + ProjectileID.EmpressBlade;
-    public Vector2 Position = Main.player[Main.myPlayer].Center;
-    /// <summary>
-    /// <see cref="netTimer"/> % 2 == 0 则对 <see cref="Position"/> 进行同步
-    /// </summary>
-    public int netTimer = 0;
-    public int netField => (int)Projectile.ai[0];
-    /// <summary>
-    /// 是否出于可以进行治疗阶段，如果为 false 则是蓄力
-    /// </summary>
-    public Status statu = Status.Golex;
-    /// <summary>
-    /// 蓄力大小 每 Tick + 0.1f
-    /// </summary>
-    public float gloexScale = 0f;
-    public Player Owner => Main.player[Projectile.owner];
-    public readonly Dictionary<int, Action> EffectApply = [];
-    public readonly Dictionary<int, Action> PreDrawApply = [];
-    public override void SetStaticDefaults()
-    {
-        LifeItemTexture = ModContent.Request<Texture2D>("KillLife/LifeItem", AssetRequestMode.ImmediateLoad);
-        LifeProjectileTexture = ModContent.Request<Texture2D>("KillLife/LifeProjectile", AssetRequestMode.ImmediateLoad);
-        base.SetStaticDefaults();
-    }
-
-    public override void SetDefaults()
-    {
-        EffectApply.TryAdd(NetmodeID.MultiplayerClient, KillLifePlayer);
-        EffectApply.TryAdd(NetmodeID.Server, KillLifeNPC);
-        EffectApply.TryAdd(NetmodeID.SinglePlayer,() => { KillLifeNPC(); KillLifePlayer(); });
-
-        PreDrawApply.TryAdd((int)Status.Golex, () => { ProjectileGolexDraw(); ItemGolexDraw(); });
-       
-    }
-
-    public override bool PreAI()
-    {
-        //Main.lightning = 100;
-        if (Projectile.owner == Main.myPlayer) {
-            Position = Main.MouseWorld;
-            gloexScale = Math.Clamp(gloexScale + 0.1f, 0f, 3f);
-            if (netTimer % 2 == 0) {
-                SendPosition(this);
-                SendGloexScale(this);
-            }
-            if (Owner == null || Owner.channel != true) {
-                Projectile.Kill();
-            }
-        }
-        Projectile.Center = Position;
-        netTimer++;
-        Owner.heldProj = Projectile.whoAmI;
-        if(statu == Status.Life)
-            EffectApply[Main.netMode]();
-
-        if (Owner.channel == false && gloexScale > 6f)
-            statu = Status.Life;
-        return base.PreAI();
-    }
-
-    public override bool PreDraw(ref Color lightColor)
-    {
-        PreDrawApply[(int)statu]();
-        return false;
-    }
-
-    /// <summary>
-    /// <see cref="KillLife.ClientLifeProjectileGloexScale(BinaryReader, int)"/>
-    /// <see cref="KillLife.ServerLifeProjectileGloexScale(BinaryReader, int)"/>
-    /// </summary>
-    /// <param name="projectile"></param>
-    /// <exception cref="System.Exception"></exception>
-    public static void SendGloexScale(LifeProjectile projectile)
-    {
-        if (Main.netMode == NetmodeID.SinglePlayer)
-            return;
-        if (NetmodeID.MultiplayerClient != Main.netMode) {
-            throw new System.Exception("不能在非客户端使用" + nameof(SendGloexScale) + "方法");
-        }
-
-        var packet = projectile.Mod.GetPacket();
-        WriteGloexScale(packet, projectile);
-        packet.Send(); //客户端唯一的发送方只有服务器
-    }
-
-    public static void WriteGloexScale(ModPacket packet, LifeProjectile projectile)
-    {
-        packet.Write((int)NetType.LifeProjectileGloexScale);
-        packet.Write(projectile.gloexScale);
-        packet.Write(projectile.netField);
-    }
-
-    public static void SendPosition(LifeProjectile projectile)
-    {
-        if (Main.netMode == NetmodeID.SinglePlayer)
-            return;
-        if (NetmodeID.MultiplayerClient != Main.netMode) {
-            throw new System.Exception("不能在非客户端使用" + nameof(SendPosition) + "方法");
-        }
-        var packet = projectile.Mod.GetPacket();
-        packet.Write((int)NetType.LifeProjectilePosition);
-        packet.WriteVector2(projectile.Position);
-        packet.Write(projectile.netField);
-        packet.Send(); //客户端唯一的发送方只有服务器
-    }
-    #region EffectAppaly
-    /// <summary>
-    /// 对弹幕碰撞箱内的npc造成治疗
-    /// </summary>
-    /// <exception cref="Exception">不应该在非 Server || SinglePlayer 下调用此方法</exception>
-    private void KillLifeNPC()
-    {
-        if (Main.netMode == NetmodeID.Server || Main.netMode == NetmodeID.SinglePlayer) {
-            foreach (var npc in Main.ActiveNPCs) {
-                if (npc.CollidingAABB(Projectile)) {
-                    var lifeAdd = 50;
-                    var addlife = npc.life + 50;
-                    var subLife = addlife - npc.lifeMax;
-                    npc.life += npc.life + lifeAdd > npc.lifeMax ? npc.life - npc.lifeMax : lifeAdd;
-                    npc.HealEffect(lifeAdd);
-                    npc.netUpdate = true;
-                    Owner.dpsDamage += 50;
-                    if (subLife > 0) {
-                        Owner.dpsDamage -= subLife;
-                        npc.StrikeNPC(new NPC.HitInfo() { Damage = subLife });
-                    }
-                }
-            }
-        } else {
-            throw new Exception($"不应该在非 Server || SinglePlayer 下调用此方法 {GetType().FullName}.{nameof(KillLifeNPC)}");
-        }
-    }
-
-    /// <summary>
-    /// 对碰撞箱内的玩家进行治疗
-    /// </summary>
-    /// <exception cref="Exception">不应该在非 Server || SinglePlayer 下调用此方法</exception>
-    private void KillLifePlayer()
-    {
-        if (Main.netMode == NetmodeID.SinglePlayer || Main.netMode == NetmodeID.MultiplayerClient) {
-            foreach (var player in Main.ActivePlayers) {
-                if (player.CollidingAABB(Projectile)) {
-                    var lifeAdd = 50;
-                    var addlife = player.statLife + 50;
-                    var subLife = addlife - player.statLifeMax2;
-                    player.Heal(lifeAdd);//会调用SendMessage() 向服务器同步
-                    if (subLife > 0) {
-                        player.Hurt(PlayerDeathReason.ByCustomReason(NetworkText.FromLiteral("好像挂掉了")), subLife, 0);
-                        player.immuneTime = 0;
-                    }
-                }
-            }
-        } else {
-            throw new Exception($"不应该在非 Server || SinglePlayer 下调用此方法 {GetType().FullName}.{nameof(KillLifePlayer)}");
-        }
-    }
-    #endregion
-
-    #region PreDrawApply
-    private static SpriteBatchParams NonPremultipliedParams => new SpriteBatchParams()
-    {
-        BlendState = BlendState.NonPremultiplied,
-        SamplerState = SamplerState.PointClamp,
-        DepthStencilState = DepthStencilState.None,
-        RasterizerState = RasterizerState.CullNone,
-        Effect = null,
-        SortMode = SpriteSortMode.Immediate,
-        TransformMatrix = Main.GameViewMatrix.TransformationMatrix
-    };
-
-    private float ProjectileDrawOffsety => LifeItemTexture.Height() * itemDrawScale;
-    private float projectileDrawScale = 0f;
-    private Vector2 ProjectileDrawPositionScreen => ItemDrawPosition + new Vector2(0f, ProjectileDrawOffsety * -1).RotatedBy(Owner.fullRotation) - Main.screenPosition;
-
-    /// <summary>
-    /// 弹幕蓄力的绘制
-    /// </summary>
-    private void ProjectileGolexDraw()
-    {
-        projectileDrawScale = Math.Clamp(projectileDrawScale + gloexScale * 0.01f, 0f, 0.5f);
-        Main.spriteBatch.TakeSnapshotAndEnd(out var snapshot);
-        NonPremultipliedParams.TransformMatrix = snapshot.TransformMatrix;
-        Main.spriteBatch.Begin(NonPremultipliedParams);
-        Main.spriteBatch.Draw(LifeProjectileTexture.Value, ProjectileDrawPositionScreen, null, Color.Red, 0f, LifeProjectileTexture.Center(), projectileDrawScale, SpriteEffects.None, 1f);
-        Main.spriteBatch.Restart(snapshot);
-    }
-
-    /// <summary>
-    /// 物品绘制缩放大小
-    /// </summary>
-    private float itemDrawScale = 2f;
-    /// <summary>
-    /// 物品绘制基于玩家中心偏移的x值
-    /// </summary>
-    private float itemDrawPlayerOffsetx = 20;
-    /// <summary>
-    /// 物品绘制基于玩家中心偏移的y值
-    /// </summary>
-    private float itemDrawPlayerOffsety = -15;
-    /// <summary>
-    /// 物品绘制基于玩家中心的坐标
-    /// </summary>
-    private Vector2 ItemDrawPlayerOffset
-    {
-        get
-        {
-            return new Vector2(itemDrawPlayerOffsetx * Owner.direction, itemDrawPlayerOffsety);
-        }
-        set
-        {
-            itemDrawPlayerOffsetx = value.X;
-            itemDrawPlayerOffsety = value.Y;
-        }
-    }
-
-    /// <summary>
-    /// 物品绘制的屏幕坐标
-    /// </summary>
-    private Vector2 ItemDrawPositionScreen => ItemDrawPosition - Main.screenPosition;
-    private Vector2 ItemDrawPosition => Owner.SmoothCenter() + ItemDrawPlayerOffset;
-
-    /// <summary>
-    /// 绘制玩家手的旋转和武器
-    /// </summary>
-    private void ItemGolexDraw()
-    {
-        float basicRotation = -45f;
-        Owner.SetCompositeArmFront(true, Player.CompositeArmStretchAmount.Full, MathHelper.ToRadians(90f) * Owner.direction * -1);
-        Owner.SetCompositeArmBack(true, Player.CompositeArmStretchAmount.Full, MathHelper.ToRadians(90f) * Owner.direction * -1);
-        Main.spriteBatch.Draw(LifeItemTexture.Value, ItemDrawPositionScreen, null, Color.White, MathHelper.ToRadians(basicRotation) + Owner.fullRotation, LifeItemTexture.Center(), itemDrawScale, SpriteEffects.None, 1f);
-    }
-    #endregion
-
-    public enum Status
-    {
-        Golex,
-        Life
-    }
-
-}
-
-public class LifeItem : ModItem
-{
-    //public override string Texture => "Terraria/Images/Projectile_" + ProjectileID.EmpressBlade;
-    public override void SetDefaults()
-    {
-        Item.damage = 0;
-        Item.autoReuse = false;
-        Item.useTime = 20;
-        Item.useAnimation = 20;
-
-        Item.useStyle = ItemUseStyleID.HoldUp;
-        Item.DamageType = DamageClass.Generic;
-
-        Item.noUseGraphic = true;
-        Item.noMelee = true;
-
-        Item.shoot = projType;
-
-        Item.channel = true;
-        base.SetDefaults();
-    }
-
-    public override bool AltFunctionUse(Player player)
-    {
-        return base.AltFunctionUse(player);
-    }
-
-    private readonly static int projType = ModContent.ProjectileType<LifeProjectile>();
-
-    public override bool CanUseItem(Player player)
-    {
-        if(player.ownedProjectileCounts[projType] > 0) {
-            return false;
-        }
-        return base.CanUseItem(player);
-    }
-
-    public override bool Shoot(Player player, EntitySource_ItemUse_WithAmmo source, Vector2 position, Vector2 velocity, int type, int damage, float knockback)
-    {
-        if (player.ownedProjectileCounts[projType] == 0) {
-            Projectile.NewProjectile(player.GetSource_ItemUse(this.Item), Main.MouseWorld, default, ModContent.ProjectileType<LifeProjectile>(), default, default, player.whoAmI, lifeProjectileNetField);
-            SendNetField();
-            Main.NewText("NetField: " + lifeProjectileNetField);
-        }
-        
-        return false;
-    }
-}
-
-
-public enum NetType
-{
-    LifeProjectilePosition,
-    LifeProjectileNetField,
-    LifeProjectileGloexScale
-}
-
-
-public static class EntityExtension
-{
-    public static bool CollidingAABB(this Entity entity1, Entity entity2)
-    {
-        var projHitbox = new Rectangle((int)entity1.position.X, (int)entity1.position.Y, entity1.width, entity1.height);
-        var targetHitbox = new Rectangle((int)entity2.position.X, (int)entity2.position.Y, entity2.width, entity2.height);
-        Vector2 pos1 = new(projHitbox.X, projHitbox.Y);
-        Vector2 boom1 = new(projHitbox.Width, projHitbox.Height);
-
-        Vector2 pos2 = new(targetHitbox.X, targetHitbox.Y);
-        Vector2 boom2 = new(targetHitbox.Width, targetHitbox.Height);
-        return Collision.CheckAABBvAABBCollision(pos1, boom1, pos2, boom2);
-    }
-}
-
-public static class AssetExtension
-{
-    public static Vector2 Center(this Asset<Texture2D> asset)
-    {
-        var height = asset.Height();
-        var width = asset.Width();
-
-        return new Vector2(width / 2, height / 2);
-    }
-}
-
-public static class PlayerExtension
-{
-    public static Vector2 SmoothCenter(this Player player)
-    {
-        return player.MountedCenter.Floor() + new Vector2(0, player.gfxOffY);
-    }
-}
-
-#region Del
-//public class LifePlayerLayer : PlayerDrawLayer
-//{
-//    public override void Load()
-//    {
-//        base.Load();
-//    }
-
-//    public override Position GetDefaultPosition()
-//    {
-//        //return new AfterParent(PlayerDrawLayers.FrontAccBack);
-//        //return new AfterParent(PlayerDrawLayers.FrontAccFront);
-//        //return new AfterParent(PlayerDrawLayers.HeldItem);
-
-//        return new BeforeParent(PlayerDrawLayers.HeldItem);
-//    }
-
-//    public override bool GetDefaultVisibility(PlayerDrawSet drawInfo)
-//    {
-//        return !(FrontDraw == null);
-//    }
-
-//    /// <summary>
-//    /// 在玩家双手之间绘制
-//    /// </summary>
-//    public static event Action FrontDraw;
-//    protected override void Draw(ref PlayerDrawSet drawInfo)
-//    {
-//        FrontDraw?.Invoke();
-//        foreach (var item in FrontDraw.GetInvocationList()) {
-//            FrontDraw -= (Action)item;
-//        }
-//    }
-//}
-#endregion

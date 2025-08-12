@@ -26,8 +26,53 @@
    }
    ```
 
+
+
+
+
+
+## 2025/08/12
+
+### 无Key物块合成站汉化问题
+
+1. 使用`TileID.Search`，例如血月天塔柱的合成站是无文本的，会被替换为英文
+
+   ```cs
+   TileID.Search.Remove(480);
+   TileID.Search.Add("血月天塔柱", 480);
+   ```
+
+2. 直接删除此合成表所需的制作站，替换为条件
+
+   ```cs
+   public class Update : ModSystem
+   {
+       public static Condition condition =
+           new Condition(Language.GetOrRegister(Guid.NewGuid().ToString(), () => "血月天塔柱"), () => Main.player[Main.myPlayer].adjTile[480]);
+   
+       public override void PostAddRecipes()
+       {
+           _ = Main.recipe
+               .Where(r => r.HasTile(480))
+               .Select(r => {
+                   r.RemoveTile(480);
+                   r.AddCondition(condition);
+                   return 1;
+               })
+               .ToArray()
+               ;
+           base.PostAddRecipes();
+       }
+   }
+   ```
+
    
 
+### 如何监听护士治疗等(未试验)
 
+| 类         | 方法               | 回答场景                                      |
+| ---------- | ------------------ | --------------------------------------------- |
+| ModPlayer  | PostNurseHeal      | 监听护士治疗                                  |
+| 搜索breath |                    | 水中窒息                                      |
+| ModPlayer  | UpdateBadLifeRegen | 判断lifeRegen值<br>负数就是回复跟不上`debuff` |
 
-   

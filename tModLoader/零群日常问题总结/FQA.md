@@ -156,3 +156,17 @@ public class WorldGenNPCSystem : ModSystem
 
 
 
+## 2025/08/14
+
+### 关于静态类
+
+IL层面其实是sealed abstract`250343`
+
+
+
+### 加载XNB字体
+
+```cs
+private static Asset<DynamicSpriteFont> font = ModContent.Request<DynamicSpriteFont>("ModName/华文细黑", AssetRequestMode.ImmediateLoad);
+```
+

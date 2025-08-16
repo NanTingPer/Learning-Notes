@@ -170,3 +170,89 @@ IL层面其实是sealed abstract`250343`
 private static Asset<DynamicSpriteFont> font = ModContent.Request<DynamicSpriteFont>("ModName/华文细黑", AssetRequestMode.ImmediateLoad);
 ```
 
+
+
+## 2025/08/15
+
+### 关于Dust的问题
+
+在`ModDust`的`MidUpdate`里，无论最后是`return true`（不跑原版dust update）还是`return false`（跑原版dust update），都无法正常操作`dust.fadein`
+想要像npc或proj的ai[n]一样操作`fadein`，请使用`ModDust`的`Update` `updatetype是不是-1都有问题`
+
+如果想写一个完全属于自己的`Dust`就需要在`Update`返回`false`
+
+
+
+## 2025/08/16
+
+### 模组加载顺序问题
+
+> 好的我无法分析
+
+```tex
+ModA:
+displayName = A
+author = a
+sortAfter = B
+
+ModB:
+displayName = B
+author = b
+weakReferences = C
+side = NoSync
+
+ModC:
+displayName = C
+author = c
+```
+
+```tex
+螺线: 
+	有B是 -> CBA
+	没有B是 -> AC
+	A和C都是Both,所以可能会错位
+	B换成client也一样
+	反正都是可能加载可能不加载的意思
+	
+依稀:
+	这里报错是要求如果你sortafter一个client或者nosync的话，就必须sortafter那个模组的一切引用
+	按照螺线说的情况，确实必须这么要求
+	
+螺线:
+	比如我模组本身是内容向，需要Both
+	但是我需要用一个UI库
+	而UI库这种东西其实Client就行了
+	这种时候是不是可以把UI库标NoSync
+	这样Both的模组引用的时候服务端加载
+	只有Client模组引用的时候就客户端加载就够了
+	我觉得NoSync应该这么用
+```
+
+
+
+### 音频播放的位置移动
+
+> 音频在生成后 更改其位置可以改变播放位置
+
+```cs
+public class SoundPlayer : ModPlayer
+{
+    public static SlotId slotid;
+    public override async void OnEnterWorld()
+    {
+        var ss = new SoundStyle("ModName/路径"); //wav . mp3 . ogg . xnb 等都行 不需要后缀
+        await Task.Delay(1000);
+        slotid = SoundEngine.PlaySound(ss);
+        base.OnEnterWorld();
+    }
+
+    public override void PreUpdate()
+    {
+        if(SoundEngine.TryGetActiveSound(slotid, out var acs)) {
+            acs.Position = Main.MouseWorld;
+        }
+        base.PreUpdate();
+    }
+}
+```
+

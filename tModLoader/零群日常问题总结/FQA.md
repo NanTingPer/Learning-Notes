@@ -1,3 +1,12 @@
+---
+title: "tModLoader 零群问题收纳"
+date: 2025-08-16T18:40:00+08:00
+draft: false
+tags: ["tModLoader"]
+---
+
+
+
 ## 2025/08/11
 
 ### 模组联动中其他模组类型`Type`获取问题
@@ -256,3 +265,6 @@ public class SoundPlayer : ModPlayer
 }
 ```
 
+
+
+已经退出群聊

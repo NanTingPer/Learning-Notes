@@ -62,7 +62,7 @@ public class TerrariaServer
         RedirectStandardInput = true,
         RedirectStandardError = true,
         StandardErrorEncoding = Encoding.UTF8,
-        StandardInputEncoding = Encoding.UTF8,
+        StandardInputEncoding = Encoding.Unicode, //需要Unicode 前面的问题 就是他！
         StandardOutputEncoding = Encoding.UTF8,
         FileName = "C:\\Program Files (x86)\\Steam\\steamapps\\common\\Terraria\\TerrariaServer.exe"
     };
@@ -88,37 +88,34 @@ public class TerrariaServer
 
         isRun = true;
         ServerProcess = Process.Start(startInfo)!;
-        ServerProcess.OutputDataReceived += ReadProcessOutput;
         ProcessId = ServerProcess.Id;
         Start?.Invoke(ProcessId);
 
-        Task.Factory.StartNew(() => {
-            while (!ServerProcess.HasExited) { 
-                if((DateTime.Now - readTime).TotalSeconds > 3) {
-                    WriteLine();
-                    readTime = DateTime.Now;
-                }
-            }
-        }, taskToken.Token);
-        //ServerProcess.OutputDataReceived += WriteLine;
-
         ServerProcess.StandardInput.AutoFlush = true;
         return Task.Factory.StartNew(() => {
+            StringBuilder line = new StringBuilder();
+            string lineText = "";
             while (!ServerProcess.HasExited) {
-                var lineText = ServerProcess.StandardOutput.ReadLine();
-                readTime = DateTime.Now;
-                Console.WriteLine(lineText);
-                if (string.IsNullOrWhiteSpace(lineText)) {
-                    continue;
+                char[] @char = new char[1];
+                ServerProcess.StandardOutput.Read(@char, 0, 1);
+                if (@char[0] != Environment.NewLine[0]) { //不是换行符
+                    line.Append(@char);
+                    lineText = line.ToString();
+                    if (lineText.StartsWith('\n') || lineText.StartsWith('\r')) {
+                        lineText = lineText[1..];
+                    }
+                } else { //是换行符
+                    if (!string.IsNullOrWhiteSpace(lineText)) {
+                        logOutput.Add(lineText);
+                    }
+                    line.Clear();
                 }
-                logOutput.Add(lineText);
+
+                Console.Write(@char);
+                if (lineText.Equals("Choose World: "))
+                    /*preRead = () => */WriteLine();
             }
         }, taskToken.Token);
-    }
-
-    private void ReadProcessOutput(object sender, DataReceivedEventArgs e)
-    {
-        _ = e.Data;
     }
 
     private void WriteLine()
@@ -130,7 +127,7 @@ public class TerrariaServer
         }
     }
 
-    private void ChoiceWorld()
+    private async void ChoiceWorld()
     {
         //计算是否有世界，没有就返回空
         var startIndex = logOutput.FindIndex(f => f.StartsWith("Terraria Server"));
@@ -160,8 +157,24 @@ public class TerrariaServer
 
         //选择世界
         var index = worldList.FirstOrDefault(kv => kv.Value.Equals(Info.WorldName)).Key;
-        ServerProcess!.StandardInput.Write(index);
-        Console.WriteLine(index);
+        await Task.Delay(1000);
+        ServerProcess!.StandardInput.WriteLine(index);
+
+        await Task.Delay(500);
+        //设置人数
+        ServerProcess!.StandardInput.WriteLine(); //默认16
+
+        await Task.Delay(500);
+        //设置端口
+        ServerProcess.StandardInput.WriteLine(Info.Port);
+
+        await Task.Delay(500);
+        //自动端口转发
+        ServerProcess.StandardInput.WriteLine();
+
+        await Task.Delay(500);
+        //服务器密码
+        ServerProcess.StandardInput.WriteLine(Info.Passwd);
     }
 
     public void Stop()
@@ -201,32 +214,20 @@ public class TerrariaServerManager
     private List<TerrariaServer> Servers { get; init; } = [];
     private readonly List<int> processIds = [];
 
-    public TerrariaServerManager()
-    {
-        AppDomain.CurrentDomain.ProcessExit += KillAll;
-        Console.CancelKeyPress += Console_CancelKeyPress;
+    public TerrariaServerManager() {
     }
 
-    private void Console_CancelKeyPress(object? sender, ConsoleCancelEventArgs e)
+    private void Console_CancelKeyPress()
     {
         foreach (var item in Servers) {
             try {
                 item.Stop();
             } catch (Exception) { }
         }
-        //processIds.ForEach(id => {
-        //    try {
-        //
-        //        //var pro = Process.GetProcessById(id);
-        //        //pro.Kill();
-        //        //pro.WaitForExit(1000);
-        //    } catch (Exception) { }
-        //});
     }
 
     private void KillAll(object? sender, EventArgs e)
     {
-        //processIds.ForEach(id => Process.GetProcessById(id).Kill());
     }
 
     public Task Run(TerrariaServer server)

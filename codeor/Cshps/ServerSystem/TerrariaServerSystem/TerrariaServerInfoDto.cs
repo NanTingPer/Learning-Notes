@@ -1,6 +1,4 @@
-﻿using TerrariaServerSystem;
-
-namespace TerrariaServerAPI.Models;
+﻿namespace TerrariaServerSystem;
 
 public class TerrariaServerInfoDto
 {
@@ -25,10 +23,10 @@ public class TerrariaServerInfoDto
     {
         return new TerrariaServerInfo()
         {
-            Name = this.Name,
-            WorldName = this.WorldName,
-            Port = this.Port,
-            Passwd = this.Passwd,
+            Name = Name,
+            WorldName = WorldName,
+            Port = Port,
+            Passwd = Passwd,
         };
     }
 }

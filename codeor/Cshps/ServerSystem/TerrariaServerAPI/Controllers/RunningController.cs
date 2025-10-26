@@ -1,6 +1,4 @@
 ﻿using Microsoft.AspNetCore.Mvc;
-using TerrariaServerAPI.Models;
-using TerrariaServerAPI.Services;
 using TerrariaServerSystem;
 
 namespace TerrariaServerAPI.Controllers;

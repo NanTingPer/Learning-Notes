@@ -1,9 +1,4 @@
-﻿using System;
-using System.Threading.Tasks;
-using TerrariaServerAPI.Models;
-using TerrariaServerSystem;
-
-namespace TerrariaServerAPI.Services;
+﻿namespace TerrariaServerSystem;
 
 public class ServerManager
 {
@@ -153,27 +148,5 @@ public class ServerManager
         if(_servers.TryGetValue(identity, out var server)) {
             await server.ReStart();
         }
-    }
-}
-
-public class ExitServer(ServerManager server) : BackgroundService
-{
-    private readonly ServerManager _manager = server;
-    protected override async Task ExecuteAsync(CancellationToken stoppingToken)
-    {
-        while (!stoppingToken.IsCancellationRequested) {
-            await Task.Delay(10000, stoppingToken);
-        }
-    }
-
-    public override async Task StopAsync(CancellationToken cancellationToken)
-    {
-        List<Task> tasks = [];
-        await foreach (var item in _manager.StopAll()) {
-            tasks.Add(item);
-        }
-        ;
-
-        Task.WaitAll(tasks.ToArray(), cancellationToken);
     }
 }

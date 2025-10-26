@@ -2,7 +2,7 @@
 
 public class Program
 {
-    private static TerrariaServerManager serverManager = new ();
+    private static ServerManager serverManager = new ();
     static async Task Main(string[] args)
     {
         var serverInfo = new TerrariaServerInfo()
@@ -12,7 +12,6 @@ public class Program
             Port = 7777,
             WorldName = "启动！"
         };
-        var server = new TerrariaServer(serverInfo);
-        await serverManager.Run(server);
+        await serverManager.AddServer(serverInfo);
     }
 }

@@ -1,0 +1,34 @@
+﻿using TerrariaServerSystem;
+
+namespace TerrariaServerAPI.Models;
+
+public class TerrariaServerInfoDto
+{
+    public int Id { get; set; }
+    public string Name { get; set; } = "未命名";
+    public string WorldName { get; set; } = "";
+    public int Port { get; set; } = 7777;
+    public string Passwd { get; set; } = "";
+    public static TerrariaServerInfoDto Create(int key, TerrariaServerInfo info)
+    {
+        return new TerrariaServerInfoDto()
+        {
+            Id = key,
+            Name = info.Name,
+            WorldName = info.WorldName,
+            Port = info.Port,
+            Passwd = info.Passwd,
+        };
+    }
+
+    public TerrariaServerInfo Prototype()
+    {
+        return new TerrariaServerInfo()
+        {
+            Name = this.Name,
+            WorldName = this.WorldName,
+            Port = this.Port,
+            Passwd = this.Passwd,
+        };
+    }
+}

@@ -14,7 +14,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\TerrariaServerSystem\TerrariaServerSystem.csproj" />
+    <ProjectReference Include="..\TerrariaServerSystem\TerrariaServerSystemTestRun.csproj" />
   </ItemGroup>
 
 </Project>

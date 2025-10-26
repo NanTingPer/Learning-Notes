@@ -1,5 +1,7 @@
 ﻿using System.Diagnostics;
 using System.Text;
+using System.Threading.Tasks;
+using TerrariaServerSystem.Exceptions;
 
 namespace TerrariaServerSystem;
 
@@ -14,11 +16,12 @@ public class TerrariaServer
     /// <summary>
     /// 传入ProcessId
     /// </summary>
-    public event Action<int>? Start;
+    public event Action<int>? StartEvent;
+    public event Action<TerrariaServer>? StopEvent;
 
     #region Private Field
     private bool isRun = false;
-    private WriteStatus status = WriteStatus.ChoiceWorld;
+    //private WriteStatus status = WriteStatus.ChoiceWorld;
     private readonly static ProcessStartInfo startInfo = new ProcessStartInfo()
     {
         UseShellExecute = false, //不使用命令行执行
@@ -29,7 +32,7 @@ public class TerrariaServer
         StandardErrorEncoding = Encoding.UTF8,
         StandardInputEncoding = Encoding.Unicode, //需要Unicode 前面的问题 就是他！
         StandardOutputEncoding = Encoding.UTF8,
-        FileName = "C:\\Program Files (x86)\\Steam\\steamapps\\common\\Terraria\\TerrariaServer.exe"
+        FileName = Environment.GetEnvironmentVariable("TSPATH") ?? throw new NotVariable("没找到环境变量TSPATH，值为TerrariaServer的完整路径，或者Ts的完整路径") //"C:\\Program Files (x86)\\Steam\\steamapps\\common\\Terraria\\TerrariaServer.exe"
     };
 
     public Process? ServerProcess { get; private set; }
@@ -53,12 +56,12 @@ public class TerrariaServer
         isRun = true;
         ServerProcess = Process.Start(startInfo)!;
         ProcessId = ServerProcess.Id;
-        Start?.Invoke(ProcessId);
+        StartEvent?.Invoke(ProcessId);
         ServerProcess.StandardInput.AutoFlush = true;
         return Task.Factory.StartNew(() => {
             StringBuilder line = new StringBuilder();
             string lineText = "";
-            while (!ServerProcess.HasExited) {
+            while (ServerProcess != null && !ServerProcess.HasExited) {
                 char[] @char = new char[1];
                 ServerProcess.StandardOutput.Read(@char, 0, 1);
                 if (@char[0] != Environment.NewLine[0]) { //不是换行符
@@ -76,21 +79,34 @@ public class TerrariaServer
 
                 Console.Write(@char);
                 if (lineText.Equals("Choose World: "))
-                    /*preRead = () => */WriteLine();
+                    /*preRead = () => */ WriteLine();
             }
         }, taskToken.Token);
     }
 
-    private void WriteLine()
+    public async Task ReStart()
     {
-        switch (status) {
-            case WriteStatus.ChoiceWorld:
-                ChoiceWorld();
-                break;
-        }
+        await Stop();
+        _ = RunServer();
     }
 
-    private async void ChoiceWorld()
+    private async void WriteLine()
+    {
+        try {
+            await ChoiceWorld();
+        } catch {
+            await Stop();
+        }
+        //switch (status) {
+        //    case WriteStatus.ChoiceWorld:
+        //        await ChoiceWorld();
+        //        break;
+        //}
+    }
+
+    /// <exception cref="WorldListIsNullException"></exception>
+    /// <exception cref="NotWorldException"></exception>
+    private async Task ChoiceWorld()
     {
         //计算是否有世界，没有就返回空
         var startIndex = logOutput.FindIndex(f => f.StartsWith("Terraria Server"));
@@ -121,31 +137,44 @@ public class TerrariaServer
         //选择世界
         var index = worldList.FirstOrDefault(kv => kv.Value.Equals(Info.WorldName)).Key;
         await Task.Delay(1000);
+        //Thread.Sleep(1000);
         ServerProcess!.StandardInput.WriteLine(index);
 
         await Task.Delay(500);
+        //Thread.Sleep(500);
         //设置人数
         ServerProcess!.StandardInput.WriteLine(); //默认16
 
         await Task.Delay(500);
+        //Thread.Sleep(500);
         //设置端口
         ServerProcess.StandardInput.WriteLine(Info.Port);
 
         await Task.Delay(500);
+        //Thread.Sleep(500);
         //自动端口转发
         ServerProcess.StandardInput.WriteLine();
 
         await Task.Delay(500);
+        //Thread.Sleep(500);
         //服务器密码
         ServerProcess.StandardInput.WriteLine(Info.Passwd);
     }
 
-    public void Stop()
+    public async Task Stop()
     {
-        ServerProcess?.StandardInput.WriteLine("exit");
-        Task.Delay(500);
-        ServerProcess?.Kill();
-        ServerProcess?.Dispose();
-        taskToken.Cancel();
+        try {
+            StopEvent?.Invoke(this);
+            ServerProcess?.StandardInput.WriteLine("exit");
+            await Task.Delay(5000);
+            //ServerProcess?.WaitForExit(1000);
+            //if(!ServerProcess?.HasExited ?? false) {
+            ServerProcess?.Kill();
+            //}
+        } finally {
+            ServerProcess = null;
+            ServerProcess?.Dispose();
+            taskToken.Cancel();
+        }
     }
 }

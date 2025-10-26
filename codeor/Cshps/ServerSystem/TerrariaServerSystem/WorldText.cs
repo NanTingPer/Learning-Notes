@@ -7,7 +7,7 @@ public class WorldText(string text)
     {
         get
         {
-            var indexText = Text[0..1].Trim();
+            var indexText = Text[0..2].Trim();
             if(!int.TryParse(indexText, out int index)) {
                 return null;
             }

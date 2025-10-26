@@ -24,7 +24,7 @@ public class TerrariaServerManager
     public Task Run(TerrariaServer server)
     {
         Servers.Add(server);
-        server.Start += GetProId;
+        server.StartEvent += GetProId;
         return server.RunServer();
     }
 

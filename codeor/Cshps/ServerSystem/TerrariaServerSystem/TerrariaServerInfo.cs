@@ -1,6 +1,6 @@
 ﻿namespace TerrariaServerSystem;
 
-public class TerrariaServerInfo
+public record class TerrariaServerInfo
 {
     public string Name { get; set; } = "未命名";
     public string WorldName { get; set; } = "";

@@ -1,5 +1,5 @@
 using TerrariaServerAPI;
-using TerrariaServerSystem;
+using TerrariaServerSystemTestRun;
 
 var builder = WebApplication.CreateBuilder(args);
 

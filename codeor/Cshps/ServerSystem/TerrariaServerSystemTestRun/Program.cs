@@ -1,4 +1,6 @@
-﻿namespace TerrariaServerSystem;
+﻿using TerrariaServerSystem;
+
+namespace TerrariaServerSystemTestRun;
 
 public class Program
 {

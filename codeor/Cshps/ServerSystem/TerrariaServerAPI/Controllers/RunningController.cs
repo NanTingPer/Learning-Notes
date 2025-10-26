@@ -1,5 +1,5 @@
 ﻿using Microsoft.AspNetCore.Mvc;
-using TerrariaServerSystem;
+using TerrariaServerSystemTestRun;
 
 namespace TerrariaServerAPI.Controllers;
 

@@ -1,4 +1,4 @@
-﻿using TerrariaServerSystem;
+﻿using TerrariaServerSystemTestRun;
 
 namespace TerrariaServerAPI;
 public class ExitServer(ServerManager server) : BackgroundService

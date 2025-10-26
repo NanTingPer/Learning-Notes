@@ -1,17 +1,33 @@
 ﻿using System.Diagnostics;
 using System.Text;
-using System.Threading.Tasks;
 using TerrariaServerSystem.Exceptions;
 
 namespace TerrariaServerSystem;
 
-public class TerrariaServer
+public interface ICreateWorld
+{
+    event Action<int> ChooseWorldEvent;
+    int ChooseWorldCount();
+    Task CreateWorld(WorldInfo info);
+}
+
+public class TerrariaServer : ICreateWorld
 {
     private enum WriteStatus
     {
         ChoiceWorld
     }
 
+#pragma warning disable CS8618 // 在退出构造函数时，不可为 null 的字段必须包含非 null 值。请考虑添加 "required" 修饰符或声明为可为 null。
+    private TerrariaServer() 
+    {
+        isRun = true;
+        ServerProcess = Process.Start(startInfo)!;
+        ProcessId = ServerProcess.Id;
+        StartEvent?.Invoke(ProcessId);
+        ServerProcess.StandardInput.AutoFlush = true;
+    }
+#pragma warning restore CS8618 // 在退出构造函数时，不可为 null 的字段必须包含非 null 值。请考虑添加 "required" 修饰符或声明为可为 null。
 
     /// <summary>
     /// 传入ProcessId
@@ -19,7 +35,20 @@ public class TerrariaServer
     public event Action<int>? StartEvent;
     public event Action<TerrariaServer>? StopEvent;
 
+    private event Action<int>? chooseWorldEvent;
+    event Action<int>? ICreateWorld.ChooseWorldEvent
+    {
+        add
+        {
+            chooseWorldEvent += value;
+        }
+        remove
+        {
+            chooseWorldEvent -= value;
+        }
+    }
     #region Private Field
+    private int chooseWorldCount = 0;
     private bool isRun = false;
     //private WriteStatus status = WriteStatus.ChoiceWorld;
     private readonly static ProcessStartInfo startInfo = new ProcessStartInfo()
@@ -53,35 +82,7 @@ public class TerrariaServer
         if (isRun)
             return Task.CompletedTask;
 
-        isRun = true;
-        ServerProcess = Process.Start(startInfo)!;
-        ProcessId = ServerProcess.Id;
-        StartEvent?.Invoke(ProcessId);
-        ServerProcess.StandardInput.AutoFlush = true;
-        return Task.Factory.StartNew(() => {
-            StringBuilder line = new StringBuilder();
-            string lineText = "";
-            while (ServerProcess != null && !ServerProcess.HasExited) {
-                char[] @char = new char[1];
-                ServerProcess.StandardOutput.Read(@char, 0, 1);
-                if (@char[0] != Environment.NewLine[0]) { //不是换行符
-                    line.Append(@char);
-                    lineText = line.ToString();
-                    if (lineText.StartsWith('\n') || lineText.StartsWith('\r')) {
-                        lineText = lineText[1..];
-                    }
-                } else { //是换行符
-                    if (!string.IsNullOrWhiteSpace(lineText)) {
-                        logOutput.Add(lineText);
-                    }
-                    line.Clear();
-                }
-
-                Console.Write(@char);
-                if (lineText.Equals("Choose World: "))
-                    /*preRead = () => */ WriteLine();
-            }
-        }, taskToken.Token);
+        return RunTerrariaCLI(WriteLine);
     }
 
     public async Task ReStart()
@@ -90,18 +91,13 @@ public class TerrariaServer
         _ = RunServer();
     }
 
-    private async void WriteLine()
+    private async void WriteLine(int _)
     {
         try {
             await ChoiceWorld();
         } catch {
             await Stop();
         }
-        //switch (status) {
-        //    case WriteStatus.ChoiceWorld:
-        //        await ChoiceWorld();
-        //        break;
-        //}
     }
 
     /// <exception cref="WorldListIsNullException"></exception>
@@ -161,6 +157,27 @@ public class TerrariaServer
         ServerProcess.StandardInput.WriteLine(Info.Passwd);
     }
 
+    async Task ICreateWorld.CreateWorld(WorldInfo info)
+    {
+        await RunTerrariaCLI(async (coun) => {
+            if(coun == 1) {
+                ServerProcess!.StandardInput.WriteLine('n');
+                await Task.Delay(1000);
+                ServerProcess!.StandardInput.WriteLine(info.WorldSize);
+                await Task.Delay(1000);
+                ServerProcess!.StandardInput.WriteLine(info.WorldDifficulty);
+                await Task.Delay(1000);
+                ServerProcess!.StandardInput.WriteLine(info.WorldEvil);
+                await Task.Delay(1000);
+                ServerProcess!.StandardInput.WriteLine(info.WroldName);
+                await Task.Delay(1000);
+                ServerProcess!.StandardInput.WriteLine(info.WroldSeed);
+            } else if(coun == 2) {
+                await Stop();
+            }
+        });
+    }
+
     public async Task Stop()
     {
         try {
@@ -176,5 +193,46 @@ public class TerrariaServer
             ServerProcess?.Dispose();
             taskToken.Cancel();
         }
+    }
+
+    private Task RunTerrariaCLI(Action<int> action)
+    {
+        return Task.Factory.StartNew(() => {
+            StringBuilder line = new StringBuilder();
+            string lineText = "";
+            while (ServerProcess != null && !ServerProcess.HasExited) {
+                char[] @char = new char[1];
+                ServerProcess.StandardOutput.Read(@char, 0, 1);
+                if (@char[0] != Environment.NewLine[0]) { //不是换行符
+                    line.Append(@char);
+                    lineText = line.ToString();
+                    if (lineText.StartsWith('\n') || lineText.StartsWith('\r')) {
+                        lineText = lineText[1..];
+                    }
+                } else { //是换行符
+                    if (!string.IsNullOrWhiteSpace(lineText)) {
+                        logOutput.Add(lineText);
+                    }
+                    line.Clear();
+                }
+
+                Console.Write(@char);
+                if (lineText.Equals("Choose World: ")) {
+                    chooseWorldCount++;
+                    action.Invoke(chooseWorldCount);
+                    chooseWorldEvent?.Invoke(chooseWorldCount);
+                }
+            }
+        }, taskToken.Token);
+    }
+
+    int ICreateWorld.ChooseWorldCount()
+    {
+        return chooseWorldCount;
+    }
+
+    public static ICreateWorld CreateWorld()
+    {
+        return new TerrariaServer();
     }
 }

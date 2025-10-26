@@ -29,4 +29,15 @@ public class TerrariaServerInfoDto
             Passwd = Passwd,
         };
     }
+
+    public override string ToString()
+    {
+        return $$"""
+            Key: {{Id}}
+            服务器名称: {{Name}}
+            世界名称: {{WorldName}}
+            所用端口: {{Port}}
+            服务器密码: {{Passwd}}
+            """;
+    }
 }

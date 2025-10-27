@@ -91,12 +91,13 @@ public class TerrariaServer : ICreateWorld
         _ = RunServer();
     }
 
-    private async void WriteLine(int _)
+    private async Task WriteLine(int _)
     {
         try {
             await ChoiceWorld();
         } catch {
             await Stop();
+            throw;
         }
     }
 
@@ -195,9 +196,9 @@ public class TerrariaServer : ICreateWorld
         }
     }
 
-    private Task RunTerrariaCLI(Action<int> action)
+    private Task RunTerrariaCLI(Func<int, Task> func)
     {
-        return Task.Factory.StartNew(() => {
+        return Task.Factory.StartNew(async () => {
             StringBuilder line = new StringBuilder();
             string lineText = "";
             while (ServerProcess != null && !ServerProcess.HasExited) {
@@ -219,7 +220,7 @@ public class TerrariaServer : ICreateWorld
                 Console.Write(@char);
                 if (lineText.Equals("Choose World: ")) {
                     chooseWorldCount++;
-                    action.Invoke(chooseWorldCount);
+                    await func.Invoke(chooseWorldCount);
                     chooseWorldEvent?.Invoke(chooseWorldCount);
                 }
             }

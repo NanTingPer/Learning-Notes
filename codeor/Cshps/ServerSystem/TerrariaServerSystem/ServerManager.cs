@@ -9,7 +9,7 @@ public class ServerManager
 
     private async void StopEventMethod(TerrariaServer t)
     {
-        await IfThrowExple(() => {
+        await IfThrowExple(async () => {
             int key = -1;
             foreach (var item in _servers) {
                 if (item.Value.Equals(t)) {
@@ -19,6 +19,7 @@ public class ServerManager
             }
             _servers.Remove(key);
             _infos.Remove(key);
+            await Task.CompletedTask;
         });
         
     }
@@ -29,14 +30,14 @@ public class ServerManager
     public async Task<int> AddServer(TerrariaServerInfo info)
     {
         var newKey = -1;
-        await IfThrowExple(() => {
+        await IfThrowExple(async () => {
             TerrariaServer server = CreateTerrariaServer(info);
             if (_servers.Count != 0) {
                 newKey = _servers.Keys.Max() + 1;
             } else {
                 newKey = 0;
             }
-            WhenThrowTask(newKey, server.RunServer());
+            await WhenThrowTask(newKey, server.RunServer());
             _servers.Add(newKey, server);
             _infos.Add(newKey, info);
         }, async () => {
@@ -48,13 +49,13 @@ public class ServerManager
     /// <summary>
     /// 如果执行<paramref name="action"/>过程中发生错误，那么释放信号量并执行<paramref name="catchAction"/>
     /// </summary>
-    private async Task IfThrowExple(Action action, Action? catchAction = null)
+    private async Task IfThrowExple(Func<Task> func, Action? catchAction = null)
     {
         bool isExcep = false;
         Exception? exception = null;
         await _editSlim.WaitAsync();
         try {
-            action.Invoke();
+            await func.Invoke();
         } catch (Exception excep) {
             isExcep = true;
             exception = excep;
@@ -81,9 +82,9 @@ public class ServerManager
 
     private async Task Cover(int key, TerrariaServerInfo info)
     {
-        await IfThrowExple(() => {
+        await IfThrowExple(async () => {
             TerrariaServer server = CreateTerrariaServer(info);
-            WhenThrowTask(key, server.RunServer());
+            await WhenThrowTask(key, server.RunServer());
             _servers[key] = server;
             _infos[key] = info;
         }, async () => {
@@ -91,7 +92,7 @@ public class ServerManager
         });
     }
 
-    private async void WhenThrowTask(int key, Task task)
+    private async Task WhenThrowTask(int key, Task task)
     {
         try {
             await task;

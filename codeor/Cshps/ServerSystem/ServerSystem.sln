@@ -7,6 +7,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TerrariaServerSystem", "Ter
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TerrariaServerAPI", "TerrariaServerAPI\TerrariaServerAPI.csproj", "{ABD5FFF3-5F98-43FA-B558-9277AA18FD2C}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TerrariaServerSystemTestRun", "TerrariaServerSystemTestRun\TerrariaServerSystemTestRun.csproj", "{A0332D0F-3E40-B876-AFE8-AD7ED7B05B07}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -21,6 +23,10 @@ Global
 		{ABD5FFF3-5F98-43FA-B558-9277AA18FD2C}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{ABD5FFF3-5F98-43FA-B558-9277AA18FD2C}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{ABD5FFF3-5F98-43FA-B558-9277AA18FD2C}.Release|Any CPU.Build.0 = Release|Any CPU
+		{A0332D0F-3E40-B876-AFE8-AD7ED7B05B07}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{A0332D0F-3E40-B876-AFE8-AD7ED7B05B07}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{A0332D0F-3E40-B876-AFE8-AD7ED7B05B07}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{A0332D0F-3E40-B876-AFE8-AD7ED7B05B07}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

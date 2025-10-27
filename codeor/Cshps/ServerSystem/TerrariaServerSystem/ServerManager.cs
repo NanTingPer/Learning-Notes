@@ -37,9 +37,10 @@ public class ServerManager
             } else {
                 newKey = 0;
             }
-            await WhenThrowTask(newKey, server.RunServer());
+            _ = WhenThrowTask(newKey, server.RunServer());
             _servers.Add(newKey, server);
             _infos.Add(newKey, info);
+            await Task.CompletedTask;
         }, async () => {
             await StopServer(newKey);
         });
@@ -84,9 +85,10 @@ public class ServerManager
     {
         await IfThrowExple(async () => {
             TerrariaServer server = CreateTerrariaServer(info);
-            await WhenThrowTask(key, server.RunServer());
+            _ = WhenThrowTask(key, server.RunServer());
             _servers[key] = server;
             _infos[key] = info;
+            await Task.CompletedTask;
         }, async () => {
             await StopServer(key);
         });

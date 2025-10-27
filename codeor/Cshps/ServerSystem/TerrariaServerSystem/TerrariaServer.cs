@@ -21,7 +21,7 @@ public class TerrariaServer : ICreateWorld
 #pragma warning disable CS8618 // 在退出构造函数时，不可为 null 的字段必须包含非 null 值。请考虑添加 "required" 修饰符或声明为可为 null。
     private TerrariaServer() 
     {
-        isRun = true;
+        //startInfo.ArgumentList.Add();
         ServerProcess = Process.Start(startInfo)!;
         ProcessId = ServerProcess.Id;
         StartEvent?.Invoke(ProcessId);
@@ -69,7 +69,7 @@ public class TerrariaServer : ICreateWorld
     #endregion
 
     public TerrariaServerInfo Info { get; init; }
-    public TerrariaServer(TerrariaServerInfo info)
+    public TerrariaServer(TerrariaServerInfo info) : this()
     {
         Info = info;
     }
@@ -77,12 +77,13 @@ public class TerrariaServer : ICreateWorld
     public int ProcessId { get; private set; }
 
     private CancellationTokenSource taskToken = new CancellationTokenSource();
-    public Task RunServer()
+    public async Task RunServer()
     {
         if (isRun)
-            return Task.CompletedTask;
-
-        return RunTerrariaCLI(WriteLine);
+            return;
+        isRun = true;
+        await RunTerrariaCLI(WriteLine);
+        return ;
     }
 
     public async Task ReStart()
@@ -160,21 +161,28 @@ public class TerrariaServer : ICreateWorld
 
     async Task ICreateWorld.CreateWorld(WorldInfo info)
     {
+        ServerProcess!.StandardInput.AutoFlush = true;
         await RunTerrariaCLI(async (coun) => {
             if(coun == 1) {
-                ServerProcess!.StandardInput.WriteLine('n');
-                await Task.Delay(1000);
-                ServerProcess!.StandardInput.WriteLine(info.WorldSize);
-                await Task.Delay(1000);
-                ServerProcess!.StandardInput.WriteLine(info.WorldDifficulty);
-                await Task.Delay(1000);
-                ServerProcess!.StandardInput.WriteLine(info.WorldEvil);
-                await Task.Delay(1000);
-                ServerProcess!.StandardInput.WriteLine(info.WroldName);
-                await Task.Delay(1000);
-                ServerProcess!.StandardInput.WriteLine(info.WroldSeed);
+                try {
+                    await Task.Delay(1000);
+                    ServerProcess!.StandardInput.WriteLine("n" + ServerProcess.StandardInput.NewLine);
+                    await Task.Delay(1000);
+                    ServerProcess!.StandardInput.WriteLine(info.WorldSize);
+                    await Task.Delay(1000);
+                    ServerProcess!.StandardInput.WriteLine(info.WorldDifficulty);
+                    await Task.Delay(1000);
+                    ServerProcess!.StandardInput.WriteLine(info.WorldEvil);
+                    await Task.Delay(1000);
+                    ServerProcess!.StandardInput.WriteLine(info.WroldName);
+                    await Task.Delay(1000);
+                    ServerProcess!.StandardInput.WriteLine(info.WroldSeed);
+                } catch {
+                    throw;
+                }
             } else if(coun == 2) {
                 await Stop();
+                Console.WriteLine("退出");
             }
         });
     }
@@ -196,35 +204,33 @@ public class TerrariaServer : ICreateWorld
         }
     }
 
-    private Task RunTerrariaCLI(Func<int, Task> func)
+    private async Task RunTerrariaCLI(Func<int, Task> func)
     {
-        return Task.Factory.StartNew(async () => {
-            StringBuilder line = new StringBuilder();
-            string lineText = "";
-            while (ServerProcess != null && !ServerProcess.HasExited) {
-                char[] @char = new char[1];
-                ServerProcess.StandardOutput.Read(@char, 0, 1);
-                if (@char[0] != Environment.NewLine[0]) { //不是换行符
-                    line.Append(@char);
-                    lineText = line.ToString();
-                    if (lineText.StartsWith('\n') || lineText.StartsWith('\r')) {
-                        lineText = lineText[1..];
-                    }
-                } else { //是换行符
-                    if (!string.IsNullOrWhiteSpace(lineText)) {
-                        logOutput.Add(lineText);
-                    }
-                    line.Clear();
+        StringBuilder line = new StringBuilder();
+        string lineText = "";
+        while (ServerProcess != null && !ServerProcess.HasExited) {
+            char[] @char = new char[1];
+            ServerProcess.StandardOutput.Read(@char, 0, 1);
+            if (@char[0] != Environment.NewLine[0]) { //不是换行符
+                line.Append(@char);
+                lineText = line.ToString();
+                if (lineText.StartsWith('\n') || lineText.StartsWith('\r')) {
+                    lineText = lineText[1..];
                 }
-
-                Console.Write(@char);
-                if (lineText.Equals("Choose World: ")) {
-                    chooseWorldCount++;
-                    await func.Invoke(chooseWorldCount);
-                    chooseWorldEvent?.Invoke(chooseWorldCount);
+            } else { //是换行符
+                if (!string.IsNullOrWhiteSpace(lineText)) {
+                    logOutput.Add(lineText);
                 }
+                line.Clear();
             }
-        }, taskToken.Token);
+
+            Console.Write(@char);
+            if (lineText.Equals("Choose World: ")) {
+                chooseWorldCount++;
+                await func.Invoke(chooseWorldCount);
+                chooseWorldEvent?.Invoke(chooseWorldCount);
+            }
+        }
     }
 
     int ICreateWorld.ChooseWorldCount()

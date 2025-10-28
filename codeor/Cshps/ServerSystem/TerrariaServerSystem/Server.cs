@@ -1,10 +1,16 @@
 using System.Diagnostics;
 using System.Text;
+using TerrariaServerSystem.Interface;
 
 namespace TerrariaServerSystem;
 
-public abstract class Server
+public class Server : IServer
 {
+    /// <summary>
+    /// 读取进程的标准输出时触发
+    /// </summary>
+    public event Action<char>? ReadOutputEvent; 
+
     /// <summary>
     /// 此服务器进程
     /// </summary>
@@ -29,9 +35,24 @@ public abstract class Server
 
     public Server(string serverFileName, ConfigOptions config)
     {
-        config.Configs.ForEach(processStartInfo.ArgumentList.Add);
+        var configs = config.Configs;
+        processStartInfo.Arguments = string.Join(' ', configs);
         processStartInfo.FileName = serverFileName;
         Process = Process.Start(processStartInfo)!;
         ProcessId = Process.Id;
+    }
+
+    public async Task Run()
+    {
+        await Task.Delay(1000);
+
+        //进程不为Null 并且 程序未退出
+        while (Process != null && !Process.HasExited) {
+            int readChar = Process.StandardOutput.Read();
+            if (readChar == -1)
+                continue;
+
+            ReadOutputEvent?.Invoke((char)readChar);
+        }
     }
 }

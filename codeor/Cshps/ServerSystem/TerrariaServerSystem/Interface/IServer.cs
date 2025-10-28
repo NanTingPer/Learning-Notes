@@ -1,6 +1,6 @@
-﻿namespace TerrariaServerSystem.Interface;
+namespace TerrariaServerSystem.Interface;
 
 public interface IServer
 {
-    Task RunServer();
+    Task Run();
 }

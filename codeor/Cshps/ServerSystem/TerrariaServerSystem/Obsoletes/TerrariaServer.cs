@@ -73,7 +73,7 @@ public class TerrariaServer : ICreateWorld, IServer
     public int ProcessId { get; private set; }
 
     private CancellationTokenSource taskToken = new CancellationTokenSource();
-    public async Task RunServer()
+    public async Task Run()
     {
         if (isRun)
             return;
@@ -85,7 +85,7 @@ public class TerrariaServer : ICreateWorld, IServer
     public async Task ReStart()
     {
         await Stop();
-        _ = RunServer();
+        _ = Run();
     }
 
     private async Task WriteLine(int _)

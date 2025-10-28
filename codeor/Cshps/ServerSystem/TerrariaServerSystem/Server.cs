@@ -6,10 +6,15 @@ namespace TerrariaServerSystem;
 
 public class Server : IServer
 {
+    public long Id { get; set; }
+    public string Name { get; set; } = "未命名";
+
+    public ServerConfigOptions ServerOptions { get; init; }
+
     /// <summary>
     /// 读取进程的标准输出时触发
     /// </summary>
-    public event Action<char>? ReadOutputEvent; 
+    public event Action<Server, char>? ReadOutputEvent; 
 
     /// <summary>
     /// 此服务器进程
@@ -33,8 +38,9 @@ public class Server : IServer
         StandardOutputEncoding = Encoding.UTF8
     };
 
-    public Server(string serverFileName, ConfigOptions config)
+    public Server(string serverFileName, ServerConfigOptions config)
     {
+        ServerOptions = config;
         var configs = config.Configs;
         processStartInfo.Arguments = string.Join(' ', configs);
         processStartInfo.FileName = serverFileName;
@@ -42,17 +48,36 @@ public class Server : IServer
         ProcessId = Process.Id;
     }
 
-    public async Task Run()
+    public Task Run() => Run(CancellationToken.None);
+
+    public async Task Run(CancellationToken token)
     {
-        await Task.Delay(1000);
+        await Task.Delay(1000, token);
 
         //进程不为Null 并且 程序未退出
-        while (Process != null && !Process.HasExited) {
-            int readChar = Process.StandardOutput.Read();
-            if (readChar == -1)
-                continue;
+        try {
+            while (!token.IsCancellationRequested && Process != null && !Process.HasExited) {
+                int readChar = Process.StandardOutput.Read();
+                if (readChar == -1)
+                    continue;
 
-            ReadOutputEvent?.Invoke((char)readChar);
+                ReadOutputEvent?.Invoke(this, (char)readChar);
+            }
+        } finally {
+            await Stop();
         }
+        
+    }
+
+    public Task Stop()
+    {
+        try {
+            if (Process != null && !Process.HasExited) {
+                Process.Kill(true);
+            }
+        } finally {
+            Process?.Dispose();
+        }
+        return Task.CompletedTask;
     }
 }

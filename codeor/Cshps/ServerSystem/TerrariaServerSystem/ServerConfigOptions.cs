@@ -3,7 +3,7 @@ using System.Text.Json.Serialization;
 
 namespace TerrariaServerSystem;
 
-public class ConfigOptions
+public class ServerConfigOptions
 {
     private static readonly Dictionary<string, string> propMap = new()
     {
@@ -18,7 +18,7 @@ public class ConfigOptions
 
     };
     private static Dictionary<string, string> PropMapReverse => propMap.Reverse().ToDictionary();
-    private static PropertyInfo[] PropertyInfos { get; set; } = typeof(ConfigOptions)
+    private static PropertyInfo[] PropertyInfos { get; set; } = typeof(ServerConfigOptions)
         .GetProperties()
         .Where(f => f.Name != nameof(Configs) && f.Name != nameof(PropMapReverse) && f.Name != nameof(PropertyInfos))
         .ToArray()
@@ -103,15 +103,15 @@ public class ConfigOptions
     /// 端口=7777
     /// </code>
     /// </summary>
-    public static ConfigOptions Parse(string strValue)
+    public static ServerConfigOptions Parse(string strValue)
     {
-        var nullConfigModel = new ConfigOptions();
+        var nullConfigModel = new ServerConfigOptions();
         var propMap = PropMapReverse;
 
         strValue
             .Replace("\r\n", "\n")
             .Split('\n')
-            .Where(line => line.Split('=').Length == 2)
+            .Where(line => line.Split('=').Length == 2) //TODO 这里需要思考一下 是否需要抛出错误，如: line 配置值不正确
             .Select(line => {
                 string[] configValue = line.Split('=');
                 return new KeyValuePair<string, string>(configValue[0], configValue[1]);

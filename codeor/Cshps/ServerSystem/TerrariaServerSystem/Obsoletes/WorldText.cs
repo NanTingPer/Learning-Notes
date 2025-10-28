@@ -1,5 +1,6 @@
-﻿namespace TerrariaServerSystem;
+namespace TerrariaServerSystem.Obsoletes;
 
+[Obsolete(message: "已过时")]
 public class WorldText(string text)
 {
     public string Text { get; set; } = text;

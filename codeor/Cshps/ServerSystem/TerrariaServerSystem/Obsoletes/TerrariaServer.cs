@@ -1,17 +1,13 @@
-﻿using System.Diagnostics;
+using System.Diagnostics;
 using System.Text;
+using TerrariaServerSystem.DataModels;
 using TerrariaServerSystem.Exceptions;
+using TerrariaServerSystem.Interface;
 
-namespace TerrariaServerSystem;
+namespace TerrariaServerSystem.Obsoletes;
 
-public interface ICreateWorld
-{
-    event Action<int> ChooseWorldEvent;
-    int ChooseWorldCount();
-    Task CreateWorld(WorldInfo info);
-}
-
-public class TerrariaServer : ICreateWorld
+[Obsolete(message: "已经过时")]
+public class TerrariaServer : ICreateWorld, IServer
 {
     private enum WriteStatus
     {

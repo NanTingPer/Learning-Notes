@@ -1,5 +1,8 @@
-﻿namespace TerrariaServerSystem;
+using TerrariaServerSystem.DataModels;
 
+namespace TerrariaServerSystem.Obsoletes;
+
+[Obsolete(message: "此服务管理器已过时")]
 public class ServerManager
 {
     private readonly Dictionary<int, TerrariaServer> _servers = [];

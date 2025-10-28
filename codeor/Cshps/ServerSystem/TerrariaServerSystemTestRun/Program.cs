@@ -1,4 +1,4 @@
-﻿using TerrariaServerSystem;
+﻿using TerrariaServerSystem.Obsoletes;
 
 namespace TerrariaServerSystemTestRun;
 

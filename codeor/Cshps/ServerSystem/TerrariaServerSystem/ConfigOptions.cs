@@ -18,7 +18,11 @@ public class ConfigOptions
 
     };
     private static Dictionary<string, string> PropMapReverse => propMap.Reverse().ToDictionary();
-    private static PropertyInfo[] PropertyInfos { get; } = typeof(ConfigOptions).GetProperties();
+    private static PropertyInfo[] PropertyInfos { get; set; } = typeof(ConfigOptions)
+        .GetProperties()
+        .Where(f => f.Name != nameof(Configs) && f.Name != nameof(PropMapReverse) && f.Name != nameof(PropertyInfos))
+        .ToArray()
+        ;
 
     /// <summary>
     /// <para> 当<see cref="World"/>不存在时，会使用此参数 </para>
@@ -78,7 +82,8 @@ public class ConfigOptions
         get
         {
             List<string> parmsValue = [];
-            foreach (var info in PropertyInfos) {
+            var propInfos = PropertyInfos;
+            foreach (var info in propInfos) {
                 var value = info.GetValue(this);
                 if (!(value != null && (string)value != string.Empty)) { //值为null 并且值为 string.Empty
                     continue;

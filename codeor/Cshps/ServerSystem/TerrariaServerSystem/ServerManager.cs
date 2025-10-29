@@ -1,16 +1,30 @@
+using System.Runtime.Loader;
+
 namespace TerrariaServerSystem;
 
 public class ServerManager
 {
     private readonly static CancellationTokenSource s_sourceToken = new();
+    /// <summary>
+    /// 对全部进程进行退出
+    /// </summary>
     static ServerManager()
     {
         AppDomain.CurrentDomain.ProcessExit += (_, _) => ExitStop();
         Console.CancelKeyPress += (_, _) => ExitStop(); 
+        AssemblyLoadContext.Default.Unloading += (_) => {
+            s_sourceToken.Cancel(true);
+            foreach (var item in s_serverManagers) {
+                foreach (var item1 in item._servers.Values) {
+                    item1.Stop().Wait(3000);
+                }
+            }
+        };
     }
 
     private static void ExitStop()
     {
+        s_sourceToken.Cancel(true);
         foreach (var item in s_serverManagers) {
             foreach (var item1 in item._servers.Values) {
                 item1.Stop().Wait(3000);
@@ -45,6 +59,15 @@ public class ServerManager
     }
 
     /// <summary>
+    /// 添加并运行Run, 这样会使用管理器的 <see cref="CancellationToken"/>
+    /// </summary>
+    public long AppendAndRun(Server server, string name)
+    {
+        _ = server.Run(s_sourceToken.Token);
+        return Append(server, name);
+    }
+
+    /// <summary>
     /// 添加一个服务器实例到此管理器中，并返回其唯一ID
     /// </summary>
     public long Append(Server server, string name)
@@ -66,4 +89,40 @@ public class ServerManager
     /// 添加一个服务器实例到此管理器中，并返回其唯一ID
     /// </summary>
     public long Append(Server server) => Append(server, "未命名服务器");
+
+    /// <summary>
+    /// 删除一个服务器实例
+    /// </summary>
+    public bool Remove(long id)
+    {
+        if(_servers.TryGetValue(id, out var server)) {
+            server.Stop().Wait(1000);
+        }
+
+        bool isRemove = _servers.Remove(id);
+        return isRemove;
+    }
+
+    /// <summary>
+    /// 停止一个服务器实例(实际调用<see cref="Remove(long)"/>)
+    /// </summary>
+    public bool Stop(long id) => Remove(id);
+
+    /// <summary>
+    /// 停止指定名称的服务器实例(实际调用<see cref="Remove(int)"/>)
+    /// </summary>
+    public bool Remove(string serverName)
+    {
+        var tarKeyValue = _servers.FirstOrDefault(f => f.Value.Name == serverName);
+        var tarServer = tarKeyValue.Value;
+        if (tarServer != null) {
+            return Remove(tarKeyValue.Key);
+        }
+        return false;
+    }
+
+    /// <summary>
+    /// 停止指定名称的服务器实例(实际调用<see cref="Remove(string)"/>)
+    /// </summary>
+    public bool Stop(string serverName) => Remove(serverName);
 }

@@ -54,19 +54,20 @@ public class Server : IServer
     {
         await Task.Delay(1000, token);
 
-        //进程不为Null 并且 程序未退出
-        try {
-            while (!token.IsCancellationRequested && Process != null && !Process.HasExited) {
-                int readChar = Process.StandardOutput.Read();
-                if (readChar == -1)
-                    continue;
+        await Task.Run(() => {
+            try {
+                while (!token.IsCancellationRequested && Process != null && !Process.HasExited) {
+                    int readChar = Process.StandardOutput.Read();
+                    if (readChar == -1)
+                        continue;
 
-                ReadOutputEvent?.Invoke(this, (char)readChar);
+                    ReadOutputEvent?.Invoke(this, (char)readChar);
+                }
+            } finally {
+                Stop().Wait(1000);
             }
-        } finally {
-            await Stop();
-        }
-        
+            
+        }, token);
     }
 
     public Task Stop()

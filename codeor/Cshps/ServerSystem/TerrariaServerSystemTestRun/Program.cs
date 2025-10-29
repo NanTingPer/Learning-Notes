@@ -4,6 +4,15 @@ namespace TerrariaServerSystemTestRun;
 
 public class Program
 {
+
+    public async Task Run()
+    {
+        var rootDirectory = Environment.CurrentDirectory;
+        var worldDirectory = Path.Combine(rootDirectory, "Worlds");
+
+        await Task.CompletedTask;
+    }
+
     static async Task Main(string[] args)
     {
         var co = new ServerConfigOptions()

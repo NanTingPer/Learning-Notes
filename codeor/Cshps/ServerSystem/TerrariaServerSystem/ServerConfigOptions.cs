@@ -1,3 +1,4 @@
+using System.Net;
 using System.Reflection;
 using System.Text.Json.Serialization;
 
@@ -64,7 +65,8 @@ public class ServerConfigOptions
     /// <summary>
     /// 指定的世界文件路径
     /// </summary>
-    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    //[JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    [JsonIgnore]
     public string? World { get; set; }
 
     /// <summary>
@@ -134,5 +136,84 @@ public class ServerConfigOptions
             ;
 
         return nullConfigModel;
+    }
+
+    /// <summary>
+    /// 校验属性值是否合法
+    /// </summary>
+    public bool Verify()
+    {
+        try {
+            VerifyAutoCreate();
+            VerifyPort();
+            VerifyEvil();
+            VerifyIP();
+            VerifyMaxPlayers();
+        } catch {
+            throw;
+        }
+        return true;
+    }
+
+    public bool VerifyAutoCreate()
+    {
+        //1,2,3
+        if (int.TryParse(AutoCreate, out int value)) {
+            if (value < 1 || value > 3) {
+                throw new Exception("世界大小应该为1 / 2 / 3");
+                return false;
+            }
+            return true;
+        }
+        throw new Exception("世界大小应该为int 同时数值为 1 / 2 / 3");
+        return false;
+    }
+
+    public bool VerifyPort()
+    {
+        if (int.TryParse(Port, out int value)) {
+            if (value < 1024 || value > 65535) {
+                throw new Exception("端口号应该在1024-65535之间");
+                return false;
+            }
+            return true;
+        }
+        throw new Exception("端口号应该为int类型");
+        return false;
+    }
+
+    public bool VerifyIP()
+    {
+        if (IPAddress.TryParse(IP, out IPAddress? address)) {
+            return true;
+        } else {
+            throw new Exception("IP地址格式不正确");
+            return false;
+        }
+    }
+
+    public bool VerifyMaxPlayers()
+    {
+        if (int.TryParse(MaxPlayers, out int value)) {
+            if (value < 1 || value > 32) {
+                throw new Exception("玩家数量最大不应超32 最小不应到0");
+                return false;
+            }
+            return true;
+        }
+        throw new Exception("玩家数量应该为int");
+        return false;
+    }
+
+    public bool VerifyEvil()
+    {
+        if(int.TryParse(Evil, out var value)) {
+            if (value < 1 && value > 3) {
+                throw new Exception("世界邪恶应该为1/2/3。1随,2腐,3猩红");
+            }
+            return true;
+        }
+        throw new Exception("邪恶类型应该为int");
+        return false;
     }
 }

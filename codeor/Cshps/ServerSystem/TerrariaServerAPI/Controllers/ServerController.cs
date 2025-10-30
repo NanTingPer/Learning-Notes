@@ -60,6 +60,11 @@ public class ServerController(ServerManager manager, IConfiguration configuratio
         return Ok(Manager.Servers.Select(s => new ViewServer() { Id = s.Id, Name = s.Name, Options = s.ServerOptions }).ToList());
     }
 
+    [HttpPost("log")]
+    public IActionResult GetLog([FromBody] long id)
+    {
+        return Ok(Manager.GetLogs(id));
+    }
 
     [NonAction]
     public static bool CopyFile(string? origDirectory, string? newDirectory)

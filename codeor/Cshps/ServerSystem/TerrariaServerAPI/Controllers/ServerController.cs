@@ -57,7 +57,7 @@ public class ServerController(ServerManager manager, IConfiguration configuratio
     [HttpPost("list")]
     public IActionResult GetServers()
     {
-        return Ok(Manager.Servers.Select(s => new ViewServer() { Id = s.Id, Name = s.Name, Options = s.ServerOptions }));
+        return Ok(Manager.Servers.Select(s => new ViewServer() { Id = s.Id, Name = s.Name, Options = s.ServerOptions }).ToList());
     }
 
 

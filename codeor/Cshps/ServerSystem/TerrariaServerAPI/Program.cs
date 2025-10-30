@@ -25,8 +25,8 @@ builder.Services.AddCors(options => {
     });
 });
 var app = builder.Build();
-app.Urls.Add("http://127.0.0.1:6667");
-app.Urls.Add("http://0.0.0.0:6667");
+app.Urls.Add("http://127.0.0.1:3000");
+app.Urls.Add("http://0.0.0.0:3000");
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment()) {
     app.UseSwagger();

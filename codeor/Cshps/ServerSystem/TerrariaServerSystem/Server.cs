@@ -14,8 +14,7 @@ public class Server : IServer
     /// <summary>
     /// 读取进程的标准输出时触发
     /// </summary>
-    public event Action<Server, char>? ReadOutputEvent; 
-
+    public event Action<Server, char>? ReadOutputEvent;
     /// <summary>
     /// 此服务器进程
     /// </summary>
@@ -40,10 +39,13 @@ public class Server : IServer
 
     public Server(string serverFileName, ServerConfigOptions config)
     {
+        processStartInfo.FileName = serverFileName;
+        processStartInfo.WorkingDirectory = Path.GetDirectoryName(serverFileName)!;
+        config.World = Path.Combine(processStartInfo.WorkingDirectory, "Worlds");
+
         ServerOptions = config;
         var configs = config.Configs;
         processStartInfo.Arguments = string.Join(' ', configs);
-        processStartInfo.FileName = serverFileName;
         Process = Process.Start(processStartInfo)!;
         ProcessId = Process.Id;
     }

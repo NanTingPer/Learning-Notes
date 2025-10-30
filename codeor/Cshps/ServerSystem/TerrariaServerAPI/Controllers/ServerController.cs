@@ -62,7 +62,7 @@ public class ServerController(ServerManager manager, IConfiguration configuratio
 
 
     [NonAction]
-    public bool CopyFile(string? origDirectory, string? newDirectory)
+    public static bool CopyFile(string? origDirectory, string? newDirectory)
     {
         //origDirectory = Path.GetDirectoryName(origDirectory);
         //newDirectory = Path.GetDirectoryName(newDirectory);

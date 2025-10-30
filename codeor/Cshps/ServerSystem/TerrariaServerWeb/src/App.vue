@@ -15,7 +15,6 @@ function GotoRoute(route : string){
 
 <template>
       <el-container>
-        <!-- <el-header class="header"></el-header> -->
         <el-container>
             <el-aside class="aside">
                 <el-menu>

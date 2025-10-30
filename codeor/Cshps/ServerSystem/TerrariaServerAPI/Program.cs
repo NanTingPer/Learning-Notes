@@ -11,8 +11,9 @@ builder.Services.AddControllers();
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
-builder.Services.AddSingleton<ServerManager>();
-builder.Services.AddHostedService<ExitServer>();
+//builder.Services.AddSingleton<ServerManager>();
+//builder.Services.AddHostedService<ExitServer>();
+
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.

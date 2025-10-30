@@ -47,6 +47,7 @@
         </tr>
         <tr>
             <td><el-button @click="Submit">确定</el-button></td>
+            <td><el-button @click="Exit">取消</el-button></td>
         </tr>
     </table>
 </template>
@@ -70,6 +71,10 @@ async function Submit(){
     }
     await axios.post('/server/add', subObj).then().catch().finally(() => emit('submit'))
     
+}
+
+function Exit(){
+    emit('submit')
 }
 
 import { ref } from 'vue'

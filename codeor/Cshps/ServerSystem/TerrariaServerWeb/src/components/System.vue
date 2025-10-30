@@ -2,6 +2,9 @@
     <div v-if="divIsShow" class="addServer">
         <AddServer @submit="SetDivIsShow"></AddServer>
     </div>
+    <div v-if="isShowLog" class="log">
+        <Log :id="viewId" @exit="SetViewLogIsShow"></Log>
+    </div>
     <el-button @click="SetDivIsShow">添加</el-button>
     <el-table :data="tableData" style="width: 100%">
     <el-table-column prop="id" label="唯一标识" style="width: auto;"/>
@@ -23,7 +26,7 @@
     </el-table-column>    
     <el-table-column label="操作">
         <template #default="value">
-            <el-button @click="GetLog(value.row)">查看日志</el-button>
+            <el-button @click="ViewLog(value.row)">查看日志</el-button>
         </template>
     </el-table-column>
     </el-table>
@@ -31,6 +34,7 @@
 
 <script lang="ts" setup>
 import AddServer from './AddServer.vue'
+import Log from './Log.vue'
 import axios from 'axios'
 import { ref, onMounted } from 'vue'
 import { type ViewServer } from '../types/ViewServer'
@@ -38,6 +42,8 @@ import type { TableColumnCtx } from 'element-plus';
 
 const tableData = ref<ViewServer[]>()
 const divIsShow = ref<boolean>(false)
+const isShowLog = ref<boolean>(false)
+const viewId = ref<number>()
 
 onMounted(() => {
    axios.post("/server/list", {}).then(response => {
@@ -70,6 +76,15 @@ function SetDivIsShow(){
     divIsShow.value = !divIsShow.value;
 }
 
+function ViewLog(row : ViewServer){
+    viewId.value = row.id
+    SetViewLogIsShow()
+}
+
+function SetViewLogIsShow(){
+    isShowLog.value = !isShowLog.value
+}
+
 async function Delete(row : ViewServer){
     await axios.post('server/delete', row.id, {
         headers: {
@@ -77,20 +92,25 @@ async function Delete(row : ViewServer){
         }
     }).catch(e => console.log(e))
 }
-
-async function GetLog(row : ViewServer) {
-    await axios.post('server/log', row.id, {
-        headers: {
-            "Content-Type": "application/json"
-        }
-    })
-    .then(res => console.log(res.data))
-    .catch(e => console.log(e))
-}
 </script>
 
 <style scoped>
 .addServer {
+    position: absolute;
+    top: 0%;
+    left: 0%;
+    float: left;
+    background-color:antiquewhite;
+    height: 100%;
+    width: 100%;
+    z-index: 99;
+
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.log {
     position: absolute;
     top: 0%;
     left: 0%;

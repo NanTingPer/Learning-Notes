@@ -1,10 +1,12 @@
 using System.Runtime.Loader;
+using System.Text;
 
 namespace TerrariaServerSystem;
 
 public class ServerManager
 {
     private readonly static CancellationTokenSource s_sourceToken = new();
+    private readonly Dictionary<long, StringBuilder> _serverLogs = [];
     /// <summary>
     /// 对全部进程进行退出
     /// </summary>
@@ -82,7 +84,16 @@ public class ServerManager
         managedServer.Id = count;
         managedServer.Name = name;
         _servers.Add(count, managedServer);
+        _serverLogs[count] = new StringBuilder();
+        managedServer.ReadOutputEvent += AppendLogs;
         return count;
+    }
+
+    private void AppendLogs(Server arg1, char arg2)
+    {
+       if (_serverLogs.TryGetValue(arg1.Id, out var sb)) {
+            sb.Append(arg2);
+       }
     }
 
     /// <summary>
@@ -125,4 +136,16 @@ public class ServerManager
     /// 停止指定名称的服务器实例(实际调用<see cref="Remove(string)"/>)
     /// </summary>
     public bool Stop(string serverName) => Remove(serverName);
+
+    /// <summary>
+    /// 获取服务器的日志
+    /// </summary>
+    /// <returns> 存在则返回日志, 否则返回<see cref="string.Empty"/> </returns>
+    public string GetLogs(long id)
+    {
+        if(_serverLogs.TryGetValue(id, out var value)) {
+            return value.ToString();
+        }
+        return string.Empty;
+    }
 }

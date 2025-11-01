@@ -34,14 +34,14 @@ public class ServerController(ServerManager manager, IConfiguration configuratio
 
         var tsexePath = Path.Combine(path, "TShock.Installer.exe");
         var server = new Server(tsexePath, request.Options);
-        var id = Manager.AppendAndRun(server, request.Name);
+        var id = Manager.Append(server, request.Name);
         server.ReadOutputEvent += Server_ReadOutputEvent;
         return Ok(id);
     }
 
-    private void Server_ReadOutputEvent(Server arg1, char arg2)
+    private void Server_ReadOutputEvent(Server arg1, string arg2)
     {
-        Console.Write(arg2);
+        Console.WriteLine(arg2);
     }
 
     [HttpPost("delete")]

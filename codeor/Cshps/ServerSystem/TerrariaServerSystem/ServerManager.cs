@@ -63,11 +63,11 @@ public class ServerManager
     /// <summary>
     /// 添加并运行Run, 这样会使用管理器的 <see cref="CancellationToken"/>
     /// </summary>
-    public long AppendAndRun(Server server, string name)
-    {
-        _ = server.Run(s_sourceToken.Token);
-        return Append(server, name);
-    }
+    //public long AppendAndRun(Server server, string name)
+    //{
+    //    //_ = server.Run(s_sourceToken.Token);
+    //    return Append(server, name);
+    //}
 
     /// <summary>
     /// 添加一个服务器实例到此管理器中，并返回其唯一ID
@@ -89,7 +89,7 @@ public class ServerManager
         return count;
     }
 
-    private void AppendLogs(Server arg1, char arg2)
+    private void AppendLogs(Server arg1, string arg2)
     {
        if (_serverLogs.TryGetValue(arg1.Id, out var sb)) {
             sb.Append(arg2);

@@ -45,14 +45,16 @@ const divIsShow = ref<boolean>(false)
 const isShowLog = ref<boolean>(false)
 const viewId = ref<number>()
 
-onMounted(() => {
-   axios.post("/server/list", {}).then(response => {
-    if(response.status == 200){
-        tableData.value = response.data as ViewServer[]
-        console.log(response.data)
-    }
-  })
-});
+async function GetServerList(){
+    await axios.post("/server/list", {}).then(response => {
+        if(response.status == 200){
+            tableData.value = response.data as ViewServer[]
+            console.log(response.data)
+        }
+    })
+}
+
+onMounted(GetServerList);
 
 function WorldSizeFormatter(_row: any, _column: TableColumnCtx<any>, cellValue: any, _index: number){
     if(cellValue == 1)
@@ -72,7 +74,8 @@ function WroldEvilFormatter(_row: any, _column: TableColumnCtx<any>, cellValue: 
         return "猩红"
 }
 
-function SetDivIsShow(){
+async function SetDivIsShow(){
+    await GetServerList();
     divIsShow.value = !divIsShow.value;
 }
 
@@ -91,6 +94,7 @@ async function Delete(row : ViewServer){
             "Content-Type": "application/json"
         }
     }).catch(e => console.log(e))
+    await GetServerList();
 }
 </script>
 

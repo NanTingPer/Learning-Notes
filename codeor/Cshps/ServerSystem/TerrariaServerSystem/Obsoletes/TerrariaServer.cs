@@ -1,17 +1,13 @@
-﻿using System.Diagnostics;
+using System.Diagnostics;
 using System.Text;
+using TerrariaServerSystem.DataModels;
 using TerrariaServerSystem.Exceptions;
+using TerrariaServerSystem.Interface;
 
-namespace TerrariaServerSystem;
+namespace TerrariaServerSystem.Obsoletes;
 
-public interface ICreateWorld
-{
-    event Action<int> ChooseWorldEvent;
-    int ChooseWorldCount();
-    Task CreateWorld(WorldInfo info);
-}
-
-public class TerrariaServer : ICreateWorld
+[Obsolete(message: "已经过时")]
+public class TerrariaServer : ICreateWorld, IServer
 {
     private enum WriteStatus
     {
@@ -77,7 +73,7 @@ public class TerrariaServer : ICreateWorld
     public int ProcessId { get; private set; }
 
     private CancellationTokenSource taskToken = new CancellationTokenSource();
-    public async Task RunServer()
+    public async Task Run()
     {
         if (isRun)
             return;
@@ -89,7 +85,7 @@ public class TerrariaServer : ICreateWorld
     public async Task ReStart()
     {
         await Stop();
-        _ = RunServer();
+        _ = Run();
     }
 
     private async Task WriteLine(int _)

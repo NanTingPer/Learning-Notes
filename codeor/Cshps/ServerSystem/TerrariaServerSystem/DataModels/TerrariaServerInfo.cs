@@ -1,4 +1,4 @@
-﻿namespace TerrariaServerSystem;
+﻿namespace TerrariaServerSystem.DataModels;
 
 public record class TerrariaServerInfo
 {

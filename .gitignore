@@ -12,6 +12,7 @@ codeor/AcortDome/
 *.targets
 *.dll
 *.json
+!package.json
 *.vsidx
 *.bin
 *.v2

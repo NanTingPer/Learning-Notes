@@ -1,22 +1,41 @@
 <script setup lang="ts">
-import RootView from './components/RootView.vue'
+import router from './router';
+
+let upRouteName : string
+function GotoRoute(route : string){
+    // window.location.pathname=route;
+    history.pushState(null, '', route);
+    if(router.hasRoute(upRouteName)){
+        router.removeRoute(upRouteName);
+    }
+    router.push(route);
+    upRouteName = route;
+}
 </script>
 
 <template>
-  <RootView></RootView>
+      <el-container>
+        <el-container>
+            <el-aside class="aside">
+                <el-menu>
+                    <el-menu-item @click="GotoRoute('/')" index="1"> 首页 </el-menu-item>
+                    <el-menu-item @click="GotoRoute('/')" index="1"> 后台 </el-menu-item>
+                    <el-menu-item @click="GotoRoute('/')" index="1"> 关于 </el-menu-item>
+                </el-menu>
+            </el-aside>
+
+            <el-main class="main">
+                <RouterView></RouterView>
+            </el-main>
+        </el-container>
+    </el-container>
 </template>
 
 <style scoped>
-.logo {
-  height: 6em;
-  padding: 1.5em;
-  will-change: filter;
-  transition: filter 300ms;
+.el-menu--vertical {
+  height: 100%;
 }
-.logo:hover {
-  filter: drop-shadow(0 0 2em #646cffaa);
-}
-.logo.vue:hover {
-  filter: drop-shadow(0 0 2em #42b883aa);
+.el-aside {
+  height: 100%;
 }
 </style>

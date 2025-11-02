@@ -1,155 +1,151 @@
-﻿namespace TerrariaServerSystem;
+using System.Runtime.Loader;
+using System.Text;
+
+namespace TerrariaServerSystem;
 
 public class ServerManager
 {
-    private readonly Dictionary<int, TerrariaServer> _servers = [];
-    private readonly Dictionary<int, TerrariaServerInfo> _infos = [];
-    public List<TerrariaServerInfoDto> Servers => [.. _infos.Select(f => TerrariaServerInfoDto.Create(f.Key, f.Value))];
-    private readonly SemaphoreSlim _editSlim = new SemaphoreSlim(1, 1);
-
-    private async void StopEventMethod(TerrariaServer t)
+    private readonly static CancellationTokenSource s_sourceToken = new();
+    private readonly Dictionary<long, StringBuilder> _serverLogs = [];
+    /// <summary>
+    /// 对全部进程进行退出
+    /// </summary>
+    static ServerManager()
     {
-        await IfThrowExple(async () => {
-            int key = -1;
-            foreach (var item in _servers) {
-                if (item.Value.Equals(t)) {
-                    key = item.Key;
-                    break;
+        AppDomain.CurrentDomain.ProcessExit += (_, _) => ExitStop();
+        Console.CancelKeyPress += (_, _) => ExitStop(); 
+        AssemblyLoadContext.Default.Unloading += (_) => {
+            s_sourceToken.Cancel(true);
+            foreach (var item in s_serverManagers) {
+                foreach (var item1 in item._servers.Values) {
+                    item1.Stop().Wait(3000);
                 }
             }
-            _servers.Remove(key);
-            _infos.Remove(key);
-            await Task.CompletedTask;
-        });
-        
+        };
     }
 
-    /// <summary>
-    /// 运行此info的服务器，并返回唯一标识
-    /// </summary>
-    public async Task<int> AddServer(TerrariaServerInfo info)
+    private static void ExitStop()
     {
-        var newKey = -1;
-        await IfThrowExple(async () => {
-            TerrariaServer server = CreateTerrariaServer(info);
-            if (_servers.Count != 0) {
-                newKey = _servers.Keys.Max() + 1;
-            } else {
-                newKey = 0;
+        s_sourceToken.Cancel(true);
+        foreach (var item in s_serverManagers) {
+            foreach (var item1 in item._servers.Values) {
+                item1.Stop().Wait(3000);
             }
-            _ = WhenThrowTask(newKey, server.RunServer());
-            _servers.Add(newKey, server);
-            _infos.Add(newKey, info);
-            await Task.CompletedTask;
-        }, async () => {
-            await StopServer(newKey);
-        });
-        return newKey;
+        }
+        Environment.Exit(0);
     }
 
+    private readonly static List<ServerManager> s_serverManagers = [];
+    private readonly static object s_lock = new();
     /// <summary>
-    /// 如果执行<paramref name="action"/>过程中发生错误，那么释放信号量并执行<paramref name="catchAction"/>
+    /// 进程全部的ServerManager实例
     /// </summary>
-    private async Task IfThrowExple(Func<Task> func, Action? catchAction = null)
+    //private static IEnumerable<ServerManager> ServerManagers { get => s_serverManagers.AsEnumerable(); }
+
+    private readonly object _appendlock = new();
+    private long _serverCount = 0L; //此ServerManager管理了多少服务器实例，用于生成唯一ID
+    private readonly Dictionary<long, Server> _servers = [];
+
+    /// <summary>
+    /// 获取此服务器管理器的所管理的全部服务器实例
+    /// </summary>
+    public IEnumerable<Server> Servers { get => _servers.Select(f => f.Value); }
+
+    public ServerManager()
     {
-        bool isExcep = false;
-        Exception? exception = null;
-        await _editSlim.WaitAsync();
-        try {
-            await func.Invoke();
-        } catch (Exception excep) {
-            isExcep = true;
-            exception = excep;
-            _editSlim.Release(); //? 避免catchaction执行过长 提前释放，如果catchaction有获取锁也可能正常获取
+        lock (s_lock) {
             try {
-                catchAction?.Invoke();
-            } catch { }
-        }
-        //_editSlim.Release();
-        if (isExcep) {
-            throw exception!;
-        } else {                    //?     正常执行完成后的释放
-            _editSlim.Release();    //?     正常执行完成后的释放
-        }                           //?     正常执行完成后的释放
-    }
-
-
-    private TerrariaServer CreateTerrariaServer(TerrariaServerInfo info)
-    {
-        var server = new TerrariaServer(info);
-        server.StopEvent += StopEventMethod;
-        return server;
-    }
-
-    private async Task Cover(int key, TerrariaServerInfo info)
-    {
-        await IfThrowExple(async () => {
-            TerrariaServer server = CreateTerrariaServer(info);
-            _ = WhenThrowTask(key, server.RunServer());
-            _servers[key] = server;
-            _infos[key] = info;
-            await Task.CompletedTask;
-        }, async () => {
-            await StopServer(key);
-        });
-    }
-
-    private async Task WhenThrowTask(int key, Task task)
-    {
-        try {
-            await task;
-        } catch {
-            await StopServer(key);
+                s_serverManagers.Add(this);
+            } finally { }
         }
     }
 
     /// <summary>
-    /// 停止指定标识的服务器
+    /// 添加并运行Run, 这样会使用管理器的 <see cref="CancellationToken"/>
     /// </summary>
-    public async Task StopServer(int identity)
+    //public long AppendAndRun(Server server, string name)
+    //{
+    //    //_ = server.Run(s_sourceToken.Token);
+    //    return Append(server, name);
+    //}
+
+    /// <summary>
+    /// 添加一个服务器实例到此管理器中，并返回其唯一ID
+    /// </summary>
+    public long Append(Server server, string name)
     {
-        await IfThrowExple(async () => {
-            if (_servers.TryGetValue(identity, out var server)) {
-                await server.Stop();
-                _servers.Remove(identity);
-            }
-        }, () => {
-            _servers.Remove(identity);
-        });
+        var count = 0L;
+        lock (_appendlock) {
+            _serverCount++;
+            count = _serverCount;
+        }
+
+        var managedServer = server;
+        managedServer.Id = count;
+        managedServer.Name = name;
+        _servers.Add(count, managedServer);
+        _serverLogs[count] = new StringBuilder();
+        managedServer.ReadOutputEvent += AppendLogs;
+        return count;
     }
 
-    public async IAsyncEnumerable<Task> StopAll()
+    private void AppendLogs(Server arg1, string arg2)
     {
-        await Task.CompletedTask;
-        foreach (var item in _servers.Values) {
-            yield return Task.Run(() => item.Stop());
-        }
-        _servers.Clear();
+       if (_serverLogs.TryGetValue(arg1.Id, out var sb)) {
+            sb.Append(arg2);
+       }
     }
 
     /// <summary>
-    /// 更新并启动
+    /// 添加一个服务器实例到此管理器中，并返回其唯一ID
     /// </summary>
-    public async Task UpdateInfo(int identity, TerrariaServerInfo newInfo)
-    {
-        await IfThrowExple(async () => {
-            if (_servers.TryGetValue(identity, out var server)) {
-                await server.Stop();
-                _servers.Remove(identity);
-                _infos.Remove(identity);
-            }
-        });
+    public long Append(Server server) => Append(server, "未命名服务器");
 
-        await Cover(identity, newInfo);
+    /// <summary>
+    /// 删除一个服务器实例
+    /// </summary>
+    public bool Remove(long id)
+    {
+        if(_servers.TryGetValue(id, out var server)) {
+            server.Stop().Wait(1000);
+        }
+
+        bool isRemove = _servers.Remove(id);
+        return isRemove;
     }
 
     /// <summary>
-    /// 重启此标识代表的服务器
+    /// 停止一个服务器实例(实际调用<see cref="Remove(long)"/>)
     /// </summary>
-    public async Task ReStart(int identity)
+    public bool Stop(long id) => Remove(id);
+
+    /// <summary>
+    /// 停止指定名称的服务器实例(实际调用<see cref="Remove(int)"/>)
+    /// </summary>
+    public bool Remove(string serverName)
     {
-        if(_servers.TryGetValue(identity, out var server)) {
-            await server.ReStart();
+        var tarKeyValue = _servers.FirstOrDefault(f => f.Value.Name == serverName);
+        var tarServer = tarKeyValue.Value;
+        if (tarServer != null) {
+            return Remove(tarKeyValue.Key);
         }
+        return false;
+    }
+
+    /// <summary>
+    /// 停止指定名称的服务器实例(实际调用<see cref="Remove(string)"/>)
+    /// </summary>
+    public bool Stop(string serverName) => Remove(serverName);
+
+    /// <summary>
+    /// 获取服务器的日志
+    /// </summary>
+    /// <returns> 存在则返回日志, 否则返回<see cref="string.Empty"/> </returns>
+    public string GetLogs(long id)
+    {
+        if(_serverLogs.TryGetValue(id, out var value)) {
+            return value.ToString();
+        }
+        return string.Empty;
     }
 }

@@ -134,7 +134,7 @@ void OnRenderImage(RenderTexture src, RenderTexture dest)
 
 ### Unity Shader
 
-基础参数
+- 基础参数
 
 ```glsl
 Properties
@@ -190,7 +190,7 @@ SubShader
 
 
 
-较亮区域
+- 较亮区域
 
 ```glsl
 //定义较亮区域的顶点输出结构
@@ -227,7 +227,7 @@ fixed4 fragExtractBright(v2fExteactBright i) : SV_TARGET0
 
 
 
-竖直方向 
+- 竖直方向
 
 > 第二个pass
 
@@ -256,7 +256,9 @@ v2fBlur vertBlurVertical(appdata_img v)
 
 ```
 
-水平方向
+
+
+- 水平方向
 
 > 第三个pass
 
@@ -280,7 +282,7 @@ v2fBlur vertBlurHorizontal(appdata_img v)
 
 
 
-高斯模糊
+- 高斯模糊
 
 ```glsl
 //定义高斯模糊的片元着色器
@@ -303,7 +305,7 @@ fixed4 fragBlur(v2fBlur i) : SV_TARGET0
 
 
 
-bloom效果
+- bloom效果
 
 > 第四个pass
 
@@ -331,4 +333,69 @@ fixed4 fragBloom(v2fBloom i) : SV_TARGET0
 ```
 
 对于高锐(GodRay)效果 可以将高斯模糊替换为径向模糊
+
+
+
+## tModLoader
+
+```glsl
+sampler uImage0 : register(s0); // 原图像
+float Intensity = 0.6;
+float bulurSize = 0.3; //模糊大小
+// float2 uImageTexelSize;  //x => 1f / 宽度, y => 1 / 高度
+
+// 计算亮度的方法
+float CountLight(float4 color)
+{
+    return 0.2125 * color.r + 0.7154 * color.g + 0.0721 * color.b;
+}
+
+float4 Pixel(float4 pos : SV_POSITION, float2 uv : TEXCOORD0) : COLOR
+{
+    float2 textureSize = float2(66.0, 200.0);
+    float2 texelSize = float2(1.0 / textureSize.x, 1.0 / textureSize.y);
+    
+    // 提取亮部
+    float4 color = tex2D(uImage0, uv);
+    float brightness = CountLight(color);
+    float val = clamp(brightness - Intensity, 0.0, 1.0);
+
+    //够亮 返回原色
+    if (val <= 0.0)
+        return color;
+    
+    float weights[3] = {0.27, 0.46, 0.27}; // 高斯核权重
+    float offsets[3] = {0.0, 1.384615, 3.230769}; // 偏移量
+
+    // 水平方向模糊
+    float4 blurredColor = tex2D(uImage0, uv) * weights[0];
+    for (int i = 1; i < 3; i++) {
+        float2 offset = float2(offsets[i] * texelSize.x * bulurSize, 0.0);
+        blurredColor += tex2D(uImage0, uv + offset) * weights[i];
+        blurredColor += tex2D(uImage0, uv - offset) * weights[i];
+    }
+
+    // 垂直方向模糊
+    float4 verticalBlur = tex2D(uImage0, uv) * weights[0];
+    for (int j = 1; j < 3; j++) {
+        float2 offset = float2(0.0, offsets[j] * texelSize.y * bulurSize);
+        verticalBlur += tex2D(uImage0, uv + offset) * weights[j];
+        verticalBlur += tex2D(uImage0, uv - offset) * weights[j];
+    }    
+
+    // 合并结果
+    float4 finalColor = (blurredColor + verticalBlur) * 0.5;
+    
+    // 应用强度
+    return (finalColor * val) + color;
+}
+
+technique Technique1
+{
+    pass Pass1
+    {
+        PixelShader = compile ps_2_0 Pixel();
+    }
+}
+```
 

@@ -1,4 +1,9 @@
-tModLoader 
+---
+title: "tModLoader 认识一下Shader"
+date: 2025-11-03T16:22:00+08:00
+draft: false
+tags: ["tModLoader"]
+---
 
 > 如果要使用着色器 建议Begin时设置`BlendState` 为 `BlendState.NonPremultiplied`
 
@@ -10,7 +15,7 @@ tModLoader
 
 
 
-## Effect的引入
+# Effect的引入
 
 ```cs
 private const string shader = "path";
@@ -30,7 +35,7 @@ Request<Effect>("Path");
 
 
 
-## Effect的应用时机
+# Effect的应用时机
 
 ```cs
 //在Begin的时候说明要使用的Effect
@@ -45,9 +50,9 @@ spriteBatch.DrawString(exampleFont, "Hello World", textPosition, Color.White);
 spriteBatch.End();
 ```
 
-## Effect的参数更改
+# Effect的参数更改
 
-### 立即模式
+## 立即模式
 
 ```cs
 // 指定Immediate 这回造成严重的性能问题
@@ -67,7 +72,7 @@ spriteBatch.End();
 
 
 
-### 批处理模式
+## 批处理模式
 
 ```cs
 // 默认使用批处理，因此只有当调用End时才会实际应用效果
@@ -89,7 +94,7 @@ spriteBatch.End();
 
 
 
-## 灰度fx
+# 灰度fx
 
 ```GLSL
 sampler uImage0 : register(s0); // 原图像
@@ -130,7 +135,7 @@ technique GrayDraw
 
 
 
-## 计算亮度fx
+# 计算亮度fx
 
 ```glsl
 sampler uImage0 : register(s0); // 原图像

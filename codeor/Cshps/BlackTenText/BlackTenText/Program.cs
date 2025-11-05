@@ -1,5 +1,6 @@
 using BlackTenText.DbContexts;
 using BlackTenText.Services;
+using BlackTenText.UtilityType;
 using static System.Net.Mime.MediaTypeNames;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -14,6 +15,7 @@ builder.Services.AddSwaggerGen();
 builder.Services.AddDbContext<AppDbContext>();
 //builder.Services.AddTransient<UserService>(); //²»ÊÇË²Ì¬
 builder.Services.AddScoped<UserService>();
+builder.Services.AddSingleton<GenerationVerifyCode>();
 
 var app = builder.Build();
 Application = app;

@@ -23,4 +23,10 @@ public class User
 }
 
 
-public record UserDto(string UserName, string Password);
+public record UserDto
+{
+    public string UUID { get; set; } = string.Empty;
+    public string UserName { get; set; } = string.Empty;
+    public string Password { get; set; } = string.Empty;
+    public string Text { get; set; } = string.Empty;
+}

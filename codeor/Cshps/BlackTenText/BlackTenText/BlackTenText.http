@@ -1,0 +1,6 @@
+@BlackTenText_HostAddress = http://localhost:5133
+
+GET {{BlackTenText_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###

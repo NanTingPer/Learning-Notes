@@ -436,7 +436,363 @@ public class EditTime2 : MonoBehaviour
 
 
 
+# 英雄无敌
+
+## 敌人模块
+
+> 敌人生成器需要生成敌人，并为敌人设置线路。
+
+| 说明            | 用处     |
+| --------------- | -------- |
+| EntityAI        | 实体AI   |
+| EntityAnimation | 实体动画 |
+| EntityStatus    | 实体状态 |
+| EntityMotor     | 移动实体 |
+
+### EntityMotor
+
+| 名称     | 说明 |
+| -------- | ---- |
+| Move     | 移动 |
+| Rotation | 旋转 |
+| FindPath | 寻路 |
+
+
+
+### EntityGenerate
+
+| 名称                 | 说明                         |
+| -------------------- | ---------------------------- |
+| WayLine[] lines      | 存储所有路线                 |
+| GameObject[] entitys | 记录敌人预制件               |
+| int startCount       | 记录开始时需要创建的敌人数量 |
+| int spawnedCount     | 记录已经生成的数量           |
+| int maxCount         | 记录最大敌人上限             |
+| int maxDelay         | 记录最大生成间隔             |
+
+
+
+## 敌人类型设计
+
+​	敌人对象只需要挂`Entity`脚本就可以，Status、Motor 由Entity`Start`中自行创建，wayLine由`EntityGenerate`设置
+
+|                |                                                              |
+| -------------- | ------------------------------------------------------------ |
+| Entity         | 实体类，包含<br>EntityStatus<br />EntityMotor<br />WayLine -> 所走的路线 |
+| EntityGenerate | 实体生成器，包含<br>全部活跃Entity，<br />全部WayLine<br />响应Entity的Kill事件 |
+
+
+
+## 创建路线
+
+> 每个点就是此路线的经过点，每个WayLine就是一条完整路线，路线类型包含Vetcor3[] 是全部路线，路线类拥有 IsUseable 是否启用
+
+​	路线的初始化至于`EntityGenerate`的`Start`中，使用`GameObject.FindObjectsByType`获取
+
+![image-20251201145603380](./UnityMdImage/英雄无敌(Cube无敌)路线.png)
+
+​	
+
+## 自己写的
+
+> 没看，直接写了，写到后面就发现设计问题了，Entity类型是多余的，完全没必要的，gameObject本身就是最好的实体，往他身上加组件，就是加EntityStatus等的字段
+
+### 说明
+
+线路有如下要求
+
+1. 需要挂载`WayLine`脚本
+2. 点需要以Pointx 命名，其中x是第几个，只支持 < 10
+
+### WayLine类
+
+路线点初始化由`WayLine`类型的`Start`方法完成
+
+```cs
+using System.Collections.Generic;
+using System.Linq;
+using UnityEngine;
+
+namespace Assets.EntityDome
+{
+    internal class WayLine : MonoBehaviour
+    {
+        [Tooltip("线路点")]
+        public List<Vector3> points;
+        [Tooltip("是否启用")]
+        public bool isEndbale;
+
+        private void Start()
+        {
+            //获取线路的全部线路点，并按照最后一个字符判断是第几个点
+            var points = this.transform.GetComponentsInChildren<Transform>();
+            foreach (var item in points.OrderBy(f => f.name.Trim()[^1]).ToArray()) {
+                this.points.Add(item.position);
+            }
+            ;
+        }
+    }
+}
+
+```
+
+
+
+### EntityStatus类
+
+​	此类型存储实体的基本状态
+
+```cs
+using UnityEngine;
+
+namespace Assets.EntityDome
+{
+    internal class EntityStatus : MonoBehaviour
+    {
+        /// <summary>
+        /// 生命值
+        /// </summary>
+        [Tooltip("生命值")]
+        public int life = 100;
+
+        /// <summary>
+        /// 此实体的路线
+        /// </summary>
+        [Tooltip("此实体的路线")]
+        public WayLine wayLine;
+    }
+}
+```
+
+
+
+### EntityMotor类
+
+​	此类型控制实体移动
+
+```cs
+using System;
+using UnityEngine;
+
+namespace Assets.EntityDome
+{
+    internal class EntityMotor : MonoBehaviour
+    {
+        //本实体要走的线路
+        private WayLine wayLine;
+        //本对象的变换组件
+        private Transform thisTransform;
+        //当前走到的线路的第几个点
+        private int currentWayLinePoint;
+
+        private void Start()
+        {
+            //初始化变换组件
+            thisTransform = this.transform;
+            currentWayLinePoint = 0;
+        }
+
+        //平滑进度
+        private float lerpT = 0f;
+        private void Update()
+        {
+            //初始化线路，如果线路未找到不执行操作
+            if (!InitWayLine()) {
+                return;
+            }
+
+            //获取当前的目标点
+            var targetPoint = wayLine.points[currentWayLinePoint]; //目标点
+            //获取本对象距离目标点的距离
+            var distanceTargetPoint = Vector3.Distance(thisTransform.position, targetPoint);
+            //距离小于1则认为他已经到了
+            if (distanceTargetPoint < 1) { //距离小于1
+                                           //判断是不是已经到最终点 如果不是那么进入下一个点
+                if (currentWayLinePoint + 1 < wayLine.points.Count) {
+                    currentWayLinePoint++;
+                    lerpT = 0;
+                } else {
+                    this.GetComponent<EntityStatus>().life = 0;
+                }
+            }
+            //平滑本对象的位置和目标点位置
+            var translateVector3 = Vector3.Lerp(thisTransform.position, targetPoint, lerpT);
+            //防止lerp超限
+            lerpT = Math.Clamp(lerpT + Time.deltaTime, 0, 1);
+            //移动
+            transform.position = translateVector3;
+        }
+
+        /// <summary>
+        /// 初始化<see cref="wayLine"/>
+        /// <para> 如果完成后wayLine不为null，则返回true </para>
+        /// </summary>
+        /// <returns></returns>
+        private bool InitWayLine()
+        {
+            if (wayLine != null)
+                return true;
+
+            if (wayLine == null) {
+                var entity = this.GetComponent<Entity>();
+                if (entity == null) {
+                    return false;
+                }
+                wayLine = entity.wayLine;
+            }
+            return !(wayLine == null);
+        }
+    }
+}
+```
+
+
+
+### EntityGenerate类
+
+​	此类型控制实体生成，应当全局只挂一个
+
+```cs
+using System.Collections.Generic;
+using UnityEngine;
+
+namespace Assets.EntityDome
+{
+    /// <summary>
+    /// 用于生成敌人
+    /// </summary>
+    internal class EntityGenerate : MonoBehaviour
+    {
+        //敌人对象的材质
+        public GameObject entityObject;
+        //全部的线路
+        public List<WayLine> lines;
+        //已经创建的全部实体
+        public List<Entity> entitys;
+        private void Start()
+        {
+            #region 初始化路线集合
+            lines = new();
+            var wayLines = GameObject.FindObjectsByType<WayLine>(FindObjectsSortMode.None);
+            for (int i = 0; i < wayLines.Length; i++) {
+                lines.Add(wayLines[i]);
+            }
+            #endregion
+            InvokeRepeating(nameof(CreateEntity), 1, 3);
+        }
+
+
+        public void CreateEntity()
+        {
+            if (entityObject == null) {
+                Debug.Log("实体对象为空");
+                return;
+            }
+            //实例化一个目标对象
+            var instantiateObject = Instantiate(entityObject);
+            //设置缩放 不然太小看不到
+            instantiateObject.transform.localScale = new Vector3(10, 10, 10);
+            //添加实体必要的组件
+            instantiateObject.AddComponent<EntityMotor>();
+            instantiateObject.AddComponent<EntityStatus>();
+
+            //设置实体线路并初始化位置
+            var instantiateObjectEntity = instantiateObject.AddComponent<Entity>();
+            instantiateObjectEntity.wayLine = lines[0];
+            instantiateObjectEntity.transform.position = instantiateObjectEntity.wayLine.points[0];
+
+            //添加到实体列表，并订阅死亡事件，避免内存泄漏
+            entitys.Add(instantiateObjectEntity);
+            instantiateObjectEntity.KillEvent += RemoveEntity;
+        }
+
+        private void RemoveEntity(Entity obj)
+        {
+            obj.KillEvent -= RemoveEntity;
+            entitys.Remove(obj);
+        }
+    }
+}
+```
+
+
+
+### Entity类
+
+​	实体类
+
+```cs
+using System;
+using UnityEngine;
+
+namespace Assets.EntityDome
+{
+    internal class Entity : MonoBehaviour
+    {
+        /// <summary>
+        /// 实体死亡触发
+        /// </summary>
+        public event Action<Entity> KillEvent;
+        /// <summary>
+        /// 实体状态
+        /// </summary>
+        public EntityStatus thisStatus;
+        /// <summary>
+        /// 实体移动脚本
+        /// </summary>
+        public EntityMotor thisMotor;
+        /// <summary>
+        /// 所走的路线
+        /// </summary>
+        public WayLine wayLine;
+
+        public void Update()
+        {
+            if(thisStatus == null && thisMotor == null) {
+                thisStatus = this.GetComponent<EntityStatus>();
+                thisMotor = this.GetComponent<EntityMotor>();
+            }
+
+            if (thisStatus.life <= 0 && thisStatus != null) {
+                KillEvent.Invoke(this);
+                UnityEngine.Object.Destroy(this.gameObject);
+            }
+        }
+    }
+}
+```
+
+
+
+## 老师写的
+
+> 我想 我不会去看老师怎么写了，但是他已经给我模板了
+>
+> 后加: 我还是不做了，按照老师的逻辑来，我不行
+
+| 类              | 说明                                           | 是否是脚本            |
+| --------------- | ---------------------------------------------- | --------------------- |
+| AnimationAction | 动画行为类，提供有关动画行为的类型             | No                    |
+| EmemyStatusInfo | 定义敌人信息类，定义敌人信息，提供受伤死亡功能 | Yes                   |
+| EnemyAI         | 敌人AI类                                       | Yes                   |
+| EnemyAnimation  | 敌人动画，定义需要播放的动画片段名称           | Yes                   |
+| EnemyMotor      | 敌人马达 提供移动 旋转 寻路功能                | Yes                   |
+| EnemySpawn      | 敌人生成器                                     | Yes                   |
+| WayLine         | 路线类                                         | Yes / No<br>我觉得Yes |
+
+### WayLine
+
+​	这个值得我单独拿出来说，我认为老师这样定义，肯定是想要手动在Inspector面板里面给点一个一个赋值的，我是这样做的。他在视频中没有指定任何脚本要使用这个WayLine，然后他又不是脚本，我觉得这是有问题的，所有我把我自己写的Line抄过来了。
+
 # 动画通用
+
+| 名称       | 说明                         |
+| ---------- | ---------------------------- |
+| Play       | 播放动画                     |
+| CrossFade  | 淡入新动画，淡出老动画       |
+| PlayQueued | 前一个动画完成马上播放新动画 |
+
+
 
 ## 录制并使用动画
 
@@ -461,3 +817,357 @@ public class EditTime2 : MonoBehaviour
 4. 要真正使用动画需要将`Animation`的`Animation`设置一下，下面的列表是可选的动画列表，这个属性才是播放的动画。
 
    <img src="./UnityMdImage/真正应用动画.png" alt="image-20251130201657051" style="zoom:50%;" />
+
+
+
+## 使用脚本开启动画
+
+> 必须条件: 
+>
+> 1. 物体需要有 Box Collider
+> 2. 相机需要有 `Physics Raycaster` 射线检测
+> 3. 脚本需要挂到实体上
+> 4. 添加Event System对象 (右键 -> UI -> Event System) 
+> 5. 倒放需要设置 time = 动画长度;
+
+当物体拥有碰撞体后，就可以响应`OnMouse`相关事件。
+
+```cs
+public class DoorAnimation : MonoBehaviour
+{
+    public Animation doorAnimation;
+    // Start is called once before the first execution of Update after the MonoBehaviour is created
+    void Start()
+    {
+        doorAnimation = gameObject.GetComponent<Animation>();
+    }
+
+    public string animationName = "DoorAnimation";
+    /// <summary>
+    /// false 关门  true 开门
+    /// </summary>
+    [Tooltip("false关门，true开门")]
+    [Range(-1, 1, order = 2)]
+    public int doorStatu = 1;
+    private void OnMouseDown()
+    {
+        if (doorAnimation == null)
+            return;
+        //速度决定方向，-就是逆向
+        var doorAnimationStatu = doorAnimation[animationName];
+        doorAnimationStatu.speed = doorStatu;
+        doorAnimationStatu.time = doorStatu == 1 ? 0 : doorAnimationStatu.length;
+        //应用动画
+        doorAnimation.Play();
+        //状态置反
+        doorStatu = -doorStatu;
+        //doorAnimation.PlayQueued(animation.name); //如果不想状态覆盖可以使用队列
+    }
+}
+```
+
+
+
+# Input
+
+> 封装后包装了输入功能，建议在Update中监听用户输入
+
+​	中Axes输入中，Fire1代表Mouse 0，Fire 2代表1，Fire 3代表2
+
+| 方法                  | 说明                                        |
+| --------------------- | ------------------------------------------- |
+| GetMouseButton(0)     | 鼠标一直按下，一直返回true                  |
+| GetMouseButtonDown(0) | 只受到按下的一下                            |
+| GetMouseButtonUp(0)   | 只受到抬下的一下                            |
+| GetKey(KeyCode.A)     | 键盘一直按下，一直返回true<br>还有Down / Up |
+
+- 缩放相机 设置FOV
+
+```cs
+using UnityEngine;
+
+public class CameraScale : MonoBehaviour
+{
+    public Camera thisCamera;
+    // Start is called once before the first execution of Update after the MonoBehaviour is created
+    void Start()
+    {
+        thisCamera = this.gameObject.GetComponent<Camera>();
+    }
+
+
+    public int defaultFieldOfView = 60;
+    public int currentFieldOfView = 60;
+    public float count = 60f;
+    // Update is called once per frame
+    void Update()
+    {
+        if(thisCamera == null) {
+            return ;
+        }
+
+        //左
+        if (Input.GetButton("Fire1")) {
+            count += Time.deltaTime * 3;
+        }
+
+        //右
+        if (Input.GetButton("Fire2")) {
+            count -= Time.deltaTime * 3;
+        }
+
+        currentFieldOfView = (int)count;
+        thisCamera.fieldOfView = currentFieldOfView;
+    }
+}
+```
+
+## 平滑
+
+```cs
+
+using UnityEngine;
+
+public class CameraScale : MonoBehaviour
+{
+    public Camera thisCamera;
+    // Start is called once before the first execution of Update after the MonoBehaviour is created
+    void Start()
+    {
+        thisCamera = this.gameObject.GetComponent<Camera>();
+    }
+
+    public int max = 60;
+    public int min = 20;
+    public bool isMax = true;
+    // Update is called once per frame
+    void Update()
+    {
+        if(thisCamera == null) {
+            return ;
+        }
+
+        if (Input.GetButtonDown("Fire2")) {
+            isMax = !isMax;
+        }
+
+        if (isMax && thisCamera.fieldOfView != max) {
+            thisCamera.fieldOfView = Mathf.Lerp(thisCamera.fieldOfView, max, 0.1f);
+            if(Mathf.Abs(thisCamera.fieldOfView - max) < 0.3f) {
+                thisCamera.fieldOfView = max;
+            }
+        } else if(!isMax && thisCamera.fieldOfView != min) {
+            thisCamera.fieldOfView = Mathf.Lerp(thisCamera.fieldOfView, min, 0.1f);
+            if (Mathf.Abs(thisCamera.fieldOfView - min) < 0.3f) {
+                thisCamera.fieldOfView = min;
+            }
+        }
+    }
+}
+```
+
+## 可扩展的相机缩放
+
+> 高级货: `(index + 1) % array.Length`， 索引越界自动回0
+
+```cs
+using UnityEngine;
+
+public class CameraScale : MonoBehaviour
+{
+    public Camera thisCamera;
+    // Start is called once before the first execution of Update after the MonoBehaviour is created
+    void Start()
+    {
+        thisCamera = this.gameObject.GetComponent<Camera>();
+    }
+
+    public float defaultFOV = 60f;
+    public float[] fovLevel;
+    public int level;
+    public bool isMax = true;
+    // Update is called once per frame
+    void Update()
+    {
+        if(thisCamera == null) {
+            return ;
+        }
+
+        if (Input.GetButtonDown("Fire2")) {
+            isMax = !isMax;
+        }
+
+        if (isMax && thisCamera.fieldOfView != defaultFOV) {
+            thisCamera.fieldOfView = Mathf.Lerp(thisCamera.fieldOfView, defaultFOV, 0.1f);
+            if(Mathf.Abs(thisCamera.fieldOfView - defaultFOV) < 0.3f) {
+                thisCamera.fieldOfView = defaultFOV;
+            }
+        } else if(!isMax && thisCamera.fieldOfView != fovLevel[level]) {
+        {
+            var fovlevel = fovLevel[level];
+            thisCamera.fieldOfView = Mathf.Lerp(thisCamera.fieldOfView, fovlevel, 0.1f);
+            if (Mathf.Abs(thisCamera.fieldOfView - fovlevel) < 0.3f) {
+                thisCamera.fieldOfView = fovlevel;
+            }
+        }
+        }
+    }
+}
+```
+
+
+
+# 三维数学
+
+## Lerp
+
+`Lerp(起点, 终点, 比例)` 对于比例 0是起点，1是终点，0.1就是取两者10%。如果起点一直在变，他只能无限接近终点。
+
+# 制作地板
+
+​	在Unity中，如要地板可以阻止物体下坠，可以为物体添加 `Box Collider` 组件，取消勾选`Is Trigger` `Provides Contacts`，然后为物体添加 `Box Collider` 组件，一样取消勾选那两个，然后添加`Rigidbody`勾选`Use Gravity`就可以了，地板不用`Rigidbody`
+
+
+
+# 渲染管线
+
+## CPU应用程序阶段
+
+---
+
+### 剔除
+
+- 视锥体剔除(Frustum Culling)
+
+  相机发射射线，检测物体的AABB是否发射碰撞，没有的就不渲染
+
+- 层级剔除，遮挡剔除等
+
+### 排序
+
+- 渲染队列 Render Queue
+
+- 不透明队列 Render Queue < 2500
+
+  按摄像机距离从前到后排序
+
+- 半透明队列 Render Queue > 2500
+
+   按摄像机距离从后到前排序
+
+
+
+### 打包数据
+
+---
+
+包含模型信息:
+
+1. 顶点坐标、法线、UV、切线、顶点色、索引列表。顶点就是一堆三维的数据，因为GPU只能渲染三角形
+
+包含变换矩阵:
+
+1. 世界变换矩阵、VP矩阵: 根据摄像机位置和fov等参数构建
+
+包含灯光、材质参数:
+
+1. Shader、材质参数、灯光信息
+
+
+
+### 绘制调用 DrawCall
+
+​	此阶段会先调用SetPass Call告知用什么shader以及混合模式，设置好背面剔除等设置，然后调用Draw Call告知用什么模型数据进行渲染
+
+
+
+## GPU渲染管线
+
+---
+
+​	简要介绍 `模型顶点空间 -> [顶点Shader] -> 裁剪空间 -> [视口变换] -> 屏幕空间坐标 -> [图元装配] -> 图元 -> [光珊化] -> 片段 -> [片段Shader] -> 片段着色 -> [输出合并] -> 像素`，我们可操作的就是顶点Shader和片段Shader
+
+<img src="./UnityMdImage/GPU渲染管线-shader base" alt="image-20251202115141714" style="zoom:50%;" />
+
+
+
+### 顶点Shader
+
+​	最重要的任务就是将顶点坐标从模型空间变换到裁剪空间，从正常模型压扁到2D中。通俗的说就是模拟拍照的过程，模拟投影成像。正常模型是3D的变换后2D显示不会那么别扭。
+
+​	经过顶点Shader处理后，相机金字塔状的视锥体被转换变形成一个比例为2x2x1的立方体(CVV)(裁剪空间)。
+
+​	顶点Shader不产生2D图像，仅使场景中的2D对象产生变形
+
+
+
+### 变换过程
+
+> 这个就是顶点Shader干的活
+> MVP矩阵
+> 裁剪空间用于判断顶点坐标是否位于视觉锥体范围之外
+
+模型空间 -> [Model Matrix] -> 世界空间 -> [View Matrix] -> 相机空间 -> [Projection Matrix] -> 裁剪空间
+	Model Matrix 是为了规范各个建模软件带来的差异。从模型空间变换到世界空间。而世界空间便是由引擎定义的。这样就能在统一的座标系描述对象。
+
+​	View Matrix 是站在相机的角度从新定义物体的坐标(站在相机的角度观察世界，将世界中心变为相机)
+
+​	Projection Matrix 将三维世界的效果映射到二维，形成近大远小
+
+<img src="./UnityMdImage/Shader顶点-MVP矩阵.png" alt="image-20251202120705813" style="zoom:50%;" />
+
+
+
+### 片元Shader
+
+纹理采样: 给定纹理坐标，去纹素地址寻找对应位置的颜色 (u, v) = (0.5, 0.5) => (x, y) = (0.5 * w, 0.5 * h)
+
+纹理过滤机制: 如果是临近点采样会造成明显失真，可以采样周围4个像素进行差值(双线性差值 Bilinear)，解决小图像映射到大屏幕的失真。
+
+Mipmap: 大图像映射到小屏幕，针对原图生成大小不同的图片，形成纹理页，根据映射区域的大小确定要使用哪一块图片
+
+纹理寻址模式: 如果uv超过纹素范围，可以设置超越的寻址模式，Wrap Mode
+
+纹理压缩格式: RGBA真彩，ASTC压缩效果最好
+
+### 光照计算
+
+> 属于片元Shader
+
+Phong光照模型
+
+
+
+### 输出合并
+
+混合 Blending
+
+半透明混合 Aplpha Blend = SrcColor * SrcAlpha + DestColor * (1.0 - SrcAplha)
+SrcColor : 当前渲染的颜色值
+DestColor : 缓冲区的颜色值
+Blend SrcAlpha OneMinusSrcAlpha
+需要关闭ZWrite
+
+叠加变量混合 Soft Additive = SrcColor * SrcAlpha + DestColor * 1.0
+Blend SrcAlpha One
+
+
+
+# Vector3
+
+|          |                    |
+| -------- | ------------------ |
+| Distance | 计算两个向量的距离 |
+|          |                    |
+|          |                    |
+
+
+
+# Math
+
+|       |                            |
+| ----- | -------------------------- |
+| Floor | 返回小于或等于给定数的整数 |
+|       |                            |
+|       |                            |
+

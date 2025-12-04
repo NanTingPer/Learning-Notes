@@ -1252,3 +1252,77 @@ float4 SimpleGaussianBlur(Texture2D tex, SamplerState samp, float2 uv, float2 te
 }
 ```
 
+
+
+# 刷地形
+
+> 前提: 创建Terraria对象（在3D Object）
+
+基本操作
+
+|           |                        |
+| --------- | ---------------------- |
+| 按住SHIFT | 本来是升高地形变成降低 |
+
+添加材质
+
+​	在地形对象的Inspector面板，选择笔刷类型那边有个`Edit Terrain Layers` 创建一个层
+
+1. 创建地形对象
+
+<img src="./UnityMdImage/创建地形.png" alt="image-20251204135154865" style="zoom:33%;" />
+
+2. 修改基本信息，选中创建的地形对象，单击设置
+
+![image-20251204135657588](./UnityMdImage/打开地形设置.png)
+
+3. 修改地形大小
+
+![image-20251204135739508](./UnityMdImage/修改地形大小.png)
+
+4. 刷地面，设置这个后就可以刷草了
+
+<img src="./UnityMdImage/选取地面草地.png" alt="image-20251204141804517" style="zoom:50%;" />
+
+
+
+
+
+# `SystemInput`
+
+1. 创建input
+
+<img src="./UnityMdImage/创建Input.png" alt="image-20251204144300666" style="zoom:50%;" />
+
+2. 设置并编辑，因为使用的时候是一个单独的类型，所以下面的设置是生成类的路径和信息
+
+![image-20251204144457645](./UnityMdImage/Unity/设置并编辑Input.png)
+
+3. 创建映射，一定要指定Interactions，那个是触发规则
+
+<img src="./UnityMdImage/Unity/创建input映射.png" alt="image-20251204144641047" style="zoom:50%;" />
+
+4. 创建并使用
+
+```cs
+private PlayerActions action;
+// Start is called once before the first execution of Update after the MonoBehaviour is created
+void Start()
+{
+    action = new PlayerActions();
+    action.Enable();
+}
+
+// Update is called once per frame
+void Update()
+{
+    var a = action.PlayerMaps.A.IsPressed();
+    Debug.Log(a);
+}
+
+private void OnDestroy()
+{
+    action.Disable();
+}
+```
+

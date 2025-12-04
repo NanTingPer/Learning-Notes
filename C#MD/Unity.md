@@ -1171,3 +1171,84 @@ Blend SrcAlpha One
 |       |                            |
 |       |                            |
 
+
+
+# 高斯模糊
+
+ **核心原理：纹理空间与屏幕空间的关系**
+
+## 纹理坐标系
+
+- UV坐标系：纹理坐标是归一化的 `[0,1]` 范围
+- 像素（纹素）坐标：实际纹理像素位置，范围是 `[0, textureWidth-1] × [0, textureHeight-1]`
+
+```cs
+//textureSize需要外部给
+
+// 从UV到像素坐标
+float2 pixelCoord = uv * textureSize;
+// 从像素坐标回到UV
+float2 uv = pixelCoord / textureSize;
+// 一个像素对应的UV偏移量
+float2 texelSize = 1.0 / textureSize;
+```
+
+## 基于纹理尺寸的采样
+
+> 每个像素在UV空间中占据 `1/textureWidth * 1/textureHeight`的区域
+> 水平方向移动一个像素 = `当前uv.x += 1/textureWidth`
+> 垂直方向移动一个像素 = `当前uv.y += 1/textureHeight`
+
+```cs
+Texture2D sourceTexture;
+float2 textureSize;  // 纹理的宽度和高度
+
+float4 GetNeighborColors(float2 uv) {
+    // 计算一个纹素对应的UV偏移
+    float2 texelSize = 1.0 / textureSize;
+    
+    // 相邻像素在UV空间中的位置
+    float2 uvLeft   = uv - float2(texelSize.x, 0);
+    float2 uvRight  = uv + float2(texelSize.x, 0);
+    float2 uvTop    = uv + float2(0, texelSize.y);
+    float2 uvBottom = uv - float2(0, texelSize.y);
+    
+    // 采样
+    float4 center = sourceTexture.Sample(linearSampler, uv);
+    float4 left   = sourceTexture.Sample(linearSampler, uvLeft);
+    float4 right  = sourceTexture.Sample(linearSampler, uvRight);
+    
+    return float4(center.rgb, 1.0);
+}
+```
+
+## 最简模糊
+
+```cs
+float4 SimpleGaussianBlur(Texture2D tex, SamplerState samp, float2 uv, float2 texelSize, float intensity) {
+    float4 color = float4(0, 0, 0, 0);
+    
+    // 基础权重
+    float centerWeight = 0.4;
+    float neighborWeight = 0.2;
+    
+    // 根据强度调整权重分布
+    centerWeight = lerp(1.0, centerWeight, intensity);  // 强度为0时完全用中心像素
+    neighborWeight = lerp(0.0, neighborWeight, intensity); // 强度为0时忽略邻居
+    
+    // 计算单个像素的uv大小
+    float2 pixeluvSize = 1.0 / texelSize;
+    
+    // 采样
+    color += tex.Sample(samp, uv) * centerWediight;                   // 中心
+    color += tex.Sample(samp, uv + float2(pixeluvSize.x, 0)) * neighborWeight;  // 右
+    color += tex.Sample(samp, uv - float2(pixeluvSize.x, 0)) * neighborWeight;  // 左
+    color += tex.Sample(samp, uv + float2(0, pixeluvSize.y)) * neighborWeight;  // 上
+    color += tex.Sample(samp, uv - float2(0, pixeluvSize.y)) * neighborWeight;  // 下
+    
+    // 重新归一化
+    float totalWeight = centerWeight + neighborWeight * 4.0;
+    return color / totalWeight;
+}
+```
+

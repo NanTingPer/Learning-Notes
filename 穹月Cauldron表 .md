@@ -1,0 +1,241 @@
+| 材料 | 材料所需数量 | 模板类型 | 返回结果 | 返回数量 |
+| :--- | :--- | :--- | :--- | :--- |
+| 烬火碎片 | 10 | 饰品 (Blank Accessory) | 焰纹护盾 (FlamecrestShield) | 1 |
+| 烬火碎片 | 10 | 弓弩 (Blank Bow) | 赤铁光弦弓 (ArchariliteEnergyShot) | 1 |
+| 烬火碎片 | 10 | 法杖 (Blank Staff) | 赤铁遥控器 (ArncharRemote) | 1 |
+| 烬火碎片 | 10 | 巨剑 (Blank Sword) | 炽星裂空剑 (CinderBraker) | 1 |
+| 烬火碎片 | 10 | 巨剑 (Blank Sword) | 绯焰魔镰 (DevilsPeak) | 1 |
+| 烬火碎片 | 10 | 枪械 (Blank Gun) | 烈焰破晓 (FlameBuster) | 1 |
+| 烬火碎片 | 10 | 法杖 (Blank Staff) | 焰灵杖 (StaffOFlame) | 1 |
+| 烬火碎片 | 10 | 法杖 (Blank Staff) | 地狱 (Infernis) | 1 |
+| 烬火碎片 | 10 | 巨剑 (Blank Sword) | 灰烬之影伊克斯 (IyxTheInfamous) | 1 |
+| 烬火碎片 | 10 | 法杖 (Blank Staff) | 裂焰烛 (Splitflame) | 1 |
+| 玄铁 | 10 | 饰品 (Blank Accessory) | 刺儿盾 (Barry) | 1 |
+| 玄铁 | 10 | 符文 (Blank Rune) | 烈风符文 (RuneOfWind) | 1 |
+| 玄铁 | 10 | 饰品 (Blank Accessory) | 耀日符印 (SunGlyph) | 1 |
+| 玄铁 | 10 | 魔法尘袋 (Blank Bag) | 艾凡魔法尘 (AivanPowder) | 1 |
+| 玄铁 | 10 | 鞭刃 (Blank Safunai) | 阿卡里亚鞭刃 (Alcarish) | 1 |
+| 玄铁 | 10 | 枪械 (Blank Gun) | 雷炎连爆 (Dunderbustion) | 1 |
+| 玄铁 | 10 | 弓弩 (Blank Bow) | 玄铁之影 (GintzlsSteed) | 1 |
+| 玄铁 | 10 | 巨剑 (Blank Sword) | 古蒂尼尔 (Gutinier) | 1 |
+| 玄铁 | 10 | 枪械 (Blank Gun) | 锈发手枪 (RustlockPistol) | 1 |
+| 玄铁 | 10 | 巨剑 (Blank Sword) | 炽焰赫尔修里斯 (Halhurish) | 1 |
+| 玄铁 | 10 | 巨剑 (Blank Sword) | 游隼之爪 (StalkersTallon) | 1 |
+| 玄铁 | 10 | 法杖 (Blank Staff) | 烈阳爆破杖 (SunBlastStaff) | 1 |
+| 玄铁 | 10 | 法杖 (Blank Staff) | 风漩仪 (Valtotude) | 1 |
+| 玄铁 | 10 | 弓弩 (Blank Bow) | 翼怒之弓 (WingedFury) | 1 |
+| 古谕碎片 | 10 | 饰品 (Blank Accessory) | 火烛灵 (Bonfire) | 1 |
+| 古谕碎片 | 10 | 饰品 (Blank Accessory) | 火焰纹章 (FireEmblem) | 1 |
+| 古谕碎片 | 10 | 饰品 (Blank Accessory) | 皮革护手 (LeatherGlove) | 1 |
+| 古谕碎片 | 10 | 魔法尘袋 (Blank Bag) | 焰火魔法尘 (FlamePowder) | 1 |
+| 古谕碎片 | 10 | 抛接 (Blank Juggler) | 烈焰天使 (BurningAngel) | 1 |
+| 古谕碎片 | 10 | 魔法尘袋 (Blank Bag) | 焰火魔法尘 (FlamePowder) | 1 |
+| 古谕碎片 | 10 | 枪械 (Blank Gun) | 翠破焰炮 (GardenWrecker) | 1 |
+| 古谕碎片 | 10 | 弓弩 (Blank Bow) | 杰克弓 (JackoShot) | 1 |
+| 古谕碎片 | 10 | 弓弩 (Blank Bow) | 幽曦鸣华 (MorrowValswa) | 1 |
+| 古谕碎片 | 10 | 巨剑 (Blank Sword) | 稻草人军刀 (ScarecrowSaber) | 1 |
+| 古谕碎片 | 10 | 符文 (Blank Rune) | 日蚀蝶杖 (SolMothStaff) | 1 |
+| 古谕碎片 | 10 | 法杖 (Blank Staff) | 日蚀蝶杖 (SolMothStaff) | 1 |
+| 古谕碎片 | 10 | 法杖 (Blank Staff) | 星花魔杖 (StarFlowerStaff) | 1 |
+| 古谕碎片 | 10 | 球体 (Blank Orb) | 爆音琴 (Violar) | 1 |
+| 古谕碎片 | 10 | 符文 (Blank Rune) | 灵光绽放 (LightSpand) | 1 |
+| 星树亮鳞 | 10 | 巨剑 (Blank Sword) | 寒裂 (Chillrend) | 1 |
+| 星树亮鳞 | 10 | 枪械 (Blank Gun) | 极光霜弩 (FrostyCrossbow) | 1 |
+| 星树亮鳞 | 10 | 弓弩 (Blank Bow) | 冰封星弓 (IcelockLongbow) | 1 |
+| 月华晶片 | 10 | 弓弩 (Blank Bow) | 云翼弓 (CloudBow) | 1 |
+| 月华晶片 | 10 | 法杖 (Blank Staff) | 果冻法典 (JellyTome) | 1 |
+| 月华晶片 | 10 | 法杖 (Blank Staff) | 星烁魔法尘 (ArcanalPowder) | 1 |
+| 玄铁 | 10 | 枪械 (Blank Gun) | 震耳蝠啸 (TheDeafen) | 1 |
+| 极光落星 | 10 | 枪械 (Blank Gun) | 星辰召唤 (Astalaiya) | 1 |
+| 辐染镀层 | 10 | 枪械 (Blank Gun) | 毒焰喷射 (Tociflare) | 1 |
+| 寒冬碎片 | 10 | 饰品 (Blank Accessory) | 极地攀登靴 (IceClimbers) | 1 |
+| 寒冬碎片 | 10 | 弓弩 (Blank Bow) | 冰晶哀歌 (Cryal) | 1 |
+| 寒冬碎片 | 10 | 魔法尘袋 (Blank Bag) | 霜冻魔法尘 (FrostedPowder) | 1 |
+| 寒冬碎片 | 10 | 符文 (Blank Rune) | 冰封魔杖 (IceboundStaff) | 1 |
+| 寒冬碎片 | 10 | 枪械 (Blank Gun) | 珍珠冰晶弹 (EvasiveBalls) | 1 |
+| 寒冬碎片 | 10 | 枪械 (Blank Gun) | 爱之焰 (Pearlinator) | 1 |
+| 荆棘常春藤 | 10 | 饰品 (Blank Accessory) | 叶灵盒 (CanOfLeaves) | 1 |
+| 荆棘常春藤 | 10 | 魔法尘袋 (Blank Bag) | 尘土魔法粉 (GrassDirtPowder) | 1 |
+| 春蘑菇 | 10 | 饰品 (Blank Accessory) | 旅者的行囊 (HikersBackpack) | 1 |
+| 荆棘常春藤 | 10 | 饰品 (Blank Accessory) | 木遁秘术书 (IllusionistBook) | 1 |
+| 荆棘常春藤 | 10 | 饰品 (Blank Accessory) | 珊瑚手环 (CoralBand) | 1 |
+| 荆棘常春藤 | 10 | 饰品 (Blank Accessory) | 锯齿利牙项链 (SawtoothNecklace) | 1 |
+| 荆棘常春藤 | 10 | 饰品 (Blank Accessory) | 吸血鬼护符 (VampireCharm) | 1 |
+| 春蘑菇 | 10 | 饰品 (Blank Accessory) | 魔法尘增效器·混融 (MushyExtenderPowder) | 1 |
+| 春蘑菇 | 10 | 巨剑 (Blank Sword) | 幽曦之剑 (MorrowSword) | 1 |
+| 荆棘常春藤 | 10 | 符文 (Blank Rune) | 绿蔓使者法杖 (IvyakenStaff) | 1 |
+| 荆棘常春藤 | 10 | 法杖 (Blank Staff) | 绿蔓使者法杖 (IvyakenStaff) | 1 |
+| 荆棘常春藤 | 10 | 巨剑 (Blank Sword) | 掌心战斧 (PalmThrower) | 1 |
+| 荆棘常春藤 | 10 | 弓弩 (Blank Bow) | 艾文弓 (IvynShot) | 1 |
+| 荆棘常春藤 | 10 | 巨剑 (Blank Sword) | 幽曦之锋 (MorrowRapier) | 1 |
+| 春蘑菇 | 10 | 弓弩 (Blank Bow) | 幽曦萨尔法斯 (MorrowSalface) | 1 |
+| 春蘑菇 | 10 | 符文 (Blank Rune) | 蘑菇杖 (MushroomStave) | 1 |
+| 春蘑菇 | 10 | 符牌 (Blank Card) | 柔梦符牒 (MushyCard) | 1 |
+| 春蘑菇 | 10 | 符文 (Blank Rune) | 生命药剂魔杖 (PotionOfLifeWand) | 1 |
+| 春蘑菇 | 10 | 符文 (Blank Rune) | 魔力药剂魔杖 (PotionOfManaWand) | 1 |
+| 荆棘常春藤 | 10 | 巨剑 (Blank Sword) | 木鞘灵剑 (WoodenSaber) | 1 |
+| 恐惧碎片 | 10 | 符文 (Blank Rune) | 潜伏符文 (RuneOfStealth) | 1 |
+| 恐惧碎片 | 10 | 饰品 (Blank Accessory) | 亡灵护符 | 1 |
+| 恐惧碎片 | 10 | 魔法尘袋 (Blank Bag) | 毒雾魔法尘 (PoisonedPowder) | 1 |
+| 恐惧碎片 | 10 | 鞭刃 (Blank Safunai) | 毒棘藤鞭刃 (Kaevine) | 1 |
+| 恐惧碎片 | 10 | 弓弩 (Blank Bow) | 红骷髅 (TheRedSkull) | 1 |
+| Hypnotized Soul | 10 | 符文 (Blank Rune) | 暗灵符文 (RuneOfShade) | 1 |
+| Hypnotized Soul | 10 | 魔法尘袋 (Blank Bag) | 暗焰魔法尘 (ShadowFlamePowder) | 1 |
+| Hypnotized Soul | 10 | 巨剑 (Blank Sword) | 赫蒙之镰 (HolmbergScythe) | 1 |
+| Hypnotized Soul | 10 | 弓弩 (Blank Bow) | 刺影瞬破 (AssassinsDischarge) | 1 |
+| Hypnotized Soul | 10 | 符牌 (Blank Card) | 幽蝶符牌 (LarvaedCard) | 1 |
+| Hypnotized Soul | 10 | 法杖 (Blank Staff) | 贪欲之壶 (PotOfGreed) | 1 |
+| Hypnotized Soul | 10 | 巨剑 (Blank Sword) | 裂魂者 (Ripper) | 1 |
+| Hypnotized Soul | 10 | 枪械 (Blank Gun) | 撕裂者 (Shredder) | 1 |
+| Hypnotized Soul | 10 | 球体 (Blank Orb) | 星辰球 (StarringBalls) | 1 |
+| Hypnotized Soul | 10 | 巨剑 (Blank Sword) | 星瀚无垠 (Starvast) | 1 |
+| 奇迹针线 | 10 | 枪械 (Blank Gun) | 科技爆裂枪 (TecnoBlaster) | 1 |
+| Hypnotized Soul | 10 | 法杖 (Blank Staff) | 月蛾法杖 (MoonMothStaff) | 1 |
+| Hypnotized Soul | 10 | 法杖 (Blank Staff) | 暮光秘法典 (TwilitTome) | 1 |
+| Hypnotized Soul | 10 | 法杖 (Blank Staff) | 魔咒烛心 (WickofSorcery) | 1 |
+| 奇迹针线 | 10 | 枪械 (Blank Gun) | 蠕动粘弹 (TheWiggler) | 1 |
+| 辐染镀层 | 10 | 饰品 (Blank Accessory) | 阿尔卡宁符 (Alcanine) | 1 |
+| 烬火碎片 | 10 | 饰符 (Blank Brooch) | 琥珀饰符 (AmberBroochA) | 1 |
+| 春蘑菇 | 10 | 饰符 (Blank Brooch) | 紫晶饰符 (AmethystBroochA) | 1 |
+| 拧曲暗质 | 10 | 饰符 (Blank Brooch) | 匿影饰符 (AurelusBlightBroochA) | 1 |
+| 恐惧碎片 | 10 | 饰符 (Blank Brooch) | 恶巫惧符 (DreadBroochA) | 1 |
+| 寒冬碎片 | 10 | 饰符 (Blank Brooch) | 月冰饰符 (FrileBroochA) | 1 |
+| 玄铁 | 10 | 饰符 (Blank Brooch) | 玄铁风符 (GintzlBroochA) | 1 |
+| 辐染镀层 | 10 | 饰品 (Blank Accessory) | 歌维赫蕴魔饰符 (GovheilHolsterBroochA) | 1 |
+| 星树亮鳞 | 10 | 饰符 (Blank Brooch) | 星树饰符 (IllurianBroochA) | 1 |
+| 古谕碎片 | 10 | 饰符 (Blank Brooch) | 锈斑猎手饰符 | 1 |
+| 恐惧碎片 | 10 | 饰符 (Blank Brooch) | 玫瑰饰符 (RoseBroochA) | 1 |
+| 玄铁 | 10 | 饰符 (Blank Brooch) | 风沙饰符 (SandyBroochA) | 1 |
+| 荆棘常春藤 | 10 | 饰符 (Blank Brooch) | 萌萌史莱姆饰符 (SlimeBroochA) | 1 |
+| 辐染镀层 | 10 | 饰符 (Blank Brooch) | 石心饰符 (StoniaBroochA) | 1 |
+| 辐染镀层 | 10 | 饰品 (Blank Accessory) | 电能水晶 (ElectricCrystal) | 1 |
+| 月华晶片 | 10 | 饰品 (Blank Accessory) | 魔法尘增效器·枯骨 (BonedExtenderPowder) | 1 |
+| Grail Rings | 10 | 饰品 (Blank Accessory) | 魔法尘增效器·砾金 (GrailedExtenderPowder) | 1 |
+| 恐惧碎片 | 10 | 饰品 (Blank Accessory) | 魔法尘增效器·黯惧 (GremoryExtenderPowder) | 1 |
+| 奇迹针线 | 10 | 饰品 (Blank Accessory) | 魔法尘增效器·中和 (MidfortuneExtenderPowder) | 1 |
+| 阿尔卡迪亚混溶质 | 10 | 饰品 (Blank Accessory) | 魔法尘增效器·幻想 (ReverieExtenderPowder) | 1 |
+| 星树亮鳞 | 10 | 饰品 (Blank Accessory) | 星树坠饰盒 (IllurianLoveLocket) | 1 |
+| 星树亮鳞 | 10 | 饰品 (Blank Accessory) | 星树耳环 | 1 |
+| 拧曲暗质 | 10 | 饰品 (Blank Accessory) | 月之手环 (LunarBand) | 1 |
+| 荆棘常春藤 | 10 | 符文 (Blank Rune) | 碧藤符文 (RuneOfCorsage) | 1 |
+| 烬火碎片 | 10 | 符文 (Blank Rune) | 爆裂符文 (RuneOfDetonation) | 1 |
+| 月华晶片 | 10 | 饰品 (Blank Accessory) | 影遁披巾 (ShadeScarf) | 1 |
+| 阿尔卡迪亚混溶质 | 10 | 饰品 (Blank Accessory) | 影匿披风 (ShadowCloak) | 1 |
+| 烬火碎片 | 10 | 饰品 (Blank Accessory) | 荆棘秘术书 (ThornedBook) | 1 |
+| 奇迹针线 | 10 | 饰品 (Blank Accessory) | 奇迹之翼 (MiracleWings) | 1 |
+| 阿尔卡迪亚混溶质 | 10 | 饰品 (Blank Accessory) | 幽灵影翼 (ShadeWraithWings) | 1 |
+| Hypnotized Soul | 10 | 饰符 (Blank Brooch) | 奇迹魔能 (EpsidonInsource) | 1 |
+| 奇迹针线 | 10 | 饰符 (Blank Brooch) | 辉日护盾 (DaedussSunSheid) | 1 |
+| 阿尔卡迪亚混溶质 | 10 | 法杖 (Blank Staff) | 阿尔卡迪黑洞爆弹 (AlcadBomb) | 1 |
+| 星树亮鳞 | 10 | 法杖 (Blank Staff) | 蔚蓝龙齿项链 (AzuretoothNecklace) | 1 |
+| 极光落星 | 10 | 法杖 (Blank Staff) | 璀光破影镜 (Bincle) | 1 |
+| 古谕碎片 | 10 | 法杖 (Blank Staff) | 星镀鼓王 (Bongos) | 1 |
+| 烬火碎片 | 10 | 法杖 (Blank Staff) | 灰烬灯笼 (CinderedLantern) | 1 |
+| 烬火碎片 | 10 | 抛接 (Blank Juggler) | 火爆核心 (Combuster) | 1 |
+| 寒冬碎片 | 10 | 球体 (Blank Orb) | 珍珠冰晶弹 (EvasiveBalls) | 1 |
+| 烬火碎片 | 10 | 球体 (Blank Orb) | 熔壳火球 (FlameburstBalls) | 1 |
+| 星树亮鳞 | 10 | 法杖 (Blank Staff) | 星织法杖 (FrameStaff) | 1 |
+| 古谕碎片 | 10 | 法杖 (Blank Staff) | 金灵法杖 (GildedStaff) | 1 |
+| 烬火碎片 | 10 | 枪械 (Blank Gun) | 焰火熔蜡器 (GraftedWaxMelter) | 1 |
+| 辐染镀层 | 10 | 枪械 (Blank Gun) | 爆鲨酸雨 (Irradishark) | 1 |
+| 辐染镀层 | 10 | 法杖 (Blank Staff) | 堕落者的明灯 (LanternOfAFallen) | 1 |
+| 拧曲暗质 | 10 | 法杖 (Blank Staff) | 魔法斧 (MagicalAxe) | 1 |
+| 恐惧碎片 | 10 | 法杖 (Blank Staff) | 心脉炎鸣 (Pericarditis) | 1 |
+| 虹彩幻墨 | 10 | 法杖 (Blank Staff) | 至炫墨彩 (PieceOfArt) | 1 |
+| 虹彩幻墨 | 10 | 球体 (Blank Orb) | 虹彩晶球 (PrismaticBalls) | 1 |
+| 阿尔卡迪亚混溶质 | 10 | 弓弩 (Blank Bow) | 雷曼索织魔 (Rhamenthal) | 1 |
+| 玄铁 | 10 | 笼手 (Blank Stein) | 始源笼手 (Hultinstein) | 1 |
+| 奇迹针线 | 10 | 笼手 (Blank Stein) | 堕魔笼手 (Mardenstein) | 1 |
+| 辐染镀层 | 10 | 笼手 (Blank Stein) | 圣霆笼手 (Voltenstein) | 1 |
+| 月华晶片 | 10 | 法杖 (Blank Staff) | 超星闪弦 (SupernovaSitar) | 1 |
+| 玄铁 | 10 | 法杖 (Blank Staff) | 蚁群魔杖 (SwarmerStaff) | 1 |
+| 辐染镀层 | 10 | 法杖 (Blank Staff) | 旋风击 (Swingaling) | 1 |
+| 极光落星 | 10 | 法杖 (Blank Staff) | 暮光秘法典 (TwilitTome) | 1 |
+| 极光落星 | 10 | 巨剑 (Blank Sword) | 阿尔特莱德剑雨 (AltrideSlicer) | 1 |
+| 阿尔卡迪亚混溶质 | 10 | 巨剑 (Blank Sword) | 安塔奇飞刃 (Antaciz) | 1 |
+| 拧曲暗质 | 10 | 巨剑 (Blank Sword) | 布里姬的告别之剑 (BridgetII) | 1 |
+| 月华晶片 | 10 | 巨剑 (Blank Sword) | 星河锁愿·夜语剑 (Curlistine) | 1 |
+| 月华晶片 | 10 | 巨剑 (Blank Sword) | 时空临界 (EventHorizon) | 1 |
+| 寒冬碎片 | 10 | 巨剑 (Blank Sword) | 霜冻者 (FrostBringer) | 1 |
+| Grail Rings | 10 | 巨剑 (Blank Sword) | 砾金斧 (GrailAxe) | 1 |
+| 拧曲暗质 | 10 | 巨剑 (Blank Sword) | 孤行深潜 (SingularDive) | 1 |
+| 寒冬碎片 | 10 | 巨剑 (Blank Sword) | 双巫槲剑 (FrostSwing) | 1 |
+| 辐染镀层 | 10 | 巨剑 (Blank Sword) | 图拉赫尔 (Tulahal) | 1 |
+| 虹彩幻墨 | 10 | 巨剑 (Blank Sword) | 绘空墨刃 (InkingSpire) | 1 |
+| 辐染镀层 | 10 | 抛接 (Blank Juggler) | 基尔维亚 (Kilvier) | 1 |
+| 寒冬碎片 | 10 | 巨剑 (Blank Sword) | 月光剑雨 (MooningSlicer) | 1 |
+| 古谕碎片 | 10 | 巨剑 (Blank Sword) | 幽曦之锋 (MorrowRapier) | 1 |
+| 月华晶片 | 10 | 巨剑 (Blank Sword) | 天怒破空刃 (SkyrageShasher) | 1 |
+| 玄铁 | 10 | 巨剑 (Blank Sword) | 角斗士之矛 (GladiatorSpear) | 1 |
+| 寒冬碎片 | 10 | 巨剑 (Blank Sword) | 极光 (Auroran) | 1 |
+| 古谕碎片 | 10 | 巨剑 (Blank Sword) | 灵光绽放 (LightSpand) | 1 |
+| 烬火碎片 | 10 | 魔法尘袋 (Blank Bag) | 阿格雷维魔法尘 (AgreviPowder) | 1 |
+| 月华晶片 | 10 | 魔法尘袋 (Blank Bag) | 莱娜之歌魔法尘 (LenaSongPowder) | 1 |
+| 星树亮鳞 | 10 | 魔法尘袋 (Blank Bag) | 星烁魔法尘 (ArcanalPowder) | 1 |
+| 辐染镀层 | 10 | 魔法尘袋 (Blank Bag) | 歌维赫魔法尘 (GovheilPowder) | 1 |
+| 拧曲暗质 | 10 | 魔法尘袋 (Blank Bag) | 幻术师魔法尘 (IllusionistPowder) | 1 |
+| 春蘑菇 | 10 | 魔法尘袋 (Blank Bag) | 旋律魔法尘 (Verstidust) | 1 |
+| 阿尔卡迪亚混溶质 | 10 | 魔法尘袋 (Blank Bag) | 灵体魔法尘 (SpiritPowder) | 1 |
+| Grail Rings | 10 | 饰品 (Blank Accessory) | 旋律魔法尘 (Verstidust) | 1 |
+| 烬火碎片 | 10 | 枪械 (Blank Gun) | 赤铁炫光剑 (ArchariliteRaysword) | 1 |
+| 虹彩幻墨 | 10 | 弓弩 (Blank Bow) | 冰霜晶化者 (Crysalizer) | 1 |
+| 恐惧碎片 | 10 | 枪械 (Blank Gun) | 冥界之吻 (DeathShot) | 1 |
+| 星树亮鳞 | 10 | 枪械 (Blank Gun) | 鳗舞无界 (EelInfinite) | 1 |
+| 恐惧碎片 | 10 | 枪械 (Blank Gun) | 影杀回魂 (AssassinsRecharge) | 1 |
+| 阿尔卡迪亚混溶质 | 10 | 枪械 (Blank Gun) | 泡沫灵犀 (BubbleBussy) | 1 |
+| 极光落星 | 10 | 枪械 (Blank Gun) | 神云枪 (DivineSniper) | 1 |
+| 玄铁 | 10 | 枪械 (Blank Gun) | 雷霆之鹰 (Eagle) | 1 |
+| 拧曲暗质 | 10 | 枪械 (Blank Gun) | 疾电破 (Electrifying) | 1 |
+| 拧曲暗质 | 10 | 枪械 (Blank Gun) | 龙息电能枪 (Dragoniper) | 1 |
+| 寒冬碎片 | 10 | 枪械 (Blank Gun) | 极光霜弩 (FrostyCrossbow) | 1 |
+| 星树亮鳞 | 10 | 枪械 (Blank Gun) | 霜冷女王 (MsFreeze) | 1 |
+| 月华晶片 | 10 | 枪械 (Blank Gun) | 皓月破空 (VoidBlaster) | 1 |
+| Grail Rings | 10 | 枪械 (Blank Gun) | 砾金发簪球 (GrailHairpinYoyo) | 1 |
+| 辐染镀层 | 10 | 枪械 (Blank Gun) | 破晓·骨鸣 (SrTetanus) | 1 |
+| 阿尔卡迪亚混溶质 | 10 | 枪械 (Blank Gun) | 星辰破晓 (STARBUST) | 1 |
+| 辐染镀层 | 10 | 枪械 (Blank Gun) | 噬灭掠影 (TheReaving) | 1 |
+| 月华晶片 | 10 | 枪械 (Blank Gun) | 和鸣亵神 (HarmonicBlasphemy) | 1 |
+| 烬火碎片 | 10 | 枪械 (Blank Gun) | 火焰蜂鸣 (Hornet) | 1 |
+| 阿尔卡迪亚混溶质 | 10 | 枪械 (Blank Gun) | 翔鹰怒射 (IrradieagleWrath) | 1 |
+| 拧曲暗质 | 10 | 弓弩 (Blank Bow) | 幽蝶长弓 (LarveinGreatbow) | 1 |
+| 烬火碎片 | 10 | 枪械 (Blank Gun) | 赤铁重集束枪 (M38F30) | 1 |
+| 烬火碎片 | 10 | 枪械 (Blank Gun) | 赤铁速驰者 (M61X) | 1 |
+| 虹彩幻墨 | 10 | 枪械 (Blank Gun) | 缤纷彩弹枪 (Photobomb) | 1 |
+| 辐染镀层 | 10 | 抛接 (Blank Juggler) | 毒翼天使 (PoisonedAngel) | 1 |
+| 烬火碎片 | 10 | 枪械 (Blank Gun) | 创痕镭枪 (TheTraumatizer) | 1 |
+| 星树亮鳞 | 10 | 枪械 (Blank Gun) | 幽能钻吸 (VacuumDrill) | 1 |
+| 月华晶片 | 10 | 枪械 (Blank Gun) | 皓月破空 (VoidBlaster) | 1 |
+| 烬火碎片 | 10 | 弓弩 (Blank Bow) | 尤里之怒 (YuriFury) | 1 |
+| 古谕碎片 | 10 | 法杖 (Blank Staff) | 星镀鼓王 (Bongos) | 1 |
+| 寒冬碎片 | 10 | 法杖 (Blank Staff) | 光渊觅法者 (AuroranSeeker) | 1 |
+| 辐染镀层 | 10 | 法杖 (Blank Staff) | 桶击勇士 (BucketScrapper) | 1 |
+| 辐染镀层 | 10 | 法杖 (Blank Staff) | 荆巫秘刃 (Verstibloom) | 1 |
+| 恐惧碎片 | 10 | 法杖 (Blank Staff) | 滴滴怪魔杖 (DripplerStaff) | 1 |
+| 虹彩幻墨 | 10 | 法杖 (Blank Staff) | 杰克逊·泼洛克 (JacksonPollock) | 1 |
+| 极光落星 | 10 | 球体 (Blank Orb) | 极光星球 (AuroreanStarball) | 1 |
+| 月华晶片 | 10 | 球体 (Blank Orb) | 真实月华 (TheActualMoon) | 1 |
+| 阿尔卡迪亚混溶质 | 10 | 球体 (Blank Orb) | 双子星爆弹 (TwinStarbombas) | 1 |
+| 极光落星 | 10 | 法杖 (Blank Staff) | 星爆投弹者 (StarCall) | 1 |
+| 月华晶片 | 10 | 法杖 (Blank Staff) | 复仇之剑 (SwordsOfRevengence) | 1 |
+| 星树亮鳞 | 10 | 法杖 (Blank Staff) | 雷霆法杖 (Thunderstaff) | 1 |
+| 恐惧碎片 | 10 | 法杖 (Blank Staff) | 吸血魔杖 (VampireScepter) | 1 |
+| 烬火碎片 | 10 | 法杖 (Blank Staff) | 激昂狂想曲 (VehementRhapsody) | 1 |
+| 月华晶片 | 10 | 法杖 (Blank Staff) | 皓月法杖 (VoidStaff) | 1 |
+| 虹彩幻墨 | 10 | 抛接 (Blank Juggler) | 艺术家之心 (ArtistsHeart) | 1 |
+| 古谕碎片 | 10 | 抛接 (Blank Juggler) | 烈焰瓶 (BurningFlask) | 1 |
+| 玄铁 | 10 | 抛接 (Blank Juggler) | 古谕绳系灵符 (AlcadizDagger) | 1 |
+| 星树亮鳞 | 10 | 抛接 (Blank Juggler) | 星树圣书 (DogmaBalls) | 1 |
+| 玄铁 | 10 | 抛接 (Blank Juggler) | 玄铁标枪 (GintzlSpear) | 1 |
+| 玄铁 | 10 | 抛接 (Blank Juggler) | 以德服人 (GreyBricks) | 1 |
+| 荆棘常春藤 | 10 | 抛接 (Blank Juggler) | 荆棘飞镖 (荆棘常春藤Shuriken) | 1 |
+| 春蘑菇 | 10 | 抛接 (Blank Juggler) | 基础棒球 (BasicBaseball) | 1 |
+| 烬火碎片 | 10 | 抛接 (Blank Juggler) | 齿轮爆裂者 (CogBomber) | 1 |
+| 玄铁 | 10 | 抛接 (Blank Juggler) | 尖刺抛击 (SpikedLobber) | 1 |
+| 月华晶片 | 10 | 抛接 (Blank Juggler) | 投掷飞牌 (ThrowingCards) | 1 |
+| 拧曲暗质 | 10 | 抛接 (Blank Juggler) | 幽蝶之矛 (LarvaedSpear) | 1 |
+| 辐染镀层 | 10 | 抛接 (Blank Juggler) | 摇滚断骨 (PunkedUpChops) | 1 |
+| 辐染镀层 | 10 | 抛接 (Blank Juggler) | 舞动裂锯 (Ragsaw) | 1 |
+| 玄铁 | 10 | 球体 (Blank Orb) | 锋刃炫目 (RazorBragett) | 1 |
+| 烬火碎片 | 10 | 球体 (Blank Orb) | 散爆弹 (Scatterbombs) | 1 |
+| 极光落星 | 10 | 抛接 (Blank Juggler) | 封魂瓶 (SpiritCapsule) | 1 |
+| 奇迹针线 | 10 | 抛接 (Blank Juggler) | 穿心刃 (ThePenetrator) | 1 |

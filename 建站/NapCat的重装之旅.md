@@ -48,3 +48,30 @@ bash start.sh
 screen -dmS napcat bash -c "xvfb-run -a /root/Napcat/opt/QQ/qq --no-sandbox " >> /opt/napcat/log.log 2>&1
 ```
 
+
+
+# 完整Bash
+
+```sh
+bash napcat.sh # 执行脚本 安装napcat
+```
+
+
+
+# 配置拷贝
+
+[配置](https://napneko.github.io/config/basic)文档
+
+```sh
+cp -r /root/Napcat/opt/QQ/resources/app/app_launcher/napcat/config/ /opt/napcat_config_back
+cp -r /opt/napcat_config_back /root/Napcat/opt/QQ/resources/app/app_launcher/napcat/config/ /opt/napcat_config_back
+```
+
+
+
+# 后台启动
+
+```sh
+screen -dmS napcat bash -c "xvfb-run -a /root/Napcat/opt/QQ/qq --no-sandbox "
+```
+

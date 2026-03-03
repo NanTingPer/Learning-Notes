@@ -88,3 +88,8 @@ rollupOptions: {
 
 
 
+# 申请密钥
+
+打开Github.com -> 右上角头像 -> Settings -> Developer settings(最后一个) -> Personal access tokens -> Generate new token
+
+打开代码仓库 -> Settings -> Secrets and variables -> Actions -> Repository secrets -> new -> 名称: INDEX_PAT value: 密钥

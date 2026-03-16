@@ -44,6 +44,7 @@ bash start.sh
 ```sh
 #登录二维码位置
 /root/Napcat/opt/QQ/resources/app/app_launcher/napcat/cache/qrcode.png
+#/root/Napcat/opt/QQ/resources/app/app_launcher/napcat/logs
 #后台执行命令 日志不会重定向
 screen -dmS napcat bash -c "xvfb-run -a /root/Napcat/opt/QQ/qq --no-sandbox " >> /opt/napcat/log.log 2>&1
 ```

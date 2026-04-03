@@ -66,6 +66,9 @@ bash napcat.sh # 执行脚本 安装napcat
 ```sh
 cp -r /root/Napcat/opt/QQ/resources/app/app_launcher/napcat/config/ /opt/napcat_config_back
 cp -r /opt/napcat_config_back /root/Napcat/opt/QQ/resources/app/app_launcher/napcat/config/ /opt/napcat_config_back
+
+# 密码
+/root/Napcat/opt/QQ/resources/app/app_launcher/napcat/config/webui.json
 ```
 
 

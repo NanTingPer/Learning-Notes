@@ -103,14 +103,23 @@ cd ./acme.sh
 bash acme.sh
 ./acme.sh --install -m youremail@xx.com
 
-
-bash acme.sh  --issue  -d www.nantingya.top  --nginx /usr/local/nginx/conf/nginx.conf #可以指定配置文件
+# 注意 你的nginx的server中必须有一条是能正确访问未配置ssl的站点
+bash acme.sh  --issue  -d www.nantingya.top  --nginx /usr/local/nginx/conf/nginx.conf --keylength ec-256 #可以指定配置文件
 
 # 安装证书
 acme.sh --install-cert -d www.nantingya.top \
 --key-file       /usr/local/nginx/ssl/www.nantingya.top.key  \
 --fullchain-file /usr/local/nginx/ssl/www.nantingya.top.pem \
 --reloadcmd     "nginx -s reload"
+
+# 强制重新颁发证书
+acme.sh --issue --force -d www.nantingya.top --nginx /usr/local/nginx/conf/nginx.conf --keylength ec-256
+```
+
+```sh
+# 使用rsa证书
+acme.sh --issue -d www.nantingya.top --nginx /usr/local/nginx/conf/nginx.conf --keylength 2048
+acme.sh --install-cert -d www.nantingya.top --key-file /usr/local/nginx/ssl/www.nantingya.top.rsa.key --fullchain-file /usr/local/nginx/ssl/www.nantingya.top.rsa.pem
 ```
 
 

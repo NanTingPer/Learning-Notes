@@ -79,3 +79,67 @@ cp -r /opt/napcat_config_back /root/Napcat/opt/QQ/resources/app/app_launcher/nap
 screen -dmS napcat bash -c "xvfb-run -a /root/Napcat/opt/QQ/qq --no-sandbox "
 ```
 
+
+
+# systemd服务
+
+## napcat
+
+```toml
+[Unit]
+Description=Napcat QQ Service (screen + xvfb)
+After=network.target
+
+[Service]
+Type=forking
+ExecStart=cd /opt/napcat
+ExecStart=/usr/bin/screen -dmS napcat bash -c "xvfb-run -a /root/Napcat/opt/QQ/qq --no-sandbox "
+Restart=on-failure
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target
+```
+
+
+
+## napcat_script
+
+```toml
+[Unit]
+Description=NapCatStart (nohup mode)
+After=napcat.service
+Wants=napcat.service
+
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+WorkingDirectory=/opt/terrariaWikiImage
+ExecStart=/usr/bin/bash start.sh
+ExecStop=/usr/bin/pkill -f "NapCatScript.Start"
+
+[Install]
+WantedBy=multi-user.target
+```
+
+
+
+## blog
+
+```toml
+[Unit]
+Description=博客服务 (nohup mode)
+After=network.target
+
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+WorkingDirectory=/opt/nantingBlog
+ExecStart=/usr/bin/bash run.sh
+ExecStop=/usr/bin/pkill -f "http-server /opt/nantingBlog/fornt"
+ExecStop=/usr/bin/pkill -f "/opt/nantingBlog/end/NanTingBlog.API"
+
+[Install]
+WantedBy=multi-user.target
+```
+

@@ -218,7 +218,7 @@ public string CreateToken(User user)
 
 
 
-# 教学脚本
+# 教学脚本 - 授权
 
 展示路径: 认证特性 -> 添加认证服务 -> 添加策略（等报错）-> 创建策略需求对象 -> 创建策略处理器 -> 在策略中创建策略需求
 
@@ -237,3 +237,197 @@ public string CreateToken(User user)
 来到`Program.cs`，现在，我们已经实现了授权需求，那我们就可以为策略添加需求了，直接`new`需求对象就可以，在执行处理器时，框架会直接把你`new`的这个需求，传递给处理器的那个参数，所以我们处理器使用的那个需求对象，就是你这里创建的。
 
 声明完策略后，我们还需要注册策略处理器。`builder.Services.AddSingleton<IAuthorizationHandler, UserAuthorizationHandler>();` 注册为单例服务。
+
+
+
+# 教学脚本 - 认证
+
+## 前言
+
+在编写完成授权后就是认证了，即 如何让授权服务，知道你是否是合法用户。而认证就是那个中间件。同时，我们现在启用了授权，而没有什么东西能够基于用户权限，没有权限怎么授权？接下来我们就需要编写认证标识符的颁发以及辨别了。
+
+此内容使用JWT认证服务，为此，需要引入`Microsoft.AspNetCore.Authentication.JwtBearer`包。如要自定义认证中间件，以及JWT的基本认识，可以查看[世纪文明 JWT验证](https://www.bilibili.com/video/BV1bC411479D/)。
+
+## 颁发JWT
+
+要让外部获取令牌，我们需要在控制器中暴露一个接口，供外部使用，你可以把他写在用户权限相关的控制器中，这个令牌的获取是有许多途径的。
+
+1. 登录成功后携带
+2. 使用有效的旧令牌，对其进行续期
+
+我们在控制器中创建一个`CreateToken`的方法，其接收一个`用户`对象作为传入参数。既然已经走到这一步，说明你前面的身份验证已经通过了，也就是 用户是登录成功了的。所以我们就可以根据用户的信息，去创建令牌。
+
+值得注意的是，Claim的内容对于任何人都是公开的，因此，请不要存放任何敏感信息，如用户密码等。其内容仅用于授权服务确定身份。以及在执行一些操作时，知道是某个用户发起的。
+
+```cs
+public string CreateToken(User user)
+{
+    var roleClaim = new Claim(ClaimTypes.Role, JsonSerializer.Serialize(user.Roles));
+    var ssk = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(configService.JwtKey));
+    var scredntial = new SigningCredentials(ssk, SecurityAlgorithms.HmacSha256);
+
+    var jwtSecurity = new JwtSecurityToken(
+        issuer: configService.JwtIssuer, 
+        audience: configService.JwtAudience, 
+        claims: [roleClaim], 
+        signingCredentials: scredntial,
+        expires: DateTime.UtcNow.AddHours(2));
+    var handler = new JwtSecurityTokenHandler();
+    return handler.WriteToken(jwtSecurity);
+}
+```
+
+使用新的JwtToken
+
+```cs
+var jwth = new JsonWebTokenHandler();
+var skey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes("66awdawfawfawdawdawdawfawdawdwadawdawdsasdsadsadasdasdasd667"));
+var sc = new SigningCredentials(skey, SecurityAlgorithms.HmacSha256);
+var tokenDesc = new SecurityTokenDescriptor()
+{
+    Subject = new ClaimsIdentity(new List<Claim>
+    {
+        new Claim(ClaimTypes.Role, "admin"),
+        new Claim(ClaimTypes.Role, "user")
+    }),
+    SigningCredentials = sc
+};
+
+var token = jwth.CreateToken(tokenDesc);
+```
+
+
+
+## 验证JWT
+
+颁发完JWT令牌后，我们就需要在请求流中去验证用户携带的令牌了。只需要在`Program.cs`或其他依赖注入容器中，添加`JWT`认证服务就可以了。
+
+这里的`JwtBearerDefaults.AuthenticationScheme`是什么？我们Web端在请求接口时，如果这是一个需要进行身份验证的接口，那么他在请求头中必须包含`Authentication`头，而`Scheme`是这个头的前几个字符，表现出来就是 `Scheme Token`，在定义中 其用于表示验证方式。
+
+对于`TokenValidationParameters`，我们在创建令牌时怎么填，这里就怎么填，表示的是哪些参数是需要被验证的。在验证时，如果发现参数对不上，那就说明这个`Token`是无效的。以`Issuer`为例，`ValidateIssuer`表示是否验证此参数，`ValidIssuer` 表示如果要验证，那么他的值应该是什么。其他参数同理。
+
+最重要的是`ValidateIssuerSigningKey`，因为这你的私钥。
+
+```cs
+builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme).AddJwtBearer(options => {
+    options.TokenValidationParameters = new Microsoft.IdentityModel.Tokens.TokenValidationParameters()
+    {
+        ...
+    };
+});
+```
+
+至此，我们的Web应用便支持了基于策略的JWT权限验证
+
+
+
+# 教学口语
+
+大家好，今天带大家来认识一下ASP .NET中的身份认证，顺便了解一下中间件。
+
+在开始之前呢，我们需要知道一些理论的内容，也希望大家能跟着一起敲一敲。同时准备一个新建的ASP .NET API项目。
+
+需要知道的理论不多，只需要知道 授权和认证的关系就可以了。
+
+那么什么是认证呢？认证就是用来确认你有没有一个合法的身份，就比如你在bilibili里面想进入个人主页，未登录的话，你无法点进去，因为你在bilibili不是一个合法的用户，bilibili也没有你的信息，就不让你访问。但是你登录后就可以了。
+
+那什么是授权呢？我们登录后可以看bilibili的1080p的视频，但是想看4k高清，你得要VIP，但是你只是普通用户，那么我们就没有权限访问，授权那边就不给过。
+
+那我们就知道了，认证就是确认用户身份，授权就是确认用户权限。所以在验证权限之前，需要先验证身份。
+
+
+
+
+
+# 认证代码
+
+## UserController
+
+```cs
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.IdentityModel.Tokens;
+using System.IdentityModel.Tokens.Jwt;
+using System.Security.Claims;
+using System.Text;
+
+namespace JWTRole.Controllers;
+
+[ApiController]
+[Route("user")]
+public class UserController : ControllerBase
+{
+    //如果一个ClaimType包含多个值，不建议使用集合序列化，而是以多Claim的方式，及 List<Claim>传递，库在处理时，会自动解析为数组
+    //"http://schemas.microsoft.com/ws/2008/06/identity/claims/role": [
+    //  "admin",
+    //  "user"
+    //],
+
+    [HttpPost("login")]
+    public ActionResult<RequestResult> Login()
+    {
+        var jwth = new JwtSecurityTokenHandler();
+        var claim = new Claim(ClaimTypes.Role, "admin");
+        var cs = new List<Claim>() { claim, new Claim(ClaimTypes.Role, "user") };
+        var skey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes("66awdawfawfawdawdawdawfawdawdwadawdawdsasdsadsadasdasdasd667"));
+
+        var sc = new SigningCredentials(skey, SecurityAlgorithms.HmacSha256);
+        var tokenDesc = new JwtSecurityToken(issuer: "aabb", audience: "aabb", claims: cs, signingCredentials: sc);
+        var token = jwth.WriteToken(tokenDesc);
+
+        return Ok(new RequestResult() { Data = token });
+    }
+
+    [HttpPost("safety")]
+    [Authorize(Roles = "admin")]
+    public ActionResult<string> Safety()
+    {
+        return Ok(new RequestResult() { Data = "safety" });
+    }
+
+    public class RequestResult
+    {
+        public string Data { get; set; } = "";
+    }
+}
+
+
+public class UserModel
+{
+    public string Id { get; set; } = Guid.NewGuid().ToString();
+    public string Role { get; set; } = "user";
+    public string Name { get; set; } = "";
+    public string Password { get; set; } = "";
+}
+
+public class UserDto
+{
+    public string Role { get; set; } = "";
+    public string Name { get; set; } = "";
+}
+```
+
+
+
+## AddJwtBearer
+
+```cs
+builder.Services.AddAuthentication().AddJwtBearer(opt => {
+    opt.TokenValidationParameters = new Microsoft.IdentityModel.Tokens.TokenValidationParameters
+    {
+        ValidateIssuer = false,
+        ValidateLifetime = false,
+        ValidateAudience = false,
+        ValidateIssuerSigningKey = true,
+        IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes("66awdawfawfawdawdawdawfawdawdwadawdawdsasdsadsadasdasdasd667"))
+    };
+});
+```
+
+## 两个英文
+
+|                |      |
+| -------------- | ---- |
+| Authentication | 认证 |
+| Authorization  | 授权 |
+
